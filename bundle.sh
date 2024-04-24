@@ -3,6 +3,12 @@
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -euxo pipefail
 
+# REMOVE ANY OLD ARTEFACTS
+rm -f platform/macos-arm64.a
+rm -f platform/linux-arm64.a
+rm -f platform/linux-x64.a
+rm -f platform/macos-x64.a
+
 # ADD TARGETS
 rustup target add aarch64-apple-darwin
 rustup target add x86_64-unknown-linux-musl
