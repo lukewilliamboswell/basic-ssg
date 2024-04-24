@@ -28,8 +28,9 @@ pub unsafe extern "C" fn roc_realloc(
 ///
 /// TODO
 #[no_mangle]
-pub unsafe extern "C" fn roc_dealloc(c_ptr: *mut c_void, _alignment: u32) {
-    libc::free(c_ptr)
+pub unsafe extern "C" fn roc_dealloc(_c_ptr: *mut c_void, _alignment: u32) {
+    // NOOP as a workaround for a lurking double free issue
+    // libc::free(c_ptr)
 }
 
 /// # Safety
