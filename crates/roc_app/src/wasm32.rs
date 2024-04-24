@@ -16,21 +16,26 @@
 #![allow(clippy::clone_on_copy)]
 #![allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
 
-
-#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, )]
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
 pub struct UrlPath {
     pub path: roc_std::RocStr,
     pub url: roc_std::RocStr,
 }
 
-#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash, )]
-#[repr(transparent)]
-pub struct Types {
-    pub a: UrlPath,
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Args {
+    pub inputDir: roc_std::RocStr,
+    pub outputDir: roc_std::RocStr,
 }
 
-
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Types {
+    pub a: UrlPath,
+    pub b: Args,
+}
 
 pub fn mainForHost() -> Types {
     extern "C" {
@@ -40,7 +45,7 @@ pub fn mainForHost() -> Types {
     let mut ret = core::mem::MaybeUninit::uninit();
 
     unsafe {
-        roc__mainForHost_1_exposed_generic(ret.as_mut_ptr(), );
+        roc__mainForHost_1_exposed_generic(ret.as_mut_ptr());
 
         ret.assume_init()
     }

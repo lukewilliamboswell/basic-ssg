@@ -7,6 +7,7 @@ platform "glue-types"
 
 Types : {
     a: InternalTypes.UrlPath,
+    b: InternalTypes.Args,
 }
 
 mainForHost : Types

@@ -1,6 +1,7 @@
 interface SSG
     exposes [
         UrlPath,
+        Args,
         files,
         parseMarkdown,
         writeFile,
@@ -8,6 +9,7 @@ interface SSG
     imports [Effect, Task.{Task}, InternalTypes]
 
 UrlPath : InternalTypes.UrlPath
+Args : InternalTypes.Args
 
 files : Str -> Task (List UrlPath) [FilesError Str]_
 files = \path ->

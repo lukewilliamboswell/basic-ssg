@@ -1,7 +1,7 @@
 use core::ffi::c_void;
 use roc_std::{RocList, RocResult, RocStr};
-use std::{alloc::Layout, mem::MaybeUninit};
 use std::path::PathBuf;
+use std::{alloc::Layout, mem::MaybeUninit};
 
 /// # Safety
 ///
@@ -106,7 +106,7 @@ pub unsafe extern "C" fn roc_shm_open(
 
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
-    pub fn roc_main(output: *mut u8);
+    pub fn roc_main(output: *mut u8, roc_args: *mut roc_app::Args);
 
     #[link_name = "roc__mainForHost_1_exposed_size"]
     pub fn roc_main_size() -> i64;
@@ -129,10 +129,21 @@ pub extern "C" fn main() -> i32 {
     let size = unsafe { roc_main_size() } as usize;
     let layout = Layout::array::<u8>(size).unwrap();
 
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 3 {
+        eprintln!("Missing directory arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
+        return 1;
+    }
+
+    let mut roc_args = roc_app::Args {
+        inputDir: args[1].as_str().into(),
+        outputDir: args[2].as_str().into(),
+    };
+
     unsafe {
         let buffer = std::alloc::alloc(layout);
 
-        roc_main(buffer);
+        roc_main(buffer, &mut roc_args);
 
         let out = call_the_closure(buffer);
 
@@ -195,7 +206,7 @@ pub extern "C" fn roc_fx_findFiles(
 ) -> RocResult<RocList<roc_app::UrlPath>, RocStr> {
     match ssg::find_files(PathBuf::from(dir_path.as_str().to_string())) {
         Ok(vec_files) => RocResult::ok(vec_files[..].into()),
-        Err(msg) =>  RocResult::err(msg.as_str().into()),
+        Err(msg) => RocResult::err(msg.as_str().into()),
     }
 }
 

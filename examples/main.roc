@@ -5,21 +5,25 @@ app "simple"
         pf.SSG,
         pf.Html.{ html, head, body, div, text, a, ul, li, link, meta },
         pf.Html.Attributes.{ httpEquiv, content, href, rel, lang, class, title },
+        "style.css" as styleCss : Str,
     ]
     provides [main] to pf
 
-inputDir = "examples/content/"
-outputDir = "examples/output/"
-
-main : Task {} _
-main = 
+main : SSG.Args -> Task {} _
+main = \{inputDir, outputDir} ->
 
     files = SSG.files! inputDir
 
-    Task.forEach files processFile
+    Task.forEach! files (processFile outputDir)
 
-processFile : SSG.UrlPath -> Task {} _
-processFile = \{path, url} ->
+    SSG.writeFile! {
+        outputDir,
+        relPath: "style.css",
+        content: styleCss,
+    }
+
+processFile : Str -> (SSG.UrlPath -> Task {} _)
+processFile = \outputDir -> \{path, url} ->
 
     inHtml = SSG.parseMarkdown! path
 
@@ -39,9 +43,10 @@ NavLink : {
 
 navLinks : List NavLink
 navLinks = [
-    { url: "subFolder/apple.html", title: "Exempli Gratia Pagina Pomi", text: "Apple" },
-    { url: "banana.html", title: "Exempli Gratia Pagina Musa", text: "Banana" },
-    { url: "cherry.html", title: "Exempli Pagina Cerasus", text: "Cherry" },
+    { url: "apple.html", title: "Foo", text: "First" },
+    { url: "subFolder/apple.html", title: "Bar", text: "Second" },
+    { url: "banana.html", title: "Baz", text: "Third" },
+    { url: "cherry.html", title: "FooBar", text: "Fourht" },
 ]
 
 transformFileContent : Str, Str -> Str

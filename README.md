@@ -1,10 +1,8 @@
 # Roc-SSG
 
-A platform for Static Site Generation
+A platform for Static Site Generation. Parse a directory of markdown files, and then transform the content using [roc-lang](https://www.roc-lang.org) into an html site that is ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
 
-**Status** Alpha - please help me tests this, and let me know if you find any issues.
-
-Use this platform to parse a directory of markdown files, and tranform this content using [roc-lang](https://www.roc-lang.org) into a html site ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
+**Alpha Status** help me test this, and let me know if you find any issues.
 
 **Supported Targets** 
 
@@ -19,7 +17,7 @@ The following targets are included in each release. If you would like an additio
 
 Ensure you have [installed the roc cli](https://www.roc-lang.org/install) and [installed cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the plaform URL in the header.
+Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the URL in the header.
 
 ```roc
 app "example"
@@ -35,6 +33,6 @@ app "example"
 
 A few scripts are included to assist with common tasks.
 
-- *run.sh* build the platform in debug mode, and run the `simple.roc` example
-- *glue.sh* re-generate glue types for the platform (note currently requires a copy of the roc repository)
-- *bundle.sh* cross-compile the platform in release mode for supported targets and package for distribution
+- **run.sh** to build the platform in debug mode, and run the example
+- **glue.sh** to re-generate glue types for the platform (note currently requires a copy of the roc repository)
+- **bundle.sh** to cross-compile the platform in release mode for supported targets and package for distribution

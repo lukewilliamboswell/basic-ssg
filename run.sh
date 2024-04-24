@@ -46,4 +46,4 @@ case "$OS" in
         ;;
 esac
 
-roc dev --prebuilt-platform examples/simple.roc
+roc dev --prebuilt-platform examples/main.roc -- examples/content/ examples/output/

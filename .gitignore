@@ -6,6 +6,6 @@ platform/*.a
 platform/*.tar.br
 
 # examples
-/examples/simple
+/examples/main
 /examples/output/
 /examples/**/*.html
