@@ -6,6 +6,15 @@ A platform for Static Site Generation
 
 Use this platform to parse a directory of markdown files, and tranform this content using [roc-lang](https://www.roc-lang.org) into a html site ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
 
+**Supported Targets** 
+
+The following targets are included in each release. If you would like an additional target, let me know because it's probably supported by [rustc](https://doc.rust-lang.org/beta/rustc/platform-support.html) and easy to add. 
+
+- Arm64 MacOS
+- Arm64 Linux
+- x64 MacOS
+- x64 Linux
+
 ## Getting Starting
 
 Ensure you have [installed the roc cli](https://www.roc-lang.org/install) and [installed cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
