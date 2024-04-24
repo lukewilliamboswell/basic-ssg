@@ -1,0 +1,9 @@
+.DS_Store
+
+# dev files
+/target/
+platform/*.a
+platform/*.tar.br
+
+# examples
+/examples/simple
