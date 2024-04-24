@@ -117,13 +117,13 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                                 replacement_file_name.trim(),
                                 snippet_name.trim(),
                                 input_file.as_path(),
-                            );
+                            )?;
                         }
                         ["file", replacement_file_name] => {
                             code_to_highlight = read_replacement_file(
                                 replacement_file_name.trim(),
                                 input_file.as_path(),
-                            );
+                            )?;
                         }
                         _ => {}
                     }
@@ -211,27 +211,28 @@ fn is_roc_code_block(cbk: &pulldown_cmark::CodeBlockKind) -> bool {
     }
 }
 
-fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> String {
+fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> Result<String, String> {
     if replacement_file_name.contains("../") {
-        panic!(
+        return Err(format!(
             "ERROR File \"{}\" must be located within the input diretory.",
             replacement_file_name
-        );
+        ));
     }
 
     let input_dir = input_file.parent().unwrap();
     let replacement_file_path = input_dir.join(replacement_file_name);
 
-    match fs::read(&replacement_file_path) {
-        Ok(content) => String::from_utf8(content).unwrap(),
-        Err(err) => {
-            panic!(
+    fs::read(&replacement_file_path)
+        .map(|content| {
+            String::from_utf8(content).map_err(|err| format!("bad utf8 in file snippet: {}", err))
+        })
+        .map_err(|err| {
+            format!(
                 "ERROR File \"{}\" is unreadable:\n\t{}",
                 replacement_file_path.to_str().unwrap(),
                 err
-            );
-        }
-    }
+            )
+        })?
 }
 
 fn remove_snippet_comments(input: &str) -> String {
@@ -248,31 +249,29 @@ fn read_replacement_snippet(
     replacement_file_name: &str,
     snippet_name: &str,
     input_file: &Path,
-) -> String {
+) -> Result<String, String> {
     let start_marker = format!("### start snippet {}", snippet_name);
     let end_marker = format!("### end snippet {}", snippet_name);
 
-    let replacement_file_content = read_replacement_file(replacement_file_name.trim(), input_file);
+    let replacement_file_content = read_replacement_file(replacement_file_name.trim(), input_file)?;
 
-    let start_position = replacement_file_content
+    let start_position = &replacement_file_content
         .find(&start_marker)
-        .expect(format!("ERROR Failed to find snippet start \"{}\". ", &start_marker).as_str());
+        .ok_or(format!("ERROR Failed to find snippet start \"{}\". ", &start_marker).as_str())?;
 
-    let end_position = replacement_file_content
+    let end_position = &replacement_file_content
         .find(&end_marker)
-        .expect(format!("ERROR Failed to find snippet end \"{}\". ", &end_marker).as_str());
+        .ok_or(format!("ERROR Failed to find snippet end \"{}\". ", &end_marker).as_str())?;
 
     if start_position >= end_position {
         let start_position_str = start_position.to_string();
         let end_position_str = end_position.to_string();
 
-        panic!(
-            "ERROR Detected start position ({start_position_str}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position_str})." 
-        );
+        return Err(format!("ERROR Detected start position ({start_position_str}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position_str})."));
     } else {
         // We want to remove other snippet comments inside this one if they exist.
-        remove_snippet_comments(
-            &replacement_file_content[start_position + start_marker.len()..end_position],
-        )
+        Ok(remove_snippet_comments(
+            &replacement_file_content[start_position + start_marker.len()..*end_position],
+        ))
     }
 }
