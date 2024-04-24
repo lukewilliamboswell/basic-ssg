@@ -7,3 +7,5 @@ platform/*.tar.br
 
 # examples
 /examples/simple
+/examples/output/
+/examples/**/*.html
