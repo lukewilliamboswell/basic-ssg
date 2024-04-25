@@ -13,10 +13,10 @@ hosted Effect
         parseMarkdown,
         writeFile,
     ]
-    imports [InternalTypes]
+    imports [Types]
     generates Effect with [after, map, always, forever, loop]
 
 applicationError : Str -> Effect {}
-findFiles : Str -> Effect (Result (List InternalTypes.UrlPath) Str)
+findFiles : Str -> Effect (Result (List Types.Files) Str)
 parseMarkdown : Str -> Effect (Result Str Str)
 writeFile : Str, Str, Str -> Effect (Result {} Str)

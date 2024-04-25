@@ -3,33 +3,30 @@ app "simple"
     imports [
         pf.Task.{Task},
         pf.SSG,
+        pf.Types.{Args, toRelPath},
         pf.Html.{ html, head, body, div, text, a, ul, li, link, meta },
         pf.Html.Attributes.{ httpEquiv, content, href, rel, lang, class, title },
         "style.css" as styleCss : Str,
     ]
     provides [main] to pf
 
-main : SSG.Args -> Task {} _
+main : Args -> Task {} _
 main = \{inputDir, outputDir} ->
 
     # get the path and url of markdown files in content directory
     files = SSG.files! inputDir
 
     # helper Task to process each file
-    processFile = \{path, url} ->
+    processFile = \{path, relpath, url} ->
 
         inHtml = SSG.parseMarkdown! path
 
-        outHtml = 
-            transform url inHtml 
+        outHtml =
+            transform url inHtml
             |> Task.fromResult
-            |> Task.mapErr! \err -> (ErrorGeneratingHtml path err)
+            |> Task.mapErr! \err -> (ErrorGeneratingHtml relpath err)
 
-        SSG.writeFile {
-            outputDir, 
-            relPath: url, 
-            content: outHtml,
-        }
+        SSG.writeFile {outputDir, relpath, content: outHtml}
 
     # process each file
     Task.forEach! files processFile
@@ -37,7 +34,7 @@ main = \{inputDir, outputDir} ->
     # copy across our static asset 
     SSG.writeFile! {
         outputDir,
-        relPath: "style.css",
+        relpath: toRelPath "style.css",
         content: styleCss,
     }
 

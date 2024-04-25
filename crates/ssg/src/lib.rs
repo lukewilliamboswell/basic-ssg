@@ -9,13 +9,13 @@ use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
 /// Find the markdown `.md` files in a directory
-pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::UrlPath>, String> {
+pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::Files>, String> {
     let mut file_paths = Vec::new();
 
     match find_files_help(&dir_path, &mut file_paths) {
         Ok(()) => Ok(file_paths
             .iter()
-            .filter(|path| path.extension().filter(|s| (*s).eq("md".into())).is_some())
+            .filter(|path| path.extension().filter(|s| (*s).eq("md")).is_some())
             .filter_map(|path_buf| {
                 let path: RocStr = format!("{}", path_buf.display()).as_str().into();
 
@@ -24,10 +24,13 @@ pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::UrlPath>, String> {
                     Ok(ref mut stripped_path_buf) => {
                         stripped_path_buf.set_extension("html");
 
-                        let url: RocStr =
+                        let relpath: RocStr =
                             format!("{}", stripped_path_buf.display()).as_str().into();
 
-                        Some(roc_app::UrlPath { url, path })
+                        let url: RocStr =
+                            format!("/{}", stripped_path_buf.display()).as_str().into();
+
+                        Some(roc_app::Files { url, path, relpath })
                     }
                 }
             })
@@ -108,7 +111,7 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                 is_roc_code = is_roc_code_block(&cbk);
             }
             pulldown_cmark::Event::End(pulldown_cmark::Tag::CodeBlock(
-                pulldown_cmark::CodeBlockKind::Fenced(extention_str),
+                pulldown_cmark::CodeBlockKind::Fenced(extension_str),
             )) => {
                 if in_code_block {
                     match &code_to_highlight.split(':').collect::<Vec<_>>()[..] {
@@ -132,7 +135,7 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                     let highlighted_html: String;
                     if is_roc_code {
                         highlighted_html = roc_highlight::highlight_roc_code(&code_to_highlight)
-                    } else if let Some(syntax) = syntax_set.find_syntax_by_token(&extention_str) {
+                    } else if let Some(syntax) = syntax_set.find_syntax_by_token(&extension_str) {
                         HighlightLines::new(syntax, &theme_set.themes["base16-ocean.dark"]);
 
                         let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
@@ -191,7 +194,7 @@ pub fn write_file(
     // Create parent directory if it doesn't exist
     let parent_dir = output_file.parent().unwrap();
     if !parent_dir.exists() {
-        fs::create_dir_all(&parent_dir).unwrap();
+        fs::create_dir_all(parent_dir).unwrap();
     }
 
     match fs::write(&output_file, content) {
@@ -267,7 +270,7 @@ fn read_replacement_snippet(
         let start_position_str = start_position.to_string();
         let end_position_str = end_position.to_string();
 
-        return Err(format!("ERROR Detected start position ({start_position_str}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position_str})."));
+        Err(format!("ERROR Detected start position ({start_position_str}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position_str})."))
     } else {
         // We want to remove other snippet comments inside this one if they exist.
         Ok(remove_snippet_comments(

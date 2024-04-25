@@ -1,30 +1,25 @@
 interface SSG
     exposes [
-        UrlPath,
-        Args,
         files,
         parseMarkdown,
         writeFile,
     ]
-    imports [Effect, Task.{Task}, InternalTypes]
+    imports [Effect, Task.{Task}, Types.{Path, RelPath, Files, Args}]
 
-UrlPath : InternalTypes.UrlPath
-Args : InternalTypes.Args
-
-files : Str -> Task (List UrlPath) [FilesError Str]_
+files : Path -> Task (List Files) [FilesError Str]_
 files = \path ->
-    Effect.findFiles path
+    Effect.findFiles (Types.pathToStr path)
     |> Effect.map \res -> Result.mapErr res FilesError
     |> Task.fromEffect
 
-parseMarkdown : Str -> Task Str [ParseError Str]_
+parseMarkdown : Path -> Task Str [ParseError Str]_
 parseMarkdown = \path ->
-    Effect.parseMarkdown path
+    Effect.parseMarkdown (Types.pathToStr path)
     |> Effect.map \res -> Result.mapErr res ParseError
     |> Task.fromEffect
 
-writeFile : {outputDir : Str, relPath : Str, content : Str} -> Task {} [WriteError Str]_
-writeFile = \{outputDir, relPath, content} ->
-    Effect.writeFile outputDir relPath content
+writeFile : {outputDir : Path, relpath : RelPath, content : Str} -> Task {} [WriteError Str]_
+writeFile = \{outputDir, relpath, content} ->
+    Effect.writeFile (Types.pathToStr outputDir) (Types.relPathToStr relpath) content
     |> Effect.map \res -> Result.mapErr res WriteError
     |> Task.fromEffect

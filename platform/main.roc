@@ -2,13 +2,14 @@ platform "roc-ssg"
     requires {} { main : _ }
     exposes [
         SSG,
+        Types,
         Task,
     ]
     packages {}
-    imports [Effect.{Effect}, Task.{Task}, InternalTypes]
+    imports [Effect.{Effect}, Task.{Task}, Types]
     provides [mainForHost]
 
-mainForHost : InternalTypes.Args -> Task {} I32
+mainForHost : Types.Args -> Task {} I32
 mainForHost = \args ->
     Task.attempt (main args) \res ->
         when res is

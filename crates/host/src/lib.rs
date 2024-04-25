@@ -201,9 +201,7 @@ pub extern "C" fn roc_fx_applicationError(message: RocStr) {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_findFiles(
-    dir_path: RocStr,
-) -> RocResult<RocList<roc_app::UrlPath>, RocStr> {
+pub extern "C" fn roc_fx_findFiles(dir_path: RocStr) -> RocResult<RocList<roc_app::Files>, RocStr> {
     match ssg::find_files(PathBuf::from(dir_path.as_str().to_string())) {
         Ok(vec_files) => RocResult::ok(vec_files[..].into()),
         Err(msg) => RocResult::err(msg.as_str().into()),

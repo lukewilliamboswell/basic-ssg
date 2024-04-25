@@ -2,12 +2,14 @@ platform "glue-types"
     requires {} { main : _ }
     exposes []
     packages {}
-    imports [InternalTypes]
+    imports [Types]
     provides [mainForHost]
 
 Types : {
-    a: InternalTypes.UrlPath,
-    b: InternalTypes.Args,
+    a: Types.Files,
+    b: Types.Args,
+    c: Types.Path, 
+    d: Types.RelPath,
 }
 
 mainForHost : Types

@@ -18,8 +18,9 @@
 
 #[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
-pub struct UrlPath {
+pub struct Files {
     pub path: roc_std::RocStr,
+    pub relpath: roc_std::RocStr,
     pub url: roc_std::RocStr,
 }
 
@@ -33,8 +34,10 @@ pub struct Args {
 #[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
 pub struct Types {
-    pub a: UrlPath,
+    pub a: Files,
     pub b: Args,
+    pub c: roc_std::RocStr,
+    pub d: roc_std::RocStr,
 }
 
 pub fn mainForHost() -> Types {
