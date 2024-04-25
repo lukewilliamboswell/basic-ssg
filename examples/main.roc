@@ -12,79 +12,75 @@ app "simple"
 main : SSG.Args -> Task {} _
 main = \{inputDir, outputDir} ->
 
+    # get the path and url of markdown files in content directory
     files = SSG.files! inputDir
 
-    Task.forEach! files (processFile outputDir)
+    # helper Task to process each file
+    processFile = \{path, url} ->
 
+        inHtml = SSG.parseMarkdown! path
+
+        outHtml = 
+            transform url inHtml 
+            |> Task.fromResult
+            |> Task.mapErr! \err -> (ErrorGeneratingHtml path err)
+
+        SSG.writeFile {
+            outputDir, 
+            relPath: url, 
+            content: outHtml,
+        }
+
+    # process each file
+    Task.forEach! files processFile
+
+    # copy across our static asset 
     SSG.writeFile! {
         outputDir,
         relPath: "style.css",
         content: styleCss,
     }
 
-processFile : Str -> (SSG.UrlPath -> Task {} _)
-processFile = \outputDir -> \{path, url} ->
-
-    inHtml = SSG.parseMarkdown! path
-
-    outHtml = transformFileContent url inHtml
-
-    SSG.writeFile {
-        outputDir, 
-        relPath: url, 
-        content: outHtml,
-    }
-
-NavLink : {
-    url : Str,
-    title : Str,
-    text : Str,
-}
-
-navLinks : List NavLink
 navLinks = [
-    { url: "apple.html", title: "Foo", text: "First" },
-    { url: "subFolder/apple.html", title: "Bar", text: "Second" },
-    { url: "banana.html", title: "Baz", text: "Third" },
-    { url: "cherry.html", title: "FooBar", text: "Fourht" },
+    { url: "/apple.html", title: "Foo", text: "First" },
+    { url: "/subFolder/apple.html", title: "Bar", text: "Second" },
+    { url: "/banana.html", title: "Baz", text: "Third" },
+    { url: "/cherry.html", title: "FooBar", text: "Fourth" },
 ]
 
-transformFileContent : Str, Str -> Str
-transformFileContent = \currentUrl, htmlContent ->
-    List.findFirst navLinks (\{ url } -> url == currentUrl)
-    |> Result.map (\currentNavLink -> view currentNavLink htmlContent)
-    |> Result.map Html.render
-    |> Result.withDefault ""
+transform : Str, Str -> Result Str _
+transform = \currentUrl, inHtml ->
+    
+    currentPage <- 
+        navLinks
+        |> List.findFirst  \{ url } -> url == currentUrl
+        |> Result.try
+        
+    view currentPage inHtml 
+    |> Html.render
+    |> Ok
 
-view : NavLink, Str -> Html.Node
-view = \currentNavLink, htmlContent ->
+view = \currentPage, inHtml ->
     html [lang "en"] [
         head [] [
             meta [httpEquiv "content-type", content "text/html; charset=utf-8"],
-            Html.title [] [text currentNavLink.title],
-            link [rel "stylesheet", href "style.css"],
+            Html.title [] [text currentPage.title],
+            link [rel "stylesheet", href "/style.css"],
         ],
         body [] [
             div [class "main"] [
                 div [class "navbar"] [
-                    viewNavbar currentNavLink,
+                    ul [] (List.map navLinks \nl -> viewNavLink (nl == currentPage) nl),
                 ],
                 div [class "article"] [
                     # For now `text` is not escaped so we can use it to insert HTML
                     # We'll probably want something more explicit in the long term though!
-                    text htmlContent,
+                    text inHtml,
                 ],
             ],
         ],
     ]
 
-viewNavbar : NavLink -> Html.Node
-viewNavbar = \currentNavLink ->
-    ul
-        []
-        (List.map navLinks \nl -> viewNavLink (nl == currentNavLink) nl)
-
-viewNavLink : Bool, NavLink -> Html.Node
 viewNavLink = \isCurrent, navlink ->
     if isCurrent then
         li [class "nav-link nav-link--current"] [
