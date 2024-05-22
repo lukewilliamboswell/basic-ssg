@@ -4,7 +4,7 @@ interface SSG
         parseMarkdown,
         writeFile,
     ]
-    imports [Effect, Task.{Task}, Types.{Path, RelPath, Files, Args}]
+    imports [Effect, Task.{Task}, Types.{Path, RelPath, Files}]
 
 files : Path -> Task (List Files) [FilesError Str]_
 files = \path ->
