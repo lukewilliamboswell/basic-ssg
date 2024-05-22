@@ -1,4 +1,4 @@
-# Basic Site Generatation for Roc
+# Static Site Generatation for Roc
 
 A platform for Static Site Generation. Parse a directory of markdown files, and then transform the content using [roc](https://www.roc-lang.org) into an html site that is ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
 
