@@ -194,14 +194,16 @@ pub fn init() {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_applicationError(message: RocStr) {
+pub extern "C" fn roc_fx_applicationError(message: &RocStr) {
     print!("\x1b[31mError completing tasks:\x1b[0m ");
     println!("{}", message.as_str());
     std::process::exit(1);
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_findFiles(dir_path: RocStr) -> RocResult<RocList<roc_app::Files>, RocStr> {
+pub extern "C" fn roc_fx_findFiles(
+    dir_path: &RocStr,
+) -> RocResult<RocList<roc_app::Files>, RocStr> {
     match ssg::find_files(PathBuf::from(dir_path.as_str().to_string())) {
         Ok(vec_files) => RocResult::ok(vec_files[..].into()),
         Err(msg) => RocResult::err(msg.as_str().into()),
@@ -209,7 +211,7 @@ pub extern "C" fn roc_fx_findFiles(dir_path: RocStr) -> RocResult<RocList<roc_ap
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_parseMarkdown(file_path: RocStr) -> RocResult<RocStr, RocStr> {
+pub extern "C" fn roc_fx_parseMarkdown(file_path: &RocStr) -> RocResult<RocStr, RocStr> {
     match ssg::parse_markdown(PathBuf::from(file_path.as_str().to_string())) {
         Ok(content) => RocResult::ok(content.as_str().into()),
         Err(msg) => RocResult::err(msg.as_str().into()),
@@ -218,9 +220,9 @@ pub extern "C" fn roc_fx_parseMarkdown(file_path: RocStr) -> RocResult<RocStr, R
 
 #[no_mangle]
 pub extern "C" fn roc_fx_writeFile(
-    output_dir_str: RocStr,
-    output_rel_path_str: RocStr,
-    content: RocStr,
+    output_dir_str: &RocStr,
+    output_rel_path_str: &RocStr,
+    content: &RocStr,
 ) -> RocResult<(), RocStr> {
     match ssg::write_file(
         PathBuf::from(output_dir_str.as_str().to_string()),
