@@ -1,4 +1,4 @@
-# Roc-SSG
+# Basic Site Generatation for Roc
 
 A platform for Static Site Generation. Parse a directory of markdown files, and then transform the content using [roc](https://www.roc-lang.org) into an html site that is ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
 
@@ -20,11 +20,10 @@ Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/release
 ```roc
 app "example"
     packages { pf: "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH RELEASE URL].tar.br" }
-    imports [
-        pf.Task.{Task},
-        pf.SSG,
-    ]
     provides [main] to pf
+
+import pf.Task exposing [Task]
+import pf.SSG
 ```
 
 ## Developing
