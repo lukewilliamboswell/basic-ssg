@@ -13,7 +13,7 @@ The following targets are included in each release. If you would like an additio
 
 ## Getting Starting
 
-Ensure you have [installed the roc cli](https://www.roc-lang.org/install) and [installed cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Ensure you have [installed the roc cli](https://www.roc-lang.org/install).
 
 Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the URL in the header.
 
@@ -28,6 +28,8 @@ app "example"
 ```
 
 ## Developing
+
+Ensure you have [cargo and rustup installed](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 A few scripts are included to assist with common tasks.
 
