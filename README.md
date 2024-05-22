@@ -18,12 +18,18 @@ Ensure you have [installed the roc cli](https://www.roc-lang.org/install).
 Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the URL in the header.
 
 ```roc
-app "example"
-    packages { pf: "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH RELEASE URL].tar.br" }
-    provides [main] to pf
+app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.1.0/EMH2OFwcXCUEzbwP6gyfeRQu7Phr-slc-vE8FPPreys.tar.br" }
 
 import pf.Task exposing [Task]
 import pf.SSG
+import pf.Types exposing [Args, toRelPath]
+import pf.Html exposing [html, head, body, div, text, a, ul, li, link, meta]
+import pf.Html.Attributes exposing [httpEquiv, content, href, rel, lang, class, title]
+import "style.css" as styleCss : Str
+
+main : Args -> Task {} _
+main = \{ inputDir, outputDir } ->
+    # ... use SSG.files!, SSG.parseMarkdown!, and SSG.writeFile! here to generate site
 ```
 
 ## Developing
