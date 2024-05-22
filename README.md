@@ -1,12 +1,10 @@
 # Roc-SSG
 
-A platform for Static Site Generation. Parse a directory of markdown files, and then transform the content using [roc-lang](https://www.roc-lang.org) into an html site that is ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
+A platform for Static Site Generation. Parse a directory of markdown files, and then transform the content using [roc](https://www.roc-lang.org) into an html site that is ready to be served from a web server or [CDN](https://en.wikipedia.org/wiki/Content_delivery_network).
 
-**Alpha Status** help me test this, and let me know if you find any issues.
+**Supported Targets**
 
-**Supported Targets** 
-
-The following targets are included in each release. If you would like an additional target, let me know because it's probably supported by [rustc](https://doc.rust-lang.org/beta/rustc/platform-support.html) and easy to add. 
+The following targets are included in each release. If you would like an additional target, let me know because it's probably supported by [rustc](https://doc.rust-lang.org/beta/rustc/platform-support.html) and easy to add.
 
 - Arm64 MacOS
 - Arm64 Linux
