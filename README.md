@@ -18,7 +18,7 @@ Ensure you have [installed the roc cli](https://www.roc-lang.org/install).
 Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the URL in the header.
 
 ```roc
-app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.1.0/EMH2OFwcXCUEzbwP6gyfeRQu7Phr-slc-vE8FPPreys.tar.br" }
+app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH LATEST RELEASE VERSION].tar.br" }
 
 import pf.Task exposing [Task]
 import pf.SSG
