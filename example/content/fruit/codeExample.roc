@@ -1,5 +1,10 @@
 ## This is a documentation comment
 # This is a comment
+app [transformFileContent] { pf: platform "platform/main.roc" }
+
+import pf.Html exposing [html, head, body, div, text, a, ul, li, link, meta]
+import pf.Html.Attributes exposing [httpEquiv, content, href, rel, lang, class, title]
+
 NavLink : {
     # this is another comment
     url : Str,
