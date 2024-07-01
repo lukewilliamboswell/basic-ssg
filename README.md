@@ -20,7 +20,6 @@ Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/release
 ```roc
 app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH LATEST RELEASE VERSION].tar.br" }
 
-import pf.Task exposing [Task]
 import pf.SSG
 import pf.Types exposing [Args, toRelPath]
 import pf.Html exposing [html, head, body, div, text, a, ul, li, link, meta]
@@ -32,12 +31,12 @@ main = \{ inputDir, outputDir } ->
     # ... use SSG.files!, SSG.parseMarkdown!, and SSG.writeFile! here to generate site
 ```
 
-## Developing
+## Platform Development
 
 Ensure you have [cargo and rustup installed](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 A few scripts are included to assist with common tasks.
 
-- **run.sh** to build the platform in debug mode, and run the example
-- **glue.sh** to re-generate glue types for the platform (note currently requires a copy of the roc repository)
+- **build.sh** to build the platform in debug mode and run the example
 - **bundle.sh** to cross-compile the platform in release mode for supported targets and package for distribution
+- **glue.sh** to re-generate glue types for the platform (note currently requires a copy of the roc repository)

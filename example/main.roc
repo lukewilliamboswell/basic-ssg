@@ -1,6 +1,5 @@
 app [main] { pf: platform "../platform/main.roc" }
 
-import pf.Task exposing [Task]
 import pf.SSG
 import pf.Types exposing [Args]
 import pf.Html exposing [div, link, text, a, html, head, body, meta, ul, li]

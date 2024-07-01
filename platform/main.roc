@@ -6,8 +6,11 @@ platform "roc-ssg"
         Task,
     ]
     packages {}
-    imports [Effect, Task.{Task}, Types]
+    imports []
     provides [mainForHost]
+
+import Types
+import PlatformTask
 
 mainForHost : Types.Args -> Task {} I32
 mainForHost = \args ->
@@ -16,6 +19,4 @@ mainForHost = \args ->
             Ok {} -> Task.ok {}
             Err (Exit code) -> Task.err code
             Err err ->
-                Effect.applicationError (Inspect.toStr err)
-                |> Effect.map Ok
-                |> Task.fromEffect
+                PlatformTask.applicationError (Inspect.toStr err)
