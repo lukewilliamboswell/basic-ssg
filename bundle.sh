@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# This script is used to build and bundle the host package for all supported platforms.
+
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail/
 set -euxo pipefail
 

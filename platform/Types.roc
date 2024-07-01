@@ -1,14 +1,12 @@
-interface Types
-    exposes [
-        Args,
-        Path,
-        pathToStr,
-        RelPath,
-        relPathToStr,
-        toRelPath,
-        Files,
-    ]
-    imports []
+module [
+    Args,
+    Path,
+    pathToStr,
+    RelPath,
+    relPathToStr,
+    toRelPath,
+    Files,
+]
 
 Path := Str
 
@@ -22,14 +20,14 @@ relPathToStr = \@RelPath str -> str
 
 toRelPath : Str -> RelPath
 toRelPath = @RelPath
-    
+
 Args : {
-    inputDir : Path, 
-    outputDir: Path,
+    inputDir : Path,
+    outputDir : Path,
 }
 
 Files : {
-    url : Str, 
+    url : Str,
     path : Path,
     relpath : RelPath,
 }
