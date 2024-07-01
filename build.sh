@@ -18,3 +18,6 @@ cp target/debug/libhost.a platform/macos-arm64.a
 cp target/debug/libhost.a platform/linux-arm64.a
 cp target/debug/libhost.a platform/linux-x64.a
 cp target/debug/libhost.a platform/macos-x64.a
+
+echo "run the example"
+roc dev --prebuilt-platform example/main.roc -- example/content/ example/www/
