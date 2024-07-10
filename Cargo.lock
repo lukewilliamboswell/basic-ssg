@@ -265,12 +265,9 @@ checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
 name = "host"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
- "libc",
- "roc_app",
- "roc_std",
- "ssg",
+ "roc_host",
 ]
 
 [[package]]
@@ -539,13 +536,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adad44e29e4c806119491a7f06f03de4d1af22c3a680dd47f1e6e179439d1f56"
 
 [[package]]
-name = "roc_app"
-version = "1.0.0"
-dependencies = [
- "roc_std",
-]
-
-[[package]]
 name = "roc_collections"
 version = "0.0.1"
 source = "git+https://github.com/roc-lang/roc.git#d67ba43d494c90b676fa485212947dd251570613"
@@ -573,6 +563,15 @@ dependencies = [
  "html-escape",
  "roc_parse",
  "roc_region",
+]
+
+[[package]]
+name = "roc_host"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "roc_std",
+ "ssg",
 ]
 
 [[package]]
@@ -725,7 +724,6 @@ name = "ssg"
 version = "0.1.0"
 dependencies = [
  "pulldown-cmark",
- "roc_app",
  "roc_highlight",
  "roc_std",
  "syntect",

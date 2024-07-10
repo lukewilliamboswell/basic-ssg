@@ -10,5 +10,4 @@ crate-type = ["rlib"]
 syntect = { version = "5.0", default-features = false, features = ["default-fancy"] }
 roc_highlight = { git = "https://github.com/roc-lang/roc.git", package = "roc_highlight" }
 roc_std = {path = "../roc_std"}
-roc_app = {path = "../roc_app"}
 pulldown-cmark = { version = "0.9.2", default-features = false }

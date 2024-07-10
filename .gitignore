@@ -1,11 +1,16 @@
 .DS_Store
 
 # dev files
-/target/
+build
+target/
 platform/*.a
+platform/*.lib
 platform/*.tar.br
 
 # examples
-/examples/main
-/examples/output/
-/examples/**/*.html
+examples/main
+examples/output/
+examples/**/*.html
+
+# generated files
+crates/roc_std/

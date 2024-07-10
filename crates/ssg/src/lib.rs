@@ -8,8 +8,32 @@ use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Files {
+    pub path: roc_std::RocStr,
+    pub relpath: roc_std::RocStr,
+    pub url: roc_std::RocStr,
+}
+
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Args {
+    pub input_dir: roc_std::RocStr,
+    pub output_dir: roc_std::RocStr,
+}
+
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Types {
+    pub a: Files,
+    pub b: Args,
+    pub c: roc_std::RocStr,
+    pub d: roc_std::RocStr,
+}
+
 /// Find the markdown `.md` files in a directory
-pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::Files>, String> {
+pub fn find_files(dir_path: PathBuf) -> Result<Vec<Files>, String> {
     let mut file_paths = Vec::new();
 
     match find_files_help(&dir_path, &mut file_paths) {
@@ -30,7 +54,7 @@ pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::Files>, String> {
                         let url: RocStr =
                             format!("/{}", stripped_path_buf.display()).as_str().into();
 
-                        Some(roc_app::Files { url, path, relpath })
+                        Some(Files { url, path, relpath })
                     }
                 }
             })

@@ -8,3 +8,5 @@
 channel = "1.79.0" # check ^^^ when changing this
 #
 # channel = "nightly-2024-04-28" # 1.79.0 nightly to be able to use unstable features
+
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-musl", "x86_64-unknown-linux-musl", "aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"]
