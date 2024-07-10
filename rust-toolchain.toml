@@ -1,0 +1,12 @@
+[toolchain]
+# How to update version:
+#  1. update `channel = "RUST_VERSION"`
+#  2. update the nightly version:
+#     a) Find the latest nightly release that matches RUST_VERSION here: https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/2024
+#     b) update `channel = "nightly-OLD_DATE"` below
+
+channel = "1.78.0"
+#
+# channel = "stable-2024-05-02"
+
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-musl", "x86_64-unknown-linux-musl", "aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"]

@@ -106,7 +106,7 @@ pub unsafe extern "C" fn roc_shm_open(
 
 extern "C" {
     #[link_name = "roc__mainForHost_1_exposed_generic"]
-    pub fn roc_main(output: *mut u8, roc_args: *mut roc_app::Args);
+    pub fn roc_main(output: *mut u8, roc_args: *mut ssg::Args);
 
     #[link_name = "roc__mainForHost_1_exposed_size"]
     pub fn roc_main_size() -> i64;
@@ -123,21 +123,23 @@ extern "C" {
     fn size_Fx_result() -> i64;
 }
 
-#[no_mangle]
-pub extern "C" fn main() -> i32 {
+pub fn rust_main() -> i32 {
     init();
     let size = unsafe { roc_main_size() } as usize;
     let layout = Layout::array::<u8>(size).unwrap();
 
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 3 {
+    if args.len() < 3 {
         eprintln!("Missing directory arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
+        return 1;
+    } else if args.len() > 3 {
+        eprintln!("Too many arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
         return 1;
     }
 
-    let mut roc_args = roc_app::Args {
-        inputDir: args[1].as_str().into(),
-        outputDir: args[2].as_str().into(),
+    let mut roc_args = ssg::Args {
+        input_dir: args[1].as_str().into(),
+        output_dir: args[2].as_str().into(),
     };
 
     unsafe {
@@ -183,9 +185,12 @@ pub fn init() {
         roc_fx_findFiles as _,
         roc_fx_writeFile as _,
     ];
+
     #[allow(forgetting_references)]
     std::mem::forget(std::hint::black_box(funcs));
-    if cfg!(unix) {
+
+    #[cfg(unix)]
+    {
         let unix_funcs: &[*const extern "C" fn()] =
             &[roc_getppid as _, roc_mmap as _, roc_shm_open as _];
         #[allow(forgetting_references)]
@@ -201,9 +206,7 @@ pub extern "C" fn roc_fx_applicationError(message: &RocStr) {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_findFiles(
-    dir_path: &RocStr,
-) -> RocResult<RocList<roc_app::Files>, RocStr> {
+pub extern "C" fn roc_fx_findFiles(dir_path: &RocStr) -> RocResult<RocList<ssg::Files>, RocStr> {
     match ssg::find_files(PathBuf::from(dir_path.as_str().to_string())) {
         Ok(vec_files) => RocResult::ok(vec_files[..].into()),
         Err(msg) => RocResult::err(msg.as_str().into()),
