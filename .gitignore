@@ -8,9 +8,9 @@ platform/*.lib
 platform/*.tar.br
 
 # examples
-examples/main
-examples/output/
-examples/**/*.html
+example/main
+example/output/
+example/**/*.html
 
 # generated files
 crates/roc_std/
