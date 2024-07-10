@@ -13,3 +13,6 @@ crate-type = ["staticlib"]
 
 [dependencies]
 roc_host = { path = "../roc_host" }
+
+[target.'cfg(windows)'.dependencies]
+winapi = {version = "0.3", features = ["winuser"]}
