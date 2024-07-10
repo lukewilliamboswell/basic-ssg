@@ -129,8 +129,11 @@ pub fn rust_main() -> i32 {
     let layout = Layout::array::<u8>(size).unwrap();
 
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 3 {
+    if args.len() < 3 {
         eprintln!("Missing directory arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
+        return 1;
+    } else if args.len() > 3 {
+        eprintln!("Too many arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
         return 1;
     }
 
