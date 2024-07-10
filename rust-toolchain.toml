@@ -5,8 +5,8 @@
 #     a) Find the latest nightly release that matches RUST_VERSION here: https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/2024
 #     b) update `channel = "nightly-OLD_DATE"` below
 
-channel = "1.79.0" # check ^^^ when changing this
+channel = "1.78.0"
 #
-# channel = "nightly-2024-04-28" # 1.79.0 nightly to be able to use unstable features
+# channel = "stable-2024-05-02"
 
 targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "aarch64-unknown-linux-musl", "x86_64-unknown-linux-musl", "aarch64-pc-windows-msvc", "x86_64-pc-windows-msvc"]
