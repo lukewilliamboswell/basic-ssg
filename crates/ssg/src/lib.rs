@@ -16,11 +16,41 @@ pub struct Files {
     pub url: roc_std::RocStr,
 }
 
+impl roc_std::RocRefcounted for Files {
+    fn inc(&mut self) {
+        self.path.inc();
+        self.relpath.inc();
+        self.url.inc();
+    }
+    fn dec(&mut self) {
+        self.path.dec();
+        self.relpath.dec();
+        self.url.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
+}
+
 #[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
 pub struct Args {
     pub input_dir: roc_std::RocStr,
     pub output_dir: roc_std::RocStr,
+}
+
+impl roc_std::RocRefcounted for Args {
+    fn inc(&mut self) {
+        self.input_dir.inc();
+        self.output_dir.inc();
+    }
+    fn dec(&mut self) {
+        self.input_dir.dec();
+        self.output_dir.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
 }
 
 #[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -30,6 +60,24 @@ pub struct Types {
     pub b: Args,
     pub c: roc_std::RocStr,
     pub d: roc_std::RocStr,
+}
+
+impl roc_std::RocRefcounted for Types {
+    fn inc(&mut self) {
+        self.a.inc();
+        self.b.inc();
+        self.c.inc();
+        self.d.inc();
+    }
+    fn dec(&mut self) {
+        self.a.dec();
+        self.b.dec();
+        self.c.dec();
+        self.d.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
 }
 
 /// Find the markdown `.md` files in a directory

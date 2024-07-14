@@ -1,5 +1,5 @@
 app [main] {
-    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.12.0/Lb8EgiejTUzbggO2HVVuPJFkwvvsfW6LojkLR20kTVE.tar.br",
+    cli: platform "../basic-cli/platform/main.roc",
 }
 
 import cli.Task exposing [Task]
@@ -7,8 +7,8 @@ import cli.Cmd
 import cli.Stdout
 import cli.Env
 import cli.Arg
-import cli.Arg.Opt as Opt
-import cli.Arg.Cli as Cli
+import cli.Arg.Opt
+import cli.Arg.Cli
 
 ## Builds the basic-ssg [platform](https://www.roc-lang.org/platforms).
 ##
@@ -17,38 +17,38 @@ import cli.Arg.Cli as Cli
 main : Task {} _
 main =
     cliParser =
-        Cli.build {
-            release: <- Opt.flag { short: "r", long: "release", help: "DEBUG build native target only, or RELEASE build for all supported targets." },
-            bundle: <- Opt.flag { short: "b", long: "bundle", help: "Bundle platform files into a package for distribution" },
-            maybeRoc: <- Opt.maybeStr { short: "p", long: "roc", help: "Path to the roc executable. Can be just `roc` or a full path."},
+        { Arg.Cli.combine <-
+            release: Arg.Opt.flag { short: "r", long: "release", help: "DEBUG build native target only, or RELEASE build for all supported targets." },
+            bundle: Arg.Opt.flag { short: "b", long: "bundle", help: "Bundle platform files into a package for distribution" },
+            maybeRoc: Arg.Opt.maybeStr { short: "p", long: "roc", help: "Path to the roc executable. Can be just `roc` or a full path." },
         }
-        |> Cli.finish {
+        |> Arg.Cli.finish {
             name: "basic-ssg-builder",
             version: "",
             authors: ["Luke Boswell <https://github.com/lukewilliamboswell>"],
             description: "Generates all files needed by Roc to use this basic-ssg platform.",
         }
-        |> Cli.assertValid
+        |> Arg.Cli.assertValid
 
-    when Cli.parseOrDisplayMessage cliParser (Arg.list! {}) is
+    when Arg.Cli.parseOrDisplayMessage cliParser (Arg.list! {}) is
         Ok args -> run args
         Err errMsg -> Task.err (Exit 1 errMsg)
 
-run : { release : Bool, bundle : Bool, maybeRoc : Result Str err} -> Task {} _
+run : { release : Bool, bundle : Bool, maybeRoc : Result Str err } -> Task {} _
 run = \{ release, bundle, maybeRoc } ->
 
     roc = maybeRoc |> Result.withDefault "roc"
 
     info! "Generating glue for builtins ..."
     roc
-        |> Cmd.exec  ["glue", "glue.roc", "crates/", "platform/main.roc"]
+        |> Cmd.exec ["glue", "glue.roc", "crates/", "platform/main.roc"]
         |> Task.mapErr! ErrGeneratingGlue
 
     # target is MacosArm64, LinuxX64,...
     info! "Getting the native target ..."
     nativeTarget =
         Env.platform
-        |> Task.await! getNativeTarget
+            |> Task.await! getNativeTarget
 
     buildTasks =
         if release then
@@ -71,7 +71,7 @@ run = \{ release, bundle, maybeRoc } ->
         if bundle then
             info! "Bundling platform binaries ..."
             roc
-                |> Cmd.exec  ["build", "--bundle", ".tar.br", "platform/main.roc"]
+                |> Cmd.exec ["build", "--bundle", ".tar.br", "platform/main.roc"]
                 |> Task.mapErr! ErrBundlingPlatform
         else
             Task.ok {}
@@ -126,7 +126,7 @@ info = \msg ->
     Stdout.line! "\u(001b)[34mINFO:\u(001b)[0m $(msg)"
 
 getNativeTarget : _ -> Task RocTarget _
-getNativeTarget =\{os, arch} ->
+getNativeTarget = \{ os, arch } ->
     when (os, arch) is
         (MACOS, AARCH64) -> Task.ok MacosArm64
         (MACOS, X64) -> Task.ok MacosX64
@@ -145,6 +145,7 @@ build = \target, releaseMode ->
             DEBUG -> ("debug", ["build", "--target=$(targetStr)"])
 
     info! "Building legacy binary for $(targetStr) ..."
+
     "cargo"
         |> Cmd.exec cargoBuildArgs
         |> Task.mapErr! \err -> ErrBuildingLegacyBinary targetStr err
@@ -153,6 +154,7 @@ build = \target, releaseMode ->
     to = "platform/$(toLibPath target)"
 
     info! "Moving legacy binary from $(from) to $(to) ..."
+
     "cp"
-        |> Cmd.exec  [from, to]
+        |> Cmd.exec [from, to]
         |> Task.mapErr! \err -> ErrMovingLegacyBinary targetStr err
