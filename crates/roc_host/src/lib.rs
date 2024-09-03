@@ -128,7 +128,10 @@ pub fn rust_main() -> i32 {
     let size = unsafe { roc_main_size() } as usize;
     let layout = Layout::array::<u8>(size).unwrap();
 
-    let args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = std::env::args_os()
+        .map(|os_str| os_str.to_string_lossy().into())
+        .collect();
+
     if args.len() < 3 {
         eprintln!("Missing directory arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
         return 1;

@@ -115,8 +115,8 @@ rustcTarget = \target ->
     when target is
         MacosArm64 -> "aarch64-apple-darwin"
         MacosX64 -> "x86_64-apple-darwin"
-        LinuxArm64 -> "aarch64-unknown-linux-musl"
-        LinuxX64 -> "x86_64-unknown-linux-musl"
+        LinuxArm64 -> "aarch64-unknown-linux-gnu"
+        LinuxX64 -> "x86_64-unknown-linux-gnu"
         WindowsArm64 -> "aarch64-pc-windows-msvc"
         WindowsX64 -> "x86_64-pc-windows-msvc"
 
