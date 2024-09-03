@@ -33,10 +33,12 @@ main = \{ inputDir, outputDir } ->
 
 ## Platform Development
 
-Ensure you have [cargo and rustup installed](https://doc.rust-lang.org/cargo/getting-started/installation.html).
+Ensure you have [roc](https://www.roc-lang.org/install) & [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) installed.
 
-A few scripts are included to assist with common tasks.
+```
+$ nix develop
+$ roc build.roc
+$ roc dev --prebuilt-platform example/main.roc -- example/content/ example/output/
+```
 
-- **build.sh** to build the platform in debug mode and run the example
-- **bundle.sh** to cross-compile the platform in release mode for supported targets and package for distribution
-- **glue.sh** to re-generate glue types for the platform (note currently requires a copy of the roc repository)
+You can generate a new package for distribution using `roc build.roc --release --bundle`

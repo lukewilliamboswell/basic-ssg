@@ -8,8 +8,80 @@ use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Files {
+    pub path: roc_std::RocStr,
+    pub relpath: roc_std::RocStr,
+    pub url: roc_std::RocStr,
+}
+
+impl roc_std::RocRefcounted for Files {
+    fn inc(&mut self) {
+        self.path.inc();
+        self.relpath.inc();
+        self.url.inc();
+    }
+    fn dec(&mut self) {
+        self.path.dec();
+        self.relpath.dec();
+        self.url.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Args {
+    pub input_dir: roc_std::RocStr,
+    pub output_dir: roc_std::RocStr,
+}
+
+impl roc_std::RocRefcounted for Args {
+    fn inc(&mut self) {
+        self.input_dir.inc();
+        self.output_dir.inc();
+    }
+    fn dec(&mut self) {
+        self.input_dir.dec();
+        self.output_dir.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[repr(C)]
+pub struct Types {
+    pub a: Files,
+    pub b: Args,
+    pub c: roc_std::RocStr,
+    pub d: roc_std::RocStr,
+}
+
+impl roc_std::RocRefcounted for Types {
+    fn inc(&mut self) {
+        self.a.inc();
+        self.b.inc();
+        self.c.inc();
+        self.d.inc();
+    }
+    fn dec(&mut self) {
+        self.a.dec();
+        self.b.dec();
+        self.c.dec();
+        self.d.dec();
+    }
+    fn is_refcounted() -> bool {
+        true
+    }
+}
+
 /// Find the markdown `.md` files in a directory
-pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::Files>, String> {
+pub fn find_files(dir_path: PathBuf) -> Result<Vec<Files>, String> {
     let mut file_paths = Vec::new();
 
     match find_files_help(&dir_path, &mut file_paths) {
@@ -30,7 +102,7 @@ pub fn find_files(dir_path: PathBuf) -> Result<Vec<roc_app::Files>, String> {
                         let url: RocStr =
                             format!("/{}", stripped_path_buf.display()).as_str().into();
 
-                        Some(roc_app::Files { url, path, relpath })
+                        Some(Files { url, path, relpath })
                     }
                 }
             })

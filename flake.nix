@@ -11,7 +11,6 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
     # to easily make configs for multiple architectures
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -22,10 +21,12 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        rocPkgs = roc.packages.${system};
 
+        rocPkgs = roc.packages.${system};
         llvmPkgs = pkgs.llvmPackages_16;
 
+        # get current working directory
+        cwd = builtins.toString ./.;
         rust =
           pkgs.rust-bin.fromRustupToolchainFile "${toString ./rust-toolchain.toml}";
 
@@ -41,9 +42,13 @@
           ]);
 
         sharedInputs = (with pkgs; [
+          jq
           rust
           llvmPkgs.clang
+          llvmPkgs.lldb # for debugging
           expect
+          nmap
+          simple-http-server
           rocPkgs.cli
         ]);
       in {
