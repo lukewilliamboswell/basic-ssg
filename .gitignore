@@ -4,8 +4,12 @@
 /target/
 platform/*.a
 platform/*.tar.br
+platform/*.lib
 
 # examples
 /examples/main
-/examples/output/
+/examples/output
 /examples/**/*.html
+/example/main
+/example/output
+/example/**/*.html

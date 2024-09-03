@@ -11,11 +11,11 @@ rm -f platform/linux-arm64.a
 rm -f platform/linux-x64.a
 rm -f platform/macos-x64.a
 
-# ADD TARGETS
-rustup target add aarch64-apple-darwin
-rustup target add x86_64-unknown-linux-gnu
-rustup target add x86_64-apple-darwin
-rustup target add aarch64-unknown-linux-gnu
+# ADD TARGETS (IF REQUIRED)
+# rustup target add aarch64-apple-darwin
+# rustup target add x86_64-unknown-linux-gnu
+# rustup target add x86_64-apple-darwin
+# rustup target add aarch64-unknown-linux-gnu
 
 # LEGACY LINKER ARTEFACTS
 cargo build --release --target=aarch64-apple-darwin
