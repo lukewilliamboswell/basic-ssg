@@ -1,4 +1,4 @@
-hosted PlatformTask
+hosted PlatformTasks
     exposes [
         applicationError,
         findFiles,
@@ -7,7 +7,7 @@ hosted PlatformTask
     ]
     imports [Types]
 
-applicationError : Str -> Task {} *
+applicationError : Str -> Task {} {}
 findFiles : Str -> Task (List Types.Files) Str
 parseMarkdown : Str -> Task Str Str
 writeFile : Str, Str, Str -> Task {} Str

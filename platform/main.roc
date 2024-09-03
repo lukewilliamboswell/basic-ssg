@@ -3,14 +3,13 @@ platform "roc-ssg"
     exposes [
         SSG,
         Types,
-        Task,
     ]
     packages {}
     imports []
     provides [mainForHost]
 
 import Types
-import PlatformTask
+import PlatformTasks
 
 mainForHost : Types.Args -> Task {} I32
 mainForHost = \args ->
@@ -19,4 +18,5 @@ mainForHost = \args ->
             Ok {} -> Task.ok {}
             Err (Exit code) -> Task.err code
             Err err ->
-                PlatformTask.applicationError (Inspect.toStr err)
+                PlatformTasks.applicationError (Inspect.toStr err)
+                |> Task.mapErr \_ -> crash "unreachable : mainForHost"

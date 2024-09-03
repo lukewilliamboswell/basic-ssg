@@ -199,7 +199,7 @@ pub fn init() {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_applicationError(message: &RocStr) {
+pub extern "C" fn roc_fx_applicationError(message: &RocStr) -> RocResult<(), ()> {
     print!("\x1b[31mError completing tasks:\x1b[0m ");
     println!("{}", message.as_str());
     std::process::exit(1);
