@@ -6,6 +6,7 @@ target/
 platform/*.a
 platform/*.lib
 platform/*.tar.br
+platform/*.lib
 
 # examples
 example/main

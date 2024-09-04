@@ -3,11 +3,13 @@ platform "roc-ssg"
     exposes [
         SSG,
         Types,
-        Task,
     ]
     packages {}
-    imports [Effect, Task.{Task}, Types]
+    imports []
     provides [mainForHost]
+
+import Types
+import PlatformTasks
 
 mainForHost : Types.Args -> Task {} I32
 mainForHost = \args ->
@@ -16,6 +18,5 @@ mainForHost = \args ->
             Ok {} -> Task.ok {}
             Err (Exit code) -> Task.err code
             Err err ->
-                Effect.applicationError (Inspect.toStr err)
-                |> Effect.map Ok
-                |> Task.fromEffect
+                PlatformTasks.applicationError (Inspect.toStr err)
+                |> Task.mapErr \_ -> crash "unreachable : mainForHost"

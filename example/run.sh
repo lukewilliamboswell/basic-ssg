@@ -5,6 +5,8 @@ set -e
 
 roc check main.roc
 
-roc main.roc content/ www/
+roc build --linker=legacy main.roc
+
+./main content/ www/
 
 simple-http-server www/

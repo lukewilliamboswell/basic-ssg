@@ -1,5 +1,5 @@
 {
-  description = "Basic ssg devShell flake";
+  description = "basic-ssg devShell flake";
 
   inputs = {
     roc.url = "github:roc-lang/roc";
@@ -16,7 +16,7 @@
   };
 
   outputs = { self, nixpkgs, roc, rust-overlay, flake-utils }:
-    let supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
+    let supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
     in flake-utils.lib.eachSystem supportedSystems (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -32,7 +32,7 @@
 
         linuxInputs = with pkgs;
           lib.optionals stdenv.isLinux [
-            valgrind
+            valgrind # for debugging
           ];
 
         darwinInputs = with pkgs;

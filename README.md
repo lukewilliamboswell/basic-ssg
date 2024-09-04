@@ -20,7 +20,6 @@ Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/release
 ```roc
 app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH LATEST RELEASE VERSION].tar.br" }
 
-import pf.Task exposing [Task]
 import pf.SSG
 import pf.Types exposing [Args, toRelPath]
 import pf.Html exposing [html, head, body, div, text, a, ul, li, link, meta]
@@ -32,7 +31,7 @@ main = \{ inputDir, outputDir } ->
     # ... use SSG.files!, SSG.parseMarkdown!, and SSG.writeFile! here to generate site
 ```
 
-## Developing
+## Platform Development
 
 Ensure you have [roc](https://www.roc-lang.org/install) & [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) installed.
 
