@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title> - Documentation</title>
+    <!-- <meta name="description" content="TODO populate this based on the module's description"> -->
+    <meta name="viewport" content="width=device-width">
+    <base href="/">
+    <script type="text/javascript" src="search.js" defer></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="/favicon.svg">
+    <!-- Safari ignores rel="icon" and only respects rel="mask-icon". It will render the SVG with
+    fill="#000" unless this `color` attribute here is hardcoded (not a CSS `var()`) to override it.
+  -->
+    <link rel="mask-icon" href="/favicon.svg" color="#7d59dd">
+    <link rel="prefetch" href="SSG"/>
+    <link rel="prefetch" href="Types"/>
+</head>
+
+<body>
+    <nav id="sidebar-nav">
+        <input id="module-search" aria-labelledby="search-link" type="text" placeholder="Search" />
+        <label for="module-search" id="search-link"><span id="search-link-text">Search</span> <span
+                id="search-link-hint">(press <span id="search-shortcut-key">s</span>)</span></label>
+        <div class="module-links">
+            <div class="sidebar-entry" ><a class="sidebar-module-link" href="SSG" >SSG</a><div class="sidebar-sub-entries" ><a href="SSG#files" >files</a><a href="SSG#parseMarkdown" >parseMarkdown</a><a href="SSG#writeFile" >writeFile</a></div></div><div class="sidebar-entry" ><a class="sidebar-module-link" href="Types" >Types</a><div class="sidebar-sub-entries" ><a href="Types#Path" >Path</a><a href="Types#pathToStr" >pathToStr</a><a href="Types#RelPath" >RelPath</a><a href="Types#relPathToStr" >relPathToStr</a><a href="Types#toRelPath" >toRelPath</a><a href="Types#Args" >Args</a><a href="Types#Files" >Files</a></div></div>
+        </div>
+    </nav>
+    <div class="top-header-extension">
+        <!-- if the window gets big, this extends the purple bar on the top header to the left edge of the window -->
+    </div>
+    <header class="top-header">
+        <div class="pkg-and-logo">
+            <a class="logo" href="/" aria-labelledby="logo-link">
+                <svg viewBox="0 -6 51 58" fill="none" xmlns="http://www.w3.org/2000/svg" aria-labelledby="logo-link"
+                    role="img">
+                    <title id="logo-link">Return to Roc packages</title>
+                    <polygon role="presentation"
+                        points="0,0 23.8834,3.21052 37.2438,19.0101 45.9665,16.6324 50.5,22 45,22 44.0315,26.3689 26.4673,39.3424 27.4527,45.2132 17.655,53 23.6751,22.7086" />
+                </svg>
+            </a>
+            <h1 class="pkg-full-name" ><a href="/" >Documentation</a></h1>
+        </div>
+        <div class="top-header-triangle">
+            <!-- if the window gets big, this extends the purple bar on the top header to the left edge of the window -->
+        </div>
+    </header>
+    <main>
+        <h2 class="module-name" >Exposed Modules</h2><ul class="index-module-links" ><li><a href="SSG" >SSG</a></li><li><a href="Types" >Types</a></li></ul>
+    </main>
+    <footer>
+        <p>Made by people who like to make nice things.</p>
+    </footer>
+</body>
+
+</html>

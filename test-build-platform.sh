@@ -13,7 +13,7 @@ find . -name "*.tar.br" -delete
 echo "Building for native"
 cargo build
 
-echo "Copy prebuilt artifact to platform/ NOTE the hack for all platforms"
+echo "Copy prebuilt artifact to platform/ NOTE the hack for all platforms DO NOT COPY THIS"
 cp target/debug/libhost.a platform/macos-arm64.a
 cp target/debug/libhost.a platform/linux-arm64.a
 cp target/debug/libhost.a platform/linux-x64.a
