@@ -39,7 +39,7 @@ jobs:
         run: ./roc_nightly/roc version
 
       - name: Run all tests
-        run: ROC=./roc_nightly/roc ./run_tests.sh
+        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
 
   test-examples-macos:
     runs-on: macos-latest
@@ -70,4 +70,4 @@ jobs:
         run: ./roc_nightly/roc version
 
       - name: Run all tests
-        run: ROC=./roc_nightly/roc ./run_tests.sh
+        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
