@@ -38,11 +38,6 @@ run = \{ release, bundle, maybeRoc } ->
 
     roc = maybeRoc |> Result.withDefault "roc"
 
-    info! "Generating glue for builtins ..."
-    roc
-        |> Cmd.exec ["glue", "glue.roc", "crates/", "platform/main.roc"]
-        |> Task.mapErr! ErrGeneratingGlue
-
     # target is MacosArm64, LinuxX64,...
     info! "Getting the native target ..."
     nativeTarget =

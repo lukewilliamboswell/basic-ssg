@@ -1,12 +1,11 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/ssg",
-    "crates/roc_host",
-    "crates/roc_host_lib",
-]
+members = ["crates/ssg", "crates/roc_host", "crates/roc_host_lib"]
 
 [profile.release]
 lto = true
 strip = "debuginfo"
 codegen-units = 1
+
+[workspace.dependencies]
+roc_std = { git = "https://github.com/roc-lang/roc.git" }
