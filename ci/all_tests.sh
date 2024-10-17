@@ -34,7 +34,7 @@ cp target/debug/libhost.a platform/linux-x64.a
 cp target/debug/libhost.a platform/macos-x64.a
 
 echo "run the example"
-$ROC ./example/main.roc -- ./example/content/ ./example/www/
+$ROC --linker=legacy ./example/main.roc -- ./example/content/ ./example/www/
 
 # test building docs website
 $ROC docs ./platform/main.roc
