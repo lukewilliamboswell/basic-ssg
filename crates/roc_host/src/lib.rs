@@ -223,3 +223,23 @@ pub extern "C" fn roc_fx_command_output(
 ) -> roc_command::OutputFromHost {
     roc_command::command_output(roc_cmd)
 }
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdout_line(line: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stdout_line(line)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdout_write(text: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stdout_write(text)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stderr_line(line: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stderr_line(line)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stderr_write(text: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stderr_write(text)
+}

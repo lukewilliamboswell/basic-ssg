@@ -6,6 +6,10 @@ hosted Host
         write_file!,
         command_status!,
         command_output!,
+        stdout_line!,
+        stdout_write!,
+        stderr_line!,
+        stderr_write!,
     ]
     imports [Types]
 
@@ -20,3 +24,9 @@ write_file! : Str, Str, Str => Result {} Str
 # COMMAND
 command_status! : InternalCmd.Command => Result I32 InternalIOErr.IOErrFromHost
 command_output! : InternalCmd.Command => InternalCmd.OutputFromHost
+
+# STDIO
+stdout_line! : Str => Result {} InternalIOErr.IOErrFromHost
+stdout_write! : Str => Result {} InternalIOErr.IOErrFromHost
+stderr_line! : Str => Result {} InternalIOErr.IOErrFromHost
+stderr_write! : Str => Result {} InternalIOErr.IOErrFromHost
