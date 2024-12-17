@@ -3,6 +3,7 @@ platform "roc-ssg"
     exposes [
         SSG,
         Types,
+        Cmd,
     ]
     packages {}
     imports []

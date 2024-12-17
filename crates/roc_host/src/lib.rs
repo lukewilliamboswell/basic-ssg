@@ -209,3 +209,17 @@ pub extern "C" fn roc_fx_write_file(
         Err(msg) => RocResult::err(msg.as_str().into()),
     }
 }
+
+#[no_mangle]
+pub extern "C" fn roc_fx_command_status(
+    roc_cmd: &roc_command::Command,
+) -> RocResult<i32, roc_io_error::IOErr> {
+    roc_command::command_status(roc_cmd)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_command_output(
+    roc_cmd: &roc_command::Command,
+) -> roc_command::OutputFromHost {
+    roc_command::command_output(roc_cmd)
+}
