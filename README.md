@@ -35,10 +35,15 @@ main = \{ inputDir, outputDir } ->
 
 Ensure you have [roc](https://www.roc-lang.org/install) & [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) installed.
 
+Using nix (optional)
+
 ```
 $ nix develop
+```
+
+```
 $ roc build.roc
-$ roc dev --prebuilt-platform example/main.roc -- example/content/ example/output/
+$ roc example/main.roc -- example/content/ example/output/
 ```
 
 You can generate a new package for distribution using `roc build.roc --release --bundle`

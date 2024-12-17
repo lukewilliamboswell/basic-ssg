@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-libc = "0.2"
-roc_std = { workspace = true }
-ssg = { path = "../ssg" }
+libc.workspace = true
+roc_std.workspace = true
+ssg.workspace = true

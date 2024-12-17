@@ -1,25 +1,25 @@
 module [
     Args,
     Path,
-    pathToStr,
-    RelPath,
-    relPathToStr,
-    toRelPath,
     Files,
+    RelPath,
+    path_to_str,
+    rel_path_to_str,
+    to_rel_path,
 ]
 
 Path := Str
 
-pathToStr : Path -> Str
-pathToStr = \@Path str -> str
+path_to_str : Path -> Str
+path_to_str = \@Path str -> str
 
 RelPath := Str
 
-relPathToStr : RelPath -> Str
-relPathToStr = \@RelPath str -> str
+rel_path_to_str : RelPath -> Str
+rel_path_to_str = \@RelPath str -> str
 
-toRelPath : Str -> RelPath
-toRelPath = @RelPath
+to_rel_path : Str -> RelPath
+to_rel_path = @RelPath
 
 Args : {
     inputDir : Path,
