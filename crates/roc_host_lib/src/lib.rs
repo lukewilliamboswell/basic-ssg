@@ -1,5 +1,6 @@
 use roc_std::{RocList, RocStr};
 use std::borrow::Borrow;
+use std::ffi::c_char;
 
 /// # Safety
 /// This function is the entry point for the program, it will be linked by roc using the legacy linker
@@ -13,7 +14,7 @@ pub unsafe extern "C" fn main(argc: usize, argv: *const *const i8) -> i32 {
     let args: RocList<RocStr> = args
         .iter()
         .map(|&c_ptr| {
-            let c_str = std::ffi::CStr::from_ptr(c_ptr);
+            let c_str = std::ffi::CStr::from_ptr(c_ptr as *const c_char);
             RocStr::from(c_str.to_string_lossy().borrow())
         })
         .collect();
