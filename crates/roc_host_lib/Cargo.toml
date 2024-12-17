@@ -14,6 +14,7 @@ crate-type = ["staticlib"]
 [dependencies]
 roc_std.workspace = true
 roc_host.workspace = true
+ssg.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }

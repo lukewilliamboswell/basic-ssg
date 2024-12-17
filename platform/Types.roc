@@ -8,12 +8,12 @@ module [
     to_rel_path,
 ]
 
-Path := Str
+Path := Str implements [Inspect]
 
 path_to_str : Path -> Str
 path_to_str = \@Path str -> str
 
-RelPath := Str
+RelPath := Str implements [Inspect]
 
 rel_path_to_str : RelPath -> Str
 rel_path_to_str = \@RelPath str -> str

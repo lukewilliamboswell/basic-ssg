@@ -200,6 +200,7 @@ version = "0.0.1"
 dependencies = [
  "roc_host",
  "roc_std",
+ "ssg",
  "winapi",
 ]
 

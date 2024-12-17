@@ -102,46 +102,6 @@ pub unsafe extern "C" fn roc_shm_open(
     libc::shm_open(name, oflag, mode as libc::c_uint)
 }
 
-fn call_roc_main(args: ssg::Args) -> RocResult<(), i32> {
-    extern "C" {
-        #[link_name = "roc__main_for_host_1_exposed_generic"]
-        pub fn caller(roc_args: *mut ssg::Args) -> RocResult<(), i32>;
-
-        #[link_name = "roc__main_for_host_1_exposed_size"]
-        pub fn size() -> i64;
-    }
-
-    unsafe {
-        let mut args = args;
-        let result = caller(&mut args);
-        debug_assert_eq!(std::mem::size_of_val(&result) as i64, size());
-        result
-    }
-}
-
-pub fn rust_main(args: RocList<RocStr>) -> i32 {
-    init();
-
-    const USAGE: &str = "Usage: roc app.roc -- path/to/input/dir path/to/output/dir";
-
-    if args.len() != 3 {
-        eprintln!("Incorrect number of arguments.\n{}", USAGE);
-        return 1;
-    }
-
-    let roc_args = ssg::Args {
-        input_dir: args[1].clone(),
-        output_dir: args[2].clone(),
-    };
-
-    let result = call_roc_main(roc_args);
-
-    match result.into() {
-        Ok(()) => 0,
-        Err(exit_code) => exit_code,
-    }
-}
-
 // Protect our functions from the vicious GC.
 // This is specifically a problem with static compilation and musl.
 // TODO: remove all of this when we switch to effect interpreter.
@@ -165,6 +125,53 @@ pub fn init() {
     }
 }
 
+fn call_roc(args: ssg::Args) -> RocResult<(), i32> {
+    extern "C" {
+        #[link_name = "roc__main_for_host_1_exposed"]
+        pub fn caller(roc_args: *const ssg::Args) -> RocResult<(), i32>;
+
+        #[link_name = "roc__main_for_host_1_exposed_size"]
+        pub fn size() -> i64;
+    }
+
+    unsafe {
+        // call roc passing args
+        let result = caller(&args);
+
+        // roc now owns args and will cleanup, so we forget them here
+        // to prevent rust from dropping.
+        std::mem::forget(args);
+
+        debug_assert_eq!(std::mem::size_of_val(&result) as i64, size());
+
+        result
+    }
+}
+
+pub fn rust_main(args: RocList<RocStr>) -> i32 {
+    init();
+
+    const USAGE: &str = "Usage: roc app.roc -- path/to/input/dir path/to/output/dir";
+
+    if args.len() != 3 {
+        eprintln!("Incorrect number of arguments.\n{}", USAGE);
+        return 1;
+    }
+
+    let roc_args = ssg::Args {
+        input_dir: args[1].clone(),
+        output_dir: args[2].clone(),
+    };
+
+    let result = call_roc(roc_args);
+
+    match result.into() {
+        Ok(()) => 0,
+        Err(exit_code) => exit_code,
+    }
+}
+
+// this will only be called internally in platform/main.roc
 #[no_mangle]
 pub extern "C" fn roc_fx_application_error(message: &RocStr) {
     print!("\x1b[31mError completing tasks:\x1b[0m ");
