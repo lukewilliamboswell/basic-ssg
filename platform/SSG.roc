@@ -1,23 +1,23 @@
 module [
-    files,
-    parseMarkdown,
-    writeFile,
+    files!,
+    parse_markdown!,
+    write_file!,
 ]
 
-import PlatformTasks
+import Host
 import Types exposing [Path, RelPath, Files]
 
-files : Path -> Task (List Files) [FilesError Str]_
-files = \path ->
-    PlatformTasks.findFiles (Types.pathToStr path)
-    |> Task.mapErr FilesError
+files! : Path => Result (List Files) [FilesError Str]_
+files! = \path ->
+    Host.find_files! (Types.path_to_str path)
+    |> Result.mapErr FilesError
 
-parseMarkdown : Path -> Task Str [ParseError Str]_
-parseMarkdown = \path ->
-    PlatformTasks.parseMarkdown (Types.pathToStr path)
-    |> Task.mapErr ParseError
+parse_markdown! : Path => Result Str [ParseError Str]_
+parse_markdown! = \path ->
+    Host.parse_markdown! (Types.path_to_str path)
+    |> Result.mapErr ParseError
 
-writeFile : { outputDir : Path, relpath : RelPath, content : Str } -> Task {} [WriteError Str]_
-writeFile = \{ outputDir, relpath, content } ->
-    PlatformTasks.writeFile (Types.pathToStr outputDir) (Types.relPathToStr relpath) content
-    |> Task.mapErr WriteError
+write_file! : { outputDir : Path, relpath : RelPath, content : Str } => Result {} [WriteError Str]_
+write_file! = \{ outputDir, relpath, content } ->
+    Host.write_file! (Types.path_to_str outputDir) (Types.rel_path_to_str relpath) content
+    |> Result.mapErr WriteError

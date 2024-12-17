@@ -31,7 +31,7 @@ est agnus erat solantia tenet?
 Scire virgo felix grandior haut. Montibus illi: vir prior, indutus est contra
 hos, semina saltuque: hoc radiis alter, intravit. Oravique sed ipsa
 [cornu](http://example.org), flere unam suis vindicta spumigeroque
-munere fertur figurae saecula mutentur. In suam corpus nare tumulos ignorat.
+munere fertur figurae saecula mutentur. In suam corpus nare tumulos ignore.
 
 ## Fraudo Sibyllae mare
 

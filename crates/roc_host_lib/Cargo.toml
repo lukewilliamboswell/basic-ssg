@@ -12,7 +12,8 @@ path = "src/lib.rs"
 crate-type = ["staticlib"]
 
 [dependencies]
-roc_host = { path = "../roc_host" }
+roc_std.workspace = true
+roc_host.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-winapi = {version = "0.3", features = ["winuser"]}
+winapi = { version = "0.3", features = ["winuser"] }

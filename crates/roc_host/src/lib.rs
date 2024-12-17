@@ -1,7 +1,6 @@
 use core::ffi::c_void;
 use roc_std::{RocList, RocResult, RocStr};
 use std::path::PathBuf;
-use std::{alloc::Layout, mem::MaybeUninit};
 
 /// # Safety
 ///
@@ -28,9 +27,8 @@ pub unsafe extern "C" fn roc_realloc(
 ///
 /// TODO
 #[no_mangle]
-pub unsafe extern "C" fn roc_dealloc(_c_ptr: *mut c_void, _alignment: u32) {
-    // NOOP as a workaround for a lurking double free issue
-    // libc::free(c_ptr)
+pub unsafe extern "C" fn roc_dealloc(c_ptr: *mut c_void, _alignment: u32) {
+    libc::free(c_ptr)
 }
 
 /// # Safety
@@ -104,75 +102,41 @@ pub unsafe extern "C" fn roc_shm_open(
     libc::shm_open(name, oflag, mode as libc::c_uint)
 }
 
-extern "C" {
-    #[link_name = "roc__mainForHost_1_exposed_generic"]
-    pub fn roc_main(output: *mut u8, roc_args: *mut ssg::Args);
+fn call_roc_main(args: ssg::Args) -> RocResult<(), i32> {
+    extern "C" {
+        #[link_name = "roc__main_for_host_1_exposed_generic"]
+        pub fn caller(roc_args: *mut ssg::Args) -> RocResult<(), i32>;
 
-    #[link_name = "roc__mainForHost_1_exposed_size"]
-    pub fn roc_main_size() -> i64;
-
-    #[link_name = "roc__mainForHost_0_caller"]
-    fn call_Fx(flags: *const u8, closure_data: *const u8, output: *mut RocResult<(), i32>);
-
-    #[allow(dead_code)]
-    #[link_name = "roc__mainForHost_0_size"]
-    fn size_Fx() -> i64;
-
-    #[allow(dead_code)]
-    #[link_name = "roc__mainForHost_0_result_size"]
-    fn size_Fx_result() -> i64;
-}
-
-pub fn rust_main() -> i32 {
-    init();
-    let size = unsafe { roc_main_size() } as usize;
-    let layout = Layout::array::<u8>(size).unwrap();
-
-    let args: Vec<String> = std::env::args_os()
-        .map(|os_str| os_str.to_string_lossy().into())
-        .collect();
-
-    if args.len() < 3 {
-        eprintln!("Missing directory arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
-        return 1;
-    } else if args.len() > 3 {
-        eprintln!("Too many arguments, usage example: roc app.roc -- path/to/input/dir path/to/output/dir");
-        return 1;
+        #[link_name = "roc__main_for_host_1_exposed_size"]
+        pub fn size() -> i64;
     }
-
-    let mut roc_args = ssg::Args {
-        input_dir: args[1].as_str().into(),
-        output_dir: args[2].as_str().into(),
-    };
 
     unsafe {
-        let buffer = std::alloc::alloc(layout);
-
-        roc_main(buffer, &mut roc_args);
-
-        let out = call_the_closure(buffer);
-
-        std::alloc::dealloc(buffer, layout);
-
-        out
+        let mut args = args;
+        let result = caller(&mut args);
+        debug_assert_eq!(std::mem::size_of_val(&result) as i64, size());
+        result
     }
 }
 
-/// # Safety
-///
-/// TODO
-pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
-    // Main always returns an i32. just allocate for that.
-    let mut out: RocResult<(), i32> = RocResult::ok(());
+pub fn rust_main(args: RocList<RocStr>) -> i32 {
+    init();
 
-    call_Fx(
-        // This flags pointer will never get dereferenced
-        MaybeUninit::uninit().as_ptr(),
-        closure_data_ptr,
-        &mut out,
-    );
+    const USAGE: &str = "Usage: roc app.roc -- path/to/input/dir path/to/output/dir";
 
-    match out.into() {
+    if args.len() != 3 {
+        eprintln!("Incorrect number of arguments.\n{}", USAGE);
+        return 1;
+    }
+
+    let roc_args = ssg::Args {
+        input_dir: args[1].clone(),
+        output_dir: args[2].clone(),
+    };
+
+    let result = call_roc_main(roc_args);
+
+    match result.into() {
         Ok(()) => 0,
         Err(exit_code) => exit_code,
     }
@@ -183,10 +147,10 @@ pub unsafe fn call_the_closure(closure_data_ptr: *const u8) -> i32 {
 // TODO: remove all of this when we switch to effect interpreter.
 pub fn init() {
     let funcs: &[*const extern "C" fn()] = &[
-        roc_fx_applicationError as _,
-        roc_fx_parseMarkdown as _,
-        roc_fx_findFiles as _,
-        roc_fx_writeFile as _,
+        roc_fx_application_error as _,
+        roc_fx_parse_markdown as _,
+        roc_fx_find_files as _,
+        roc_fx_write_file as _,
     ];
 
     #[allow(forgetting_references)]
@@ -202,14 +166,13 @@ pub fn init() {
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_applicationError(message: &RocStr) -> RocResult<(), ()> {
+pub extern "C" fn roc_fx_application_error(message: &RocStr) {
     print!("\x1b[31mError completing tasks:\x1b[0m ");
     println!("{}", message.as_str());
-    std::process::exit(1);
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_findFiles(dir_path: &RocStr) -> RocResult<RocList<ssg::Files>, RocStr> {
+pub extern "C" fn roc_fx_find_files(dir_path: &RocStr) -> RocResult<RocList<ssg::Files>, RocStr> {
     match ssg::find_files(PathBuf::from(dir_path.as_str().to_string())) {
         Ok(vec_files) => RocResult::ok(vec_files[..].into()),
         Err(msg) => RocResult::err(msg.as_str().into()),
@@ -217,7 +180,7 @@ pub extern "C" fn roc_fx_findFiles(dir_path: &RocStr) -> RocResult<RocList<ssg::
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_parseMarkdown(file_path: &RocStr) -> RocResult<RocStr, RocStr> {
+pub extern "C" fn roc_fx_parse_markdown(file_path: &RocStr) -> RocResult<RocStr, RocStr> {
     match ssg::parse_markdown(PathBuf::from(file_path.as_str().to_string())) {
         Ok(content) => RocResult::ok(content.as_str().into()),
         Err(msg) => RocResult::err(msg.as_str().into()),
@@ -225,7 +188,7 @@ pub extern "C" fn roc_fx_parseMarkdown(file_path: &RocStr) -> RocResult<RocStr, 
 }
 
 #[no_mangle]
-pub extern "C" fn roc_fx_writeFile(
+pub extern "C" fn roc_fx_write_file(
     output_dir_str: &RocStr,
     output_rel_path_str: &RocStr,
     content: &RocStr,
