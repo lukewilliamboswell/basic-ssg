@@ -9,6 +9,8 @@ platform "roc-ssg"
         Env,
         Locale,
         Utc,
+        Tcp,
+        Http,
     ]
     packages {}
     imports []

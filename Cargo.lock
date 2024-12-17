@@ -710,6 +710,8 @@ dependencies = [
 name = "roc_host"
 version = "0.1.0"
 dependencies = [
+ "hyper",
+ "hyper-rustls",
  "libc",
  "roc_command",
  "roc_env",
@@ -719,6 +721,7 @@ dependencies = [
  "roc_std",
  "roc_stdio",
  "ssg",
+ "tokio",
 ]
 
 [[package]]

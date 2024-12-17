@@ -1,5 +1,6 @@
 hosted Host
     exposes [
+        TcpStream,
         application_error!,
         find_files!,
         parse_markdown!,
@@ -16,11 +17,18 @@ hosted Host
         get_locale!,
         get_locales!,
         posix_time!,
+        send_request!,
+        tcp_connect!,
+        tcp_read_up_to!,
+        tcp_read_exactly!,
+        tcp_read_until!,
+        tcp_write!,
     ]
     imports [Types]
 
 import InternalIOErr
 import InternalCmd
+import InternalHttp
 
 application_error! : Str => {}
 find_files! : Str => Result (List Types.Files) Str
@@ -48,3 +56,13 @@ get_locales! : {} => List Str
 
 # UTC
 posix_time! : {} => U128 # TODO why is this a U128 but then getting converted to a I128 in Utc.roc?
+
+# TCP
+send_request! : InternalHttp.RequestToAndFromHost => InternalHttp.ResponseToAndFromHost
+
+TcpStream := Box {}
+tcp_connect! : Str, U16 => Result TcpStream Str
+tcp_read_up_to! : TcpStream, U64 => Result (List U8) Str
+tcp_read_exactly! : TcpStream, U64 => Result (List U8) Str
+tcp_read_until! : TcpStream, U8 => Result (List U8) Str
+tcp_write! : TcpStream, List U8 => Result {} Str
