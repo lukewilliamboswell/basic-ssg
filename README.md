@@ -4,12 +4,12 @@ A platform for Static Site Generation. Parse a directory of markdown files, and 
 
 **Supported Targets**
 
-The following targets are included in each release. If you would like an additional target, let me know because it's probably supported by [rustc](https://doc.rust-lang.org/beta/rustc/platform-support.html) and easy to add.
+The following targets are included in each release.
 
-- Arm64 MacOS
-- Arm64 Linux
-- x64 MacOS
-- x64 Linux
+- MacOS aarch64 and x86_64
+- Linux aarch64 and x86_64
+
+If you would like an additional target, let me know because it's probably supported by [rustc](https://doc.rust-lang.org/beta/rustc/platform-support.html) and very easy to add.
 
 ## Getting Starting
 
@@ -18,16 +18,15 @@ Ensure you have [installed the roc cli](https://www.roc-lang.org/install).
 Use the latest [release](https://github.com/lukewilliamboswell/basic-ssg/releases) of this platform by replacing the URL in the header.
 
 ```roc
-app [main] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/[REPLACE WITH LATEST RELEASE VERSION].tar.br" }
+app [main!] { pf: platform "<REPLACE WITH URL TO PLATFORM RELEASE>" }
 
 import pf.SSG
-import pf.Types exposing [Args, toRelPath]
-import pf.Html exposing [html, head, body, div, text, a, ul, li, link, meta]
-import pf.Html.Attributes exposing [httpEquiv, content, href, rel, lang, class, title]
-import "style.css" as styleCss : Str
+import pf.Types exposing [Args]
+import pf.Html exposing [div, link, text, a, html, head, body, meta, ul, li]
+import pf.Html.Attributes exposing [class, httpEquiv, href, rel, content, lang, title]
 
-main : Args -> Task {} _
-main = \{ inputDir, outputDir } ->
+main! : Args => Result {} _
+main! = \{ inputDir, outputDir } ->
     # ... use SSG.files!, SSG.parseMarkdown!, and SSG.writeFile! here to generate site
 ```
 
