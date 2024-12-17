@@ -243,3 +243,33 @@ pub extern "C" fn roc_fx_stderr_line(line: &RocStr) -> RocResult<(), roc_io_erro
 pub extern "C" fn roc_fx_stderr_write(text: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
     roc_stdio::stderr_write(text)
 }
+
+#[no_mangle]
+pub extern "C" fn roc_fx_env_dict() -> RocList<(RocStr, RocStr)> {
+    roc_env::env_dict()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_env_var(roc_str: &RocStr) -> RocResult<RocStr, ()> {
+    roc_env::env_var(roc_str)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_current_arch_os() -> roc_env::ReturnArchOS {
+    roc_env::current_arch_os()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_get_locale() -> RocResult<RocStr, ()> {
+    roc_env::get_locale()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_get_locales() -> RocList<RocStr> {
+    roc_env::get_locales()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_posix_time() -> roc_std::U128 {
+    roc_env::posix_time()
+}
