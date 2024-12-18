@@ -117,10 +117,27 @@ pub unsafe extern "C" fn roc_shm_open(
 // TODO: remove all of this when we switch to effect interpreter.
 pub fn init() {
     let funcs: &[*const extern "C" fn()] = &[
-        roc_fx_application_error as _,
         roc_fx_parse_markdown as _,
         roc_fx_find_files as _,
         roc_fx_write_file as _,
+        roc_fx_command_status as _,
+        roc_fx_command_output as _,
+        roc_fx_stdout_line as _,
+        roc_fx_stdout_write as _,
+        roc_fx_stderr_line as _,
+        roc_fx_stderr_write as _,
+        roc_fx_env_dict as _,
+        roc_fx_env_var as _,
+        roc_fx_current_arch_os as _,
+        roc_fx_get_locale as _,
+        roc_fx_get_locales as _,
+        roc_fx_posix_time as _,
+        roc_fx_send_request as _,
+        roc_fx_tcp_connect as _,
+        roc_fx_tcp_read_up_to as _,
+        roc_fx_tcp_read_exactly as _,
+        roc_fx_tcp_read_until as _,
+        roc_fx_tcp_write as _,
     ];
 
     #[allow(forgetting_references)]
@@ -135,10 +152,10 @@ pub fn init() {
     }
 }
 
-fn call_roc(args: ssg::Args) -> RocResult<(), i32> {
+fn call_roc(args: ssg::Args) -> i32 {
     extern "C" {
         #[link_name = "roc__main_for_host_1_exposed"]
-        pub fn caller(roc_args: *const ssg::Args) -> RocResult<(), i32>;
+        pub fn caller(roc_args: *const ssg::Args) -> i32;
 
         #[link_name = "roc__main_for_host_1_exposed_size"]
         pub fn size() -> i64;
@@ -173,19 +190,9 @@ pub fn rust_main(args: RocList<RocStr>) -> i32 {
         output_dir: args[2].clone(),
     };
 
-    let result = call_roc(roc_args);
+    let exit_code = call_roc(roc_args);
 
-    match result.into() {
-        Ok(()) => 0,
-        Err(exit_code) => exit_code,
-    }
-}
-
-// this will only be called internally in platform/main.roc
-#[no_mangle]
-pub extern "C" fn roc_fx_application_error(message: &RocStr) {
-    print!("\x1b[31mError completing tasks:\x1b[0m ");
-    println!("{}", message.as_str());
+    exit_code
 }
 
 #[no_mangle]
