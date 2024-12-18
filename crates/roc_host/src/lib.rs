@@ -1,6 +1,16 @@
 use core::ffi::c_void;
-use roc_std::{RocList, RocResult, RocStr};
+use roc_std::{RocBox, RocList, RocResult, RocStr};
 use std::path::PathBuf;
+use std::time::Duration;
+use tokio::runtime::Runtime;
+
+thread_local! {
+   static TOKIO_RUNTIME: Runtime = tokio::runtime::Builder::new_current_thread()
+       .enable_io()
+       .enable_time()
+       .build()
+       .unwrap();
+}
 
 /// # Safety
 ///
@@ -102,19 +112,65 @@ pub unsafe extern "C" fn roc_shm_open(
     libc::shm_open(name, oflag, mode as libc::c_uint)
 }
 
-fn call_roc_main(args: ssg::Args) -> RocResult<(), i32> {
+// Protect our functions from the vicious GC.
+// This is specifically a problem with static compilation and musl.
+// TODO: remove all of this when we switch to effect interpreter.
+pub fn init() {
+    let funcs: &[*const extern "C" fn()] = &[
+        roc_fx_parse_markdown as _,
+        roc_fx_find_files as _,
+        roc_fx_write_file as _,
+        roc_fx_command_status as _,
+        roc_fx_command_output as _,
+        roc_fx_stdout_line as _,
+        roc_fx_stdout_write as _,
+        roc_fx_stderr_line as _,
+        roc_fx_stderr_write as _,
+        roc_fx_env_dict as _,
+        roc_fx_env_var as _,
+        roc_fx_current_arch_os as _,
+        roc_fx_get_locale as _,
+        roc_fx_get_locales as _,
+        roc_fx_posix_time as _,
+        roc_fx_send_request as _,
+        roc_fx_tcp_connect as _,
+        roc_fx_tcp_read_up_to as _,
+        roc_fx_tcp_read_exactly as _,
+        roc_fx_tcp_read_until as _,
+        roc_fx_tcp_write as _,
+    ];
+
+    #[allow(forgetting_references)]
+    std::mem::forget(std::hint::black_box(funcs));
+
+    #[cfg(unix)]
+    {
+        let unix_funcs: &[*const extern "C" fn()] =
+            &[roc_getppid as _, roc_mmap as _, roc_shm_open as _];
+        #[allow(forgetting_references)]
+        std::mem::forget(std::hint::black_box(unix_funcs));
+    }
+}
+
+fn call_roc(args: ssg::Args) -> i32 {
     extern "C" {
-        #[link_name = "roc__main_for_host_1_exposed_generic"]
-        pub fn caller(roc_args: *mut ssg::Args) -> RocResult<(), i32>;
+        #[link_name = "roc__main_for_host_1_exposed"]
+        pub fn caller(roc_args: *const ssg::Args) -> i32;
 
         #[link_name = "roc__main_for_host_1_exposed_size"]
         pub fn size() -> i64;
     }
 
     unsafe {
-        let mut args = args;
-        let result = caller(&mut args);
+        // call roc passing args
+        let result = caller(&args);
+
+        // roc now owns args and will cleanup, so we forget them here
+        // to prevent rust from dropping.
+        std::mem::forget(args);
+
         debug_assert_eq!(std::mem::size_of_val(&result) as i64, size());
+
         result
     }
 }
@@ -134,41 +190,9 @@ pub fn rust_main(args: RocList<RocStr>) -> i32 {
         output_dir: args[2].clone(),
     };
 
-    let result = call_roc_main(roc_args);
+    let exit_code = call_roc(roc_args);
 
-    match result.into() {
-        Ok(()) => 0,
-        Err(exit_code) => exit_code,
-    }
-}
-
-// Protect our functions from the vicious GC.
-// This is specifically a problem with static compilation and musl.
-// TODO: remove all of this when we switch to effect interpreter.
-pub fn init() {
-    let funcs: &[*const extern "C" fn()] = &[
-        roc_fx_application_error as _,
-        roc_fx_parse_markdown as _,
-        roc_fx_find_files as _,
-        roc_fx_write_file as _,
-    ];
-
-    #[allow(forgetting_references)]
-    std::mem::forget(std::hint::black_box(funcs));
-
-    #[cfg(unix)]
-    {
-        let unix_funcs: &[*const extern "C" fn()] =
-            &[roc_getppid as _, roc_mmap as _, roc_shm_open as _];
-        #[allow(forgetting_references)]
-        std::mem::forget(std::hint::black_box(unix_funcs));
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn roc_fx_application_error(message: &RocStr) {
-    print!("\x1b[31mError completing tasks:\x1b[0m ");
-    println!("{}", message.as_str());
+    exit_code
 }
 
 #[no_mangle]
@@ -201,4 +225,187 @@ pub extern "C" fn roc_fx_write_file(
         Ok(()) => RocResult::ok(()),
         Err(msg) => RocResult::err(msg.as_str().into()),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_command_status(
+    roc_cmd: &roc_command::Command,
+) -> RocResult<i32, roc_io_error::IOErr> {
+    roc_command::command_status(roc_cmd)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_command_output(
+    roc_cmd: &roc_command::Command,
+) -> roc_command::OutputFromHost {
+    roc_command::command_output(roc_cmd)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdout_line(line: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stdout_line(line)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stdout_write(text: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stdout_write(text)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stderr_line(line: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stderr_line(line)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_stderr_write(text: &RocStr) -> RocResult<(), roc_io_error::IOErr> {
+    roc_stdio::stderr_write(text)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_env_dict() -> RocList<(RocStr, RocStr)> {
+    roc_env::env_dict()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_env_var(roc_str: &RocStr) -> RocResult<RocStr, ()> {
+    roc_env::env_var(roc_str)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_current_arch_os() -> roc_env::ReturnArchOS {
+    roc_env::current_arch_os()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_get_locale() -> RocResult<RocStr, ()> {
+    roc_env::get_locale()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_get_locales() -> RocList<RocStr> {
+    roc_env::get_locales()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_posix_time() -> roc_std::U128 {
+    roc_env::posix_time()
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_send_request(
+    roc_request: &roc_http::RequestToAndFromHost,
+) -> roc_http::ResponseToAndFromHost {
+    TOKIO_RUNTIME.with(|rt| {
+        let request = match roc_request.to_hyper_request() {
+            Ok(r) => r,
+            Err(err) => return err.into(),
+        };
+
+        match roc_request.has_timeout() {
+            Some(time_limit) => rt
+                .block_on(async {
+                    tokio::time::timeout(
+                        Duration::from_millis(time_limit),
+                        async_send_request(request),
+                    )
+                    .await
+                })
+                .unwrap_or_else(|_err| roc_http::ResponseToAndFromHost {
+                    status: 408,
+                    headers: RocList::empty(),
+                    body: "Request Timeout".as_bytes().into(),
+                }),
+            None => rt.block_on(async_send_request(request)),
+        }
+    })
+}
+
+async fn async_send_request(request: hyper::Request<String>) -> roc_http::ResponseToAndFromHost {
+    use hyper::Client;
+    use hyper_rustls::HttpsConnectorBuilder;
+
+    let https = HttpsConnectorBuilder::new()
+        .with_native_roots()
+        .https_or_http()
+        .enable_http1()
+        .build();
+
+    let client: Client<_, String> = Client::builder().build(https);
+    let res = client.request(request).await;
+
+    match res {
+        Ok(response) => {
+            let status = response.status();
+
+            let headers = RocList::from_iter(response.headers().iter().map(|(name, value)| {
+                roc_http::Header::new(name.as_str(), value.to_str().unwrap_or_default())
+            }));
+
+            let status = status.as_u16();
+
+            let bytes = hyper::body::to_bytes(response.into_body()).await.unwrap();
+            let body: RocList<u8> = RocList::from_iter(bytes);
+
+            roc_http::ResponseToAndFromHost {
+                body,
+                status,
+                headers,
+            }
+        }
+        Err(err) => {
+            if err.is_timeout() {
+                roc_http::ResponseToAndFromHost {
+                    status: 408,
+                    headers: RocList::empty(),
+                    body: "Request Timeout".as_bytes().into(),
+                }
+            } else if err.is_connect() || err.is_closed() {
+                roc_http::ResponseToAndFromHost {
+                    status: 500,
+                    headers: RocList::empty(),
+                    body: "Network Error".as_bytes().into(),
+                }
+            } else {
+                roc_http::ResponseToAndFromHost {
+                    status: 500,
+                    headers: RocList::empty(),
+                    body: err.to_string().as_bytes().into(),
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_tcp_connect(host: &RocStr, port: u16) -> RocResult<RocBox<()>, RocStr> {
+    roc_http::tcp_connect(host, port)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_tcp_read_up_to(
+    stream: RocBox<()>,
+    bytes_to_read: u64,
+) -> RocResult<RocList<u8>, RocStr> {
+    roc_http::tcp_read_up_to(stream, bytes_to_read)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_tcp_read_exactly(
+    stream: RocBox<()>,
+    bytes_to_read: u64,
+) -> RocResult<RocList<u8>, RocStr> {
+    roc_http::tcp_read_exactly(stream, bytes_to_read)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_tcp_read_until(
+    stream: RocBox<()>,
+    byte: u8,
+) -> RocResult<RocList<u8>, RocStr> {
+    roc_http::tcp_read_until(stream, byte)
+}
+
+#[no_mangle]
+pub extern "C" fn roc_fx_tcp_write(stream: RocBox<()>, msg: &RocList<u8>) -> RocResult<(), RocStr> {
+    roc_http::tcp_write(stream, msg)
 }
