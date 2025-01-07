@@ -1,6 +1,6 @@
 app [main!] {
-    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.18.0/0APbwVN1_p1mJ96tXjaoiUCr8NBGamr8G8Ac_DrXR-o.tar.br",
-    weaver: "https://github.com/smores56/weaver/releases/download/0.5.1/nqyqbOkpECWgDUMbY-rG9ug883TVbOimHZFHek-bQeI.tar.br",
+    cli: platform "../basic-cli/platform/main.roc",
+    weaver: "https://github.com/smores56/weaver/releases/download/0.6.0/6WdRio4quZ_3HL8cEY_vyx5mzl1xXrEv2a_c1Bswrq4.tar.br",
 }
 
 import cli.Cmd
