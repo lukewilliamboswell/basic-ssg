@@ -81,7 +81,7 @@ send! = \request ->
 ## ```
 get! : Str, fmt => Result body [HttpDecodingFailed] where body implements Decoding, fmt implements DecoderFormatting
 get! = \uri, fmt ->
-    response = send! { default_request & uri }
+    response = send!({ default_request & uri })
 
-    Decode.fromBytes response.body fmt
-    |> Result.mapErr \_ -> HttpDecodingFailed
+    Decode.from_bytes(response.body, fmt)
+    |> Result.map_err(\_ -> HttpDecodingFailed)

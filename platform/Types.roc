@@ -11,19 +11,19 @@ module [
 Path := Str implements [Inspect]
 
 path_to_str : Path -> Str
-path_to_str = \@Path str -> str
+path_to_str = \@Path(str) -> str
 
 RelPath := Str implements [Inspect]
 
 rel_path_to_str : RelPath -> Str
-rel_path_to_str = \@RelPath str -> str
+rel_path_to_str = \@RelPath(str) -> str
 
 to_rel_path : Str -> RelPath
 to_rel_path = @RelPath
 
 Args : {
-    inputDir : Path,
-    outputDir : Path,
+    input_dir : Path,
+    output_dir : Path,
 }
 
 Files : {

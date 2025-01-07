@@ -23,11 +23,11 @@ app [main!] { pf: platform "<REPLACE WITH URL TO PLATFORM RELEASE>" }
 import pf.SSG
 import pf.Types exposing [Args]
 import pf.Html exposing [div, link, text, a, html, head, body, meta, ul, li]
-import pf.Html.Attributes exposing [class, httpEquiv, href, rel, content, lang, title]
+import pf.Html.Attributes exposing [class, http_equiv, href, rel, content, lang, title]
 
 main! : Args => Result {} _
-main! = \{ inputDir, outputDir } ->
-    # ... use SSG.files!, SSG.parseMarkdown!, and SSG.writeFile! here to generate site
+main! = \{ input_dir, output_dir } ->
+    # ... use SSG.files!, SSG.parse_markdown!, and SSG.write_file! here to generate site
 ```
 
 ## Platform Development

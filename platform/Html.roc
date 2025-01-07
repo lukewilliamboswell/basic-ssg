@@ -2,9 +2,9 @@ module [
     Node,
     Attribute,
     render,
-    renderWithoutDocType,
+    render_without_doc_type,
     element,
-    unclosedElem,
+    unclosed_elem,
     text,
     attribute,
     html,
@@ -150,35 +150,35 @@ text = Text
 ## html = blink [] [ text "This text is blinking!" ]
 ##
 element : Str -> (List Attribute, List Node -> Node)
-element = \tagName ->
+element = \tag_name ->
     \attrs, children ->
         # While building the node tree, calculate the size of Str it will render to
-        withTag = 2 * (3 + Str.countUtf8Bytes tagName)
-        withAttrs = List.walk attrs withTag \acc, Attribute name val ->
-            acc + Str.countUtf8Bytes name + Str.countUtf8Bytes val + 4
-        totalSize = List.walk children withAttrs \acc, child ->
-            acc + nodeSize child
+        with_tag = 2 * (3 + Str.count_utf8_bytes(tag_name))
+        with_attrs = List.walk(attrs, with_tag, \acc, Attribute(name, val) ->
+            acc + Str.count_utf8_bytes(name) + Str.count_utf8_bytes(val) + 4)
+        total_size = List.walk(children, with_attrs, \acc, child ->
+            acc + node_size(child))
 
-        Element tagName totalSize attrs children
+        Element(tag_name, total_size, attrs, children)
 
-unclosedElem : Str -> (List Attribute -> Node)
-unclosedElem = \tagName ->
+unclosed_elem : Str -> (List Attribute -> Node)
+unclosed_elem = \tag_name ->
     \attrs ->
         # While building the node tree, calculate the size of Str it will render to
-        withTag = 2 * (3 + Str.countUtf8Bytes tagName)
-        totalSize = List.walk attrs withTag \acc, Attribute name val ->
-            acc + Str.countUtf8Bytes name + Str.countUtf8Bytes val + 4
+        with_tag = 2 * (3 + Str.count_utf8_bytes(tag_name))
+        total_size = List.walk(attrs, with_tag, \acc, Attribute(name, val) ->
+            acc + Str.count_utf8_bytes(name) + Str.count_utf8_bytes(val) + 4)
 
-        UnclosedElem tagName totalSize attrs
+        UnclosedElem(tag_name, total_size, attrs)
 
 # internal helper
-nodeSize : Node -> U64
-nodeSize = \node ->
+node_size : Node -> U64
+node_size = \node ->
     when node is
-        Text content ->
-            Str.countUtf8Bytes content
+        Text(content) ->
+            Str.count_utf8_bytes(content)
 
-        Element _ size _ _ | UnclosedElem _ size _ ->
+        Element(_, size, _, _) | UnclosedElem(_, size, _) ->
             size
 
 ## Render a Node to an HTML string
@@ -189,188 +189,188 @@ nodeSize = \node ->
 ## See also `renderWithoutDocType`.
 render : Node -> Str
 render = \node ->
-    buffer = Str.reserve "<!DOCTYPE html>" (nodeSize node)
+    buffer = Str.reserve("<!DOCTYPE html>", node_size(node))
 
-    renderHelp buffer node
+    render_help(buffer, node)
 
 ## Render a Node to a string, without a DOCTYPE tag
-renderWithoutDocType : Node -> Str
-renderWithoutDocType = \node ->
-    buffer = Str.reserve "" (nodeSize node)
+render_without_doc_type : Node -> Str
+render_without_doc_type = \node ->
+    buffer = Str.reserve("", node_size(node))
 
-    renderHelp buffer node
+    render_help(buffer, node)
 
 # internal helper
-renderHelp : Str, Node -> Str
-renderHelp = \buffer, node ->
+render_help : Str, Node -> Str
+render_help = \buffer, node ->
     when node is
-        Text content ->
-            Str.concat buffer content
+        Text(content) ->
+            Str.concat(buffer, content)
 
-        Element tagName _ attrs children ->
-            withTagName = "$(buffer)<$(tagName)"
-            withAttrs =
-                if List.isEmpty attrs then
-                    withTagName
+        Element(tag_name, _, attrs, children) ->
+            with_tag_name = "$(buffer)<$(tag_name)"
+            with_attrs =
+                if List.is_empty(attrs) then
+                    with_tag_name
                 else
-                    List.walk attrs "$(withTagName) " renderAttr
-            withTag = Str.concat withAttrs ">"
-            withChildren = List.walk children withTag renderHelp
+                    List.walk(attrs, "$(with_tag_name) ", render_attr)
+            with_tag = Str.concat(with_attrs, ">")
+            with_children = List.walk(children, with_tag, render_help)
 
-            "$(withChildren)</$(tagName)>"
+            "$(with_children)</$(tag_name)>"
 
-        UnclosedElem tagName _ attrs ->
-            if List.isEmpty attrs then
-                "$(buffer)<$(tagName)>"
+        UnclosedElem(tag_name, _, attrs) ->
+            if List.is_empty(attrs) then
+                "$(buffer)<$(tag_name)>"
             else
                 attrs
-                |> List.walk "$(buffer)<$(tagName) " renderAttr
-                |> Str.concat ">"
+                |> List.walk("$(buffer)<$(tag_name) ", render_attr)
+                |> Str.concat(">")
 
 # internal helper
-renderAttr : Str, Attribute -> Str
-renderAttr = \buffer, Attribute key val ->
+render_attr : Str, Attribute -> Str
+render_attr = \buffer, Attribute(key, val) ->
     "$(buffer) $(key)=\"$(val)\""
 
 # Main root
-html = element "html"
+html = element("html")
 
 # Document metadata
-base = element "base"
-head = element "head"
-link = unclosedElem "link"
-meta = unclosedElem "meta"
-style = element "style"
-title = element "title"
+base = element("base")
+head = element("head")
+link = unclosed_elem("link")
+meta = unclosed_elem("meta")
+style = element("style")
+title = element("title")
 
 # Sectioning root
-body = element "body"
+body = element("body")
 
 # Content sectioning
-address = element "address"
-article = element "article"
-aside = element "aside"
-footer = element "footer"
-header = element "header"
-h1 = element "h1"
-h2 = element "h2"
-h3 = element "h3"
-h4 = element "h4"
-h5 = element "h5"
-h6 = element "h6"
-main = element "main"
-nav = element "nav"
-section = element "section"
+address = element("address")
+article = element("article")
+aside = element("aside")
+footer = element("footer")
+header = element("header")
+h1 = element("h1")
+h2 = element("h2")
+h3 = element("h3")
+h4 = element("h4")
+h5 = element("h5")
+h6 = element("h6")
+main = element("main")
+nav = element("nav")
+section = element("section")
 
 # Text content
-blockquote = element "blockquote"
-dd = element "dd"
-div = element "div"
-dl = element "dl"
-dt = element "dt"
-figcaption = element "figcaption"
-figure = element "figure"
-hr = element "hr"
-li = element "li"
-menu = element "menu"
-ol = element "ol"
-p = element "p"
-pre = element "pre"
-ul = element "ul"
+blockquote = element("blockquote")
+dd = element("dd")
+div = element("div")
+dl = element("dl")
+dt = element("dt")
+figcaption = element("figcaption")
+figure = element("figure")
+hr = element("hr")
+li = element("li")
+menu = element("menu")
+ol = element("ol")
+p = element("p")
+pre = element("pre")
+ul = element("ul")
 
 # Inline text semantics
-a = element "a"
-abbr = element "abbr"
-b = element "b"
-bdi = element "bdi"
-bdo = element "bdo"
-br = element "br"
-cite = element "cite"
-code = element "code"
-data = element "data"
-dfn = element "dfn"
-em = element "em"
-i = element "i"
-kbd = element "kbd"
-mark = element "mark"
-q = element "q"
-rp = element "rp"
-rt = element "rt"
-ruby = element "ruby"
-s = element "s"
-samp = element "samp"
-small = element "small"
-span = element "span"
-strong = element "strong"
-sub = element "sub"
-sup = element "sup"
-time = element "time"
-u = element "u"
-var = element "var"
-wbr = element "wbr"
+a = element("a")
+abbr = element("abbr")
+b = element("b")
+bdi = element("bdi")
+bdo = element("bdo")
+br = element("br")
+cite = element("cite")
+code = element("code")
+data = element("data")
+dfn = element("dfn")
+em = element("em")
+i = element("i")
+kbd = element("kbd")
+mark = element("mark")
+q = element("q")
+rp = element("rp")
+rt = element("rt")
+ruby = element("ruby")
+s = element("s")
+samp = element("samp")
+small = element("small")
+span = element("span")
+strong = element("strong")
+sub = element("sub")
+sup = element("sup")
+time = element("time")
+u = element("u")
+var = element("var")
+wbr = element("wbr")
 
 # Image and multimedia
-area = element "area"
-audio = element "audio"
-img = unclosedElem "img"
-map = element "map"
-track = element "track"
-video = element "video"
+area = element("area")
+audio = element("audio")
+img = unclosed_elem("img")
+map = element("map")
+track = element("track")
+video = element("video")
 
 # Embedded content
-embed = element "embed"
-iframe = element "iframe"
-object = element "object"
-picture = element "picture"
-portal = element "portal"
-source = element "source"
+embed = element("embed")
+iframe = element("iframe")
+object = element("object")
+picture = element("picture")
+portal = element("portal")
+source = element("source")
 
 # SVG and MathML
-svg = element "svg"
-math = element "math"
+svg = element("svg")
+math = element("math")
 
 # Scripting
-canvas = element "canvas"
-noscript = element "noscript"
-script = element "script"
+canvas = element("canvas")
+noscript = element("noscript")
+script = element("script")
 
 # Demarcating edits
-del = element "del"
-ins = element "ins"
+del = element("del")
+ins = element("ins")
 
 # Table content
-caption = element "caption"
-col = element "col"
-colgroup = element "colgroup"
-table = element "table"
-tbody = element "tbody"
-td = element "td"
-tfoot = element "tfoot"
-th = element "th"
-thead = element "thead"
-tr = element "tr"
+caption = element("caption")
+col = element("col")
+colgroup = element("colgroup")
+table = element("table")
+tbody = element("tbody")
+td = element("td")
+tfoot = element("tfoot")
+th = element("th")
+thead = element("thead")
+tr = element("tr")
 
 # Forms
-button = element "button"
-datalist = element "datalist"
-fieldset = element "fieldset"
-form = element "form"
-input = element "input"
-label = element "label"
-legend = element "legend"
-meter = element "meter"
-optgroup = element "optgroup"
-option = element "option"
-output = element "output"
-progress = element "progress"
-select = element "select"
-textarea = element "textarea"
+button = element("button")
+datalist = element("datalist")
+fieldset = element("fieldset")
+form = element("form")
+input = element("input")
+label = element("label")
+legend = element("legend")
+meter = element("meter")
+optgroup = element("optgroup")
+option = element("option")
+output = element("output")
+progress = element("progress")
+select = element("select")
+textarea = element("textarea")
 
 # Interactive elements
-details = element "details"
-dialog = element "dialog"
-summary = element "summary"
+details = element("details")
+dialog = element("dialog")
+summary = element("summary")
 
 # Web Components
-slot = element "slot"
-template = element "template"
+slot = element("slot")
+template = element("template")
