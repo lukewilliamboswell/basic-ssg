@@ -40,14 +40,16 @@ main! = \args ->
     native_target = try(get_native_target!(Env.platform!({})))
 
     targets_to_build =
+        # TOD restore these after we upgrade to hyper 1.5.2
+        # https://github.com/roc-lang/basic-cli/pull/292
         if release then
             [
                 (MacosArm64, RELEASE),
                 (MacosX64, RELEASE),
-                (LinuxArm64, RELEASE),
+                #(LinuxArm64, RELEASE),
                 (LinuxX64, RELEASE),
-                (WindowsArm64, RELEASE),
-                (WindowsX64, RELEASE),
+                #(WindowsArm64, RELEASE),
+                #(WindowsX64, RELEASE),
             ]
         else
             [

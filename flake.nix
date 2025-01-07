@@ -2,7 +2,7 @@
   description = "basic-ssg devShell flake";
 
   inputs = {
-    roc.url = "github:roc-lang/roc";
+    roc.url = "github:smores56/roc?ref=auto-snake-case";
 
     nixpkgs.follows = "roc/nixpkgs";
 
