@@ -9,4 +9,4 @@ roc build --linker=legacy main.roc
 
 ./main content/ www/
 
-simple-http-server www/
+simple-http-server --index --open --ip 127.0.0.1 www/

@@ -12,7 +12,3 @@ roc_command.workspace = true
 roc_io_error.workspace = true
 roc_stdio.workspace = true
 roc_file.workspace = true
-roc_http.workspace = true
-hyper.workspace = true
-hyper-rustls.workspace = true
-tokio.workspace = true

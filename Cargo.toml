@@ -15,7 +15,6 @@ roc_command = { git = "https://github.com/roc-lang/basic-cli.git" }
 roc_io_error = { git = "https://github.com/roc-lang/basic-cli.git" }
 roc_stdio = { git = "https://github.com/roc-lang/basic-cli.git" }
 roc_file = { git = "https://github.com/roc-lang/basic-cli.git" }
-roc_http = { git = "https://github.com/roc-lang/basic-cli.git" }
 syntect = { version = "5.0", default-features = false, features = [
     "default-fancy",
 ] }
@@ -23,13 +22,3 @@ roc_highlight = { git = "https://github.com/roc-lang/roc.git", package = "roc_hi
 pulldown-cmark = { version = "0.9.2", default-features = false }
 libc = "0.2"
 ssg = { path = "crates/ssg" }
-hyper = { version = "=0.14.27", default-features = false, features = [
-    "http1",
-    "client",
-] }
-hyper-rustls = { version = "=0.24.2", default-features = false, features = [
-    "http1",
-    "tls12",
-    "native-tokio",
-] }
-tokio = { version = "=1.31.0", default-features = false }

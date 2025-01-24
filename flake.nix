@@ -44,8 +44,8 @@
         sharedInputs = (with pkgs; [
           jq
           rust
-          llvmPkgs.clang
-          llvmPkgs.lldb # for debugging
+          # llvmPkgs.clang
+          # llvmPkgs.lldb # for debugging
           expect
           nmap
           simple-http-server

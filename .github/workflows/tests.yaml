@@ -7,71 +7,53 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-examples-linux:
-    runs-on: ubuntu-latest
-    env:
-      ROC_VERSION: nightly
+  build-and-test-native:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - operating-system: ubuntu-20.04
+            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
+          - operating-system: ubuntu-22.04
+            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
+          - operating-system: macos-13
+            roc-nightly-release: roc_nightly-macos_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-macos_x86_64-TESTING.tar.gz
+          - operating-system: macos-14
+            roc-nightly-release: roc_nightly-macos_apple_silicon-latest.tar.gz
+            roc-testing-release: roc_nightly-macos_apple_silicon-TESTING.tar.gz
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Update apt-get
-        run: sudo apt-get update
+      - name: install z3 for macOS
+        if: runner.os == 'macOS'
+        run: brew install z3
 
-      - name: Install Build Essentials
-        run: sudo apt install build-essential git
+      - id: try_fetching_testing_release
+        name: try TESTING release
+        continue-on-error: true
+        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
 
-      - name: Install Rust and Cargo
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
+      - name: fetch NIGHTLY release
+        if: steps.try_fetching_testing_release.outcome == 'failure'
+        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
 
-      - name: Install ROC
-        run: |
-          # Install ROC
-          curl -fOL https://github.com/roc-lang/roc/releases/download/${ROC_VERSION}/roc_nightly-linux_x86_64-latest.tar.gz
-          mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
-          tar -xzf roc_nightly.tar.gz
-          rm roc_nightly.tar.gz
-          mv roc_nightly* roc_nightly
+      - name: rename nightly tar
+        run: mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
 
-      - name: Check ROC version
-        run: ./roc_nightly/roc version
+      - name: decompress the tar
+        run: tar -xzf roc_nightly.tar.gz
 
-      - name: Run all tests
-        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
+      - name: remove tar
+        run: rm roc_nightly.tar.gz
 
-  test-examples-macos:
-    runs-on: macos-latest
-    env:
-      ROC_VERSION: nightly
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: simplify nightly folder name
+        run: mv roc_nightly* roc_nightly
 
-      - name: Install Build Essentials
-        run: brew install automake autoconf libtool
-
-      - name: Install Rust and Cargo
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
-
-      - name: Export Homebrew paths for roc
-        run: |
-          brew install z3 zstd
-          export LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
-
-      - name: Install ROC
-        run: |
-          # Install ROC
-          curl -fOL https://github.com/roc-lang/roc/releases/download/${ROC_VERSION}/roc_nightly-macos_apple_silicon-latest.tar.gz
-          mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
-          tar -xzf roc_nightly.tar.gz
-          rm roc_nightly.tar.gz
-          mv roc_nightly* roc_nightly
-
-      - name: Check ROC version
+      - name: Check roc version
         run: ./roc_nightly/roc version
 
       - name: Run all tests

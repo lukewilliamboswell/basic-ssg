@@ -14,8 +14,8 @@ import Host
 ## [Unicode replacement character](https://unicode.org/glossary/#replacement_character) ('�').
 var! : Str => Result Str [VarNotFound]
 var! = \name ->
-    Host.env_var! name
-    |> Result.mapErr \{} -> VarNotFound
+    Host.env_var!(name)
+    |> Result.map_err(\{} -> VarNotFound)
 
 ## Reads the given environment variable and attempts to decode it.
 ##
@@ -44,12 +44,12 @@ var! = \name ->
 ##
 decode! : Str => Result val [VarNotFound, DecodeErr DecodeError] where val implements Decoding
 decode! = \name ->
-    when Host.env_var! name is
-        Err {} -> Err VarNotFound
-        Ok varStr ->
-            Str.toUtf8 varStr
-            |> Decode.fromBytes (EnvDecoding.format {})
-            |> Result.mapErr (\_ -> DecodeErr TooShort)
+    when Host.env_var!(name) is
+        Err({}) -> Err(VarNotFound)
+        Ok(var_str) ->
+            Str.to_utf8(var_str)
+            |> Decode.from_bytes(EnvDecoding.format({}))
+            |> Result.map_err(\_ -> DecodeErr(TooShort))
 
 ## Reads all the process's environment variables into a [Dict].
 ##
@@ -57,8 +57,8 @@ decode! = \name ->
 ## will be used in place of any parts of keys or values that are invalid Unicode.
 dict! : {} => Dict Str Str
 dict! = \{} ->
-    Host.env_dict! {}
-    |> Dict.fromList
+    Host.env_dict!({})
+    |> Dict.from_list
 
 ARCH : [X86, X64, ARM, AARCH64, OTHER Str]
 OS : [LINUX, MACOS, WINDOWS, OTHER Str]
@@ -73,21 +73,21 @@ OS : [LINUX, MACOS, WINDOWS, OTHER Str]
 platform! : {} => { arch : ARCH, os : OS }
 platform! = \{} ->
 
-    fromRust = Host.current_arch_os! {}
+    from_rust = Host.current_arch_os!({})
 
     arch =
-        when fromRust.arch is
+        when from_rust.arch is
             "x86" -> X86
             "x86_64" -> X64
             "arm" -> ARM
             "aarch64" -> AARCH64
-            _ -> OTHER fromRust.arch
+            _ -> OTHER(from_rust.arch)
 
     os =
-        when fromRust.os is
+        when from_rust.os is
             "linux" -> LINUX
             "macos" -> MACOS
             "windows" -> WINDOWS
-            _ -> OTHER fromRust.os
+            _ -> OTHER(from_rust.os)
 
     { arch, os }
