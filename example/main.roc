@@ -9,12 +9,12 @@ main! : Args => Result {} _
 main! = \{ input_dir, output_dir } ->
 
     # get the path and url of markdown files in content directory
-    files = SSG.files!?(input_dir)
+    files = SSG.files!(input_dir)?
 
     # helper Task to process each file
     process_file! = \{ path, relpath, url } ->
 
-        in_html = SSG.parse_markdown!?(path)
+        in_html = SSG.parse_markdown!(path)?
 
         out_html = transform_file_content(url, in_html)
 
