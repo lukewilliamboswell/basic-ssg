@@ -36,10 +36,8 @@ jobs:
         continue-on-error: true
         run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
 
-      - name: get NIGHTLY release
+      - name: fetch NIGHTLY release
         if: steps.try_fetching_testing_release.outcome == 'failure'
-
-      - name: fetch latest release
         run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
 
       - name: Check roc version
