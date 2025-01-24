@@ -32,7 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: try TESTING release
+      - id: try_fetching_testing_release
+        name: try TESTING release
         continue-on-error: true
         run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
 
