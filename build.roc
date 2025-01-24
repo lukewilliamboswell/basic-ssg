@@ -46,8 +46,8 @@ main! = |args|
                 (MacosX64, RELEASE),
                 (LinuxArm64, RELEASE),
                 (LinuxX64, RELEASE),
-                #(WindowsArm64, RELEASE),
-                #(WindowsX64, RELEASE),
+                (WindowsArm64, RELEASE),
+                (WindowsX64, RELEASE),
             ]
         else
             [
