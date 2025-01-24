@@ -6,6 +6,7 @@ set -euxo pipefail
 if [ -z "${ROC:-}" ]; then
   echo "INFO: The ROC environment variable is not set."
   export ROC=$(which roc)
+  echo "INFO: defaulting ROC to use $ROC"
 fi
 
 if [ -z "${CARGO:-}" ]; then
@@ -24,14 +25,8 @@ rm -rf target/
 find . -name "*.a" -delete
 find . -name "*.tar.br" -delete
 
-echo "Build the platform for native"
-$CARGO build
-
-echo "Copy prebuilt artifact to platform/ NOTE the hack for all platforms DO NOT COPY THIS"
-cp target/debug/libhost.a platform/macos-arm64.a
-cp target/debug/libhost.a platform/linux-arm64.a
-cp target/debug/libhost.a platform/linux-x64.a
-cp target/debug/libhost.a platform/macos-x64.a
+echo "Build the platform"
+$ROC build.roc
 
 echo "run the example"
 $ROC --linker=legacy ./example/main.roc -- ./example/content/ ./example/www/

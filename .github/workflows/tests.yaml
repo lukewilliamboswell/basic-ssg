@@ -41,8 +41,20 @@ jobs:
         if: steps.try_fetching_testing_release.outcome == 'failure'
         run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
 
+      - name: rename nightly tar
+        run: mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
+
+      - name: decompress the tar
+        run: tar -xzf roc_nightly.tar.gz
+
+      - name: remove tar
+        run: rm roc_nightly.tar.gz
+
+      - name: simplify nightly folder name
+        run: mv roc_nightly* roc_nightly
+
       - name: Check roc version
-        run: roc version
+        run: ./roc_nightly/roc version
 
       - name: Run all tests
-        run: ./ci/all_tests.sh
+        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
