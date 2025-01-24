@@ -14,21 +14,33 @@ jobs:
       matrix:
         include:
           - operating-system: ubuntu-20.04
+            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
             package-manager: apt
           - operating-system: ubuntu-22.04
+            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
             package-manager: apt
           - operating-system: macos-13
+            roc-nightly-release: roc_nightly-macos_x86_64-latest.tar.gz
+            roc-testing-release: roc_nightly-macos_x86_64-TESTING.tar.gz
             package-manager: brew
           - operating-system: macos-14
+            roc-nightly-release: roc_nightly-macos_apple_silicon-latest.tar.gz
+            roc-testing-release: roc_nightly-macos_apple_silicon-TESTING.tar.gz
             package-manager: brew
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Roc
-        uses: hasnep/setup-roc@v0.4.0
-        with:
-          roc-version: nightly
-          testing: "true"
+      - id: try TESTING release
+        continue-on-error: true
+        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
+
+      - name: get NIGHTLY release
+        if: steps.try_fetching_testing_release.outcome == 'failure'
+
+      - name: fetch latest release
+        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
 
       - name: Check roc version
         run: roc version
