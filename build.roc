@@ -14,59 +14,56 @@ import weaver.Opt
 ##
 ## run with: roc ./build.roc --release
 ##
-main! = \args ->
+main! = |args|
     cli_parser =
         { Cli.weave <-
             release: Opt.flag({ short: "r", long: "release", help: "DEBUG build native target only, or RELEASE build for all supported targets." }),
             bundle: Opt.flag({ short: "b", long: "bundle", help: "Bundle platform files into a package for distribution" }),
             roc: Opt.str({ short: "p", long: "roc", help: "Path to the roc executable. Can be just `roc` or a full path.", default: Value("roc") }),
         }
-        |> Cli.finish({
-            name: "basic-ssg-builder",
-            version: "",
-            authors: ["Luke Boswell <https://github.com/lukewilliamboswell>"],
-            description: "Generates all files needed by Roc to use this basic-ssg platform.",
-        })
+        |> Cli.finish(
+            {
+                name: "basic-ssg-builder",
+                version: "",
+                authors: ["Luke Boswell <https://github.com/lukewilliamboswell>"],
+                description: "Generates all files needed by Roc to use this basic-ssg platform.",
+            },
+        )
         |> Cli.assert_valid
 
     { release, bundle, roc } =
-        Cli.parse_or_display_message(cli_parser, args, Arg.to_os_raw)
-        |> try(Result.on_err!, \message ->
-            try(Stdout.line!(message))
-            Err(Exit(1, "")))
+        Cli.parse_or_display_message(cli_parser, args, Arg.to_os_raw) ? |message| Err(Exit(1, message))
 
     # target is MacosArm64, LinuxX64,...
-    try(info!("Getting the native target ..."))
-    native_target = try(get_native_target!(Env.platform!({})))
+    info!("Getting the native target ...")?
+
+    native_target = get_native_target!(Env.platform!({}))?
 
     targets_to_build =
-        # TOD restore these after we upgrade to hyper 1.5.2
-        # https://github.com/roc-lang/basic-cli/pull/292
         if release then
             [
                 (MacosArm64, RELEASE),
                 (MacosX64, RELEASE),
-                # (LinuxArm64, RELEASE),
+                (LinuxArm64, RELEASE),
                 (LinuxX64, RELEASE),
-                # (WindowsArm64, RELEASE),
-                # (WindowsX64, RELEASE),
+                #(WindowsArm64, RELEASE),
+                #(WindowsX64, RELEASE),
             ]
         else
             [
                 (native_target, DEBUG),
             ]
 
-    try(
-        List.for_each_try!(targets_to_build, \(target, opt_level) ->
-            build!(target, opt_level)),
-    )
+    List.for_each_try!(
+        targets_to_build,
+        |(target, opt_level)|
+            build!(target, opt_level),
+    )?
 
     if bundle then
-        try(info!("Bundling platform binaries ..."))
-        try(
-            Cmd.exec!(roc, ["build", "--bundle", ".tar.br", "platform/main.roc"])
-            |> Result.map_err(ErrBundlingPlatform),
-        )
+        info!("Bundling platform binaries ...")?
+        Cmd.exec!(roc, ["build", "--bundle", ".tar.br", "platform/main.roc"]) ? ErrBundlingPlatform
+        {}
     else
         {}
 
@@ -82,7 +79,7 @@ RocTarget : [
 ]
 
 roc_target : RocTarget -> Str
-roc_target = \target ->
+roc_target = |target|
     when target is
         MacosArm64 -> "macos-arm64"
         MacosX64 -> "macos-x64"
@@ -92,19 +89,19 @@ roc_target = \target ->
         WindowsX64 -> "windows-x64"
 
 from_lib_path : RocTarget -> Str
-from_lib_path = \target ->
+from_lib_path = |target|
     when target is
         MacosArm64 | MacosX64 | LinuxArm64 | LinuxX64 -> "libhost.a"
         WindowsArm64 | WindowsX64 -> "host.lib"
 
 to_lib_path : RocTarget -> Str
-to_lib_path = \target ->
+to_lib_path = |target|
     when target is
-        MacosArm64 | MacosX64 | LinuxArm64 | LinuxX64 -> "$(roc_target(target)).a"
-        WindowsArm64 | WindowsX64 -> "$(roc_target(target)).lib"
+        MacosArm64 | MacosX64 | LinuxArm64 | LinuxX64 -> "${roc_target(target)}.a"
+        WindowsArm64 | WindowsX64 -> "${roc_target(target)}.lib"
 
 rustc_target : RocTarget -> Str
-rustc_target = \target ->
+rustc_target = |target|
     when target is
         MacosArm64 -> "aarch64-apple-darwin"
         MacosX64 -> "x86_64-apple-darwin"
@@ -114,11 +111,11 @@ rustc_target = \target ->
         WindowsX64 -> "x86_64-pc-windows-msvc"
 
 info! : Str => Result {} _
-info! = \msg ->
-    Stdout.line!("\u(001b)[34mINFO:\u(001b)[0m $(msg)")
+info! = |msg|
+    Stdout.line!("\u(001b)[34mINFO:\u(001b)[0m ${msg}")
 
 get_native_target! : _ => Result _ _
-get_native_target! = \{ os, arch } ->
+get_native_target! = |{ os, arch }|
     when (os, arch) is
         (MACOS, AARCH64) -> Ok(MacosArm64)
         (MACOS, X64) -> Ok(MacosX64)
@@ -127,25 +124,24 @@ get_native_target! = \{ os, arch } ->
         _ -> Err(UnsupportedNative(os, arch))
 
 build! : RocTarget, [DEBUG, RELEASE] => Result {} _
-build! = \target, release_mode ->
+build! = |target, release_mode|
 
     target_str = rustc_target(target)
 
     (release_mode_str, cargo_build_args) =
         when release_mode is
-            RELEASE -> ("release", ["build", "--release", "--target=$(target_str)"])
-            DEBUG -> ("debug", ["build", "--target=$(target_str)"])
+            RELEASE -> ("release", ["build", "--release", "--target=${target_str}"])
+            DEBUG -> ("debug", ["build", "--target=${target_str}"])
 
-    try(info!("Building legacy binary for $(target_str) ..."))
+    info!("Building legacy binary for ${target_str} ...")?
 
-    Cmd.exec!("cargo", cargo_build_args)
-    |> Result.map_err(\err -> ErrBuildingLegacyBinary(target_str, err))
-    |> try
+    Cmd.exec!("cargo", cargo_build_args) ? |err| ErrBuildingLegacyBinary(target_str, err)
 
-    from = "target/$(target_str)/$(release_mode_str)/$(from_lib_path(target))"
-    to = "platform/$(to_lib_path(target))"
+    from = "target/${target_str}/${release_mode_str}/${from_lib_path(target)}"
+    to = "platform/${to_lib_path(target)}"
 
-    try(info!("Moving legacy binary from $(from) to $(to) ..."))
+    info!("Moving legacy binary from ${from} to ${to} ...")?
 
-    Cmd.exec!("cp", [from, to])
-    |> Result.map_err(\err -> ErrMovingLegacyBinary(target_str, err))
+    Cmd.exec!("cp", [from, to]) ? |err| ErrMovingLegacyBinary(target_str, err)
+
+    Ok({})
