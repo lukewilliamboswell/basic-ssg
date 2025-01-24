@@ -2,7 +2,7 @@
   description = "basic-ssg devShell flake";
 
   inputs = {
-    roc.url = "github:smores56/roc?ref=auto-snake-case";
+    roc.url = "github:roc-lang/roc";
 
     nixpkgs.follows = "roc/nixpkgs";
 
@@ -44,8 +44,8 @@
         sharedInputs = (with pkgs; [
           jq
           rust
-          llvmPkgs.clang
-          llvmPkgs.lldb # for debugging
+          # llvmPkgs.clang
+          # llvmPkgs.lldb # for debugging
           expect
           nmap
           simple-http-server

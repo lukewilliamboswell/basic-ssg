@@ -1,6 +1,6 @@
 app [main!] {
-    cli: platform "../basic-cli/platform/main.roc",
-    weaver: "https://github.com/smores56/weaver/releases/download/0.6.0/6WdRio4quZ_3HL8cEY_vyx5mzl1xXrEv2a_c1Bswrq4.tar.br",
+    cli: platform "https://github.com/roc-lang/basic-cli/releases/download/0.19.0/bi5zubJ-_Hva9vxxPq4kNx4WHX6oFs8OP6Ad0tCYlrY.tar.br",
+    weaver: "https://github.com/smores56/weaver/releases/download/0.6.0/4GmRnyE7EFjzv6dDpebJoWWwXV285OMt4ntHIc6qvmY.tar.br",
 }
 
 import cli.Cmd
@@ -46,10 +46,10 @@ main! = \args ->
             [
                 (MacosArm64, RELEASE),
                 (MacosX64, RELEASE),
-                #(LinuxArm64, RELEASE),
+                # (LinuxArm64, RELEASE),
                 (LinuxX64, RELEASE),
-                #(WindowsArm64, RELEASE),
-                #(WindowsX64, RELEASE),
+                # (WindowsArm64, RELEASE),
+                # (WindowsX64, RELEASE),
             ]
         else
             [

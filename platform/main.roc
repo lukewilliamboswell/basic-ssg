@@ -9,8 +9,6 @@ platform "roc-ssg"
         Env,
         Locale,
         Utc,
-        Tcp,
-        Http,
     ]
     packages {}
     imports []
@@ -36,7 +34,7 @@ main_for_host! = \args ->
                 Program exited with error:
                     $(Inspect.to_str(msg))
 
-                Tip: If you do not want to exit on this error, use `Result.mapErr` to handle the error. Docs for `Result.mapErr`: <https://www.roc-lang.org/builtins/Result#mapErr>
+                Tip: If you do not want to exit on this error, use `Result.map_err` to handle the error. Docs for `Result.map_err`: <https://www.roc-lang.org/builtins/Result#map_err>
                 """
 
             _ = Stderr.line!(help_msg)
