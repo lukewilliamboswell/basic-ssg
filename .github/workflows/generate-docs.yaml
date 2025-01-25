@@ -20,7 +20,6 @@ jobs:
         uses: hasnep/setup-roc@main
         with:
           roc-version: nightly
-          testing: "true"
       - name: Generate docs
         run: roc docs platform/main.roc
       - name: Fix absolute paths
