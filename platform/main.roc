@@ -1,12 +1,21 @@
 platform ""
     requires {} { main! : List(Str) => Try({}, [Exit(I32), ..]) }
-    exposes [SSG, Html, HtmlAttributes, IOErr, Stderr]
+    exposes [SSG, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
     packages {}
     provides { "roc_main": main_for_host! }
     hosted {
-        "hosted_stderr_line": Stderr.line!,
-        "hosted_stderr_write": Stderr.write!,
-        "hosted_stderr_write_bytes": Stderr.write_bytes!,
+        "hosted_stdout_line": Stdout.host_line!,
+        "hosted_stdout_write": Stdout.host_write!,
+        "hosted_stderr_line": Stderr.host_line!,
+        "hosted_stderr_write": Stderr.host_write!,
+        "hosted_cmd_status": Cmd.host_status!,
+        "hosted_cmd_output": Cmd.host_output!,
+        "hosted_env_var": Env.var!,
+        "hosted_env_dict": Env.host_dict!,
+        "hosted_env_arch_os": Env.host_arch_os!,
+        "hosted_locale_get": Locale.get!,
+        "hosted_locale_all": Locale.all!,
+        "hosted_utc_now": Utc.now!,
         # SSG-specific effects kept LAST so future SSG churn won't renumber the
         # generated glue types of the shared modules above.
         "hosted_ssg_find_files": SSG.host_find_files!,
@@ -25,7 +34,12 @@ import SSG
 import Html
 import HtmlAttributes
 import IOErr
+import Stdout
 import Stderr
+import Cmd
+import Env
+import Locale
+import Utc
 
 main_for_host! : List(Str) => I32
 main_for_host! = |args|

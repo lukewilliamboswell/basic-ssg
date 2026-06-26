@@ -1,20 +1,23 @@
 import IOErr exposing [IOErr]
 
 Stderr := [].{
-    ## Write the given string to [standard error](https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)),
-    ## followed by a newline.
-    ##
-    ## > To write to `stderr` without the newline, see [Stderr.write!].
+    # See Stdout.roc for why the host boundary uses a `Str` error.
+    host_line! : Str => Try({}, Str)
+    host_write! : Str => Try({}, Str)
+
+    ## Write the given string to standard error, followed by a newline.
     line! : Str => Try({}, [StderrErr(IOErr), ..])
+    line! = |str|
+        match Stderr.host_line!(str) {
+            Ok({}) => Ok({})
+            Err(msg) => Err(StderrErr(Other(msg)))
+        }
 
-    ## Write the given string to [standard error](https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)).
-    ##
-    ## Most terminals will not actually display strings that are written to them until they receive a newline,
-    ## so this may appear to do nothing until you write a newline!
-    ##
-    ## > To write to `stderr` with a newline at the end, see [Stderr.line!].
+    ## Write the given string to standard error (no trailing newline).
     write! : Str => Try({}, [StderrErr(IOErr), ..])
-
-    ## Write the given bytes to [standard error](https://en.wikipedia.org/wiki/Standard_streams#Standard_error_(stderr)).
-    write_bytes! : List(U8) => Try({}, [StderrErr(IOErr), ..])
+    write! = |str|
+        match Stderr.host_write!(str) {
+            Ok({}) => Ok({})
+            Err(msg) => Err(StderrErr(Other(msg)))
+        }
 }
