@@ -1208,8 +1208,9 @@ pub fn decref_anon_struct3(value: AnonStruct3, roc_host: &RocHost) {
     {
         let list = value.args;
         if list.has_one_ref() {
-            for item in list.allocation_items() {
-                    (*item).decref(roc_host);
+            for item_ref in list.allocation_items() {
+                let item = *item_ref;
+                    item.decref(roc_host);
             }
         }
         list.decref(roc_host);
@@ -1217,8 +1218,9 @@ pub fn decref_anon_struct3(value: AnonStruct3, roc_host: &RocHost) {
     {
         let list = value.envs;
         if list.has_one_ref() {
-            for item in list.allocation_items() {
-                    (*item).decref(roc_host);
+            for item_ref in list.allocation_items() {
+                let item = *item_ref;
+                    item.decref(roc_host);
             }
         }
         list.decref(roc_host);
@@ -1235,14 +1237,8 @@ pub fn incref_anon_struct3(value: AnonStruct3, amount: isize) {
 
 /// Recursively decrement Roc-owned fields in AnonStruct6.
 pub fn decref_anon_struct6(value: AnonStruct6, roc_host: &RocHost) {
-    {
-        let list = value.stderr;
-        list.decref(roc_host);
-    }
-    {
-        let list = value.stdout;
-        list.decref(roc_host);
-    }
+    value.stderr.decref(roc_host);
+    value.stdout.decref(roc_host);
 }
 
 /// Increment Roc-owned fields in AnonStruct6.
@@ -1336,8 +1332,9 @@ pub fn decref_try_type21(value: TryType21, roc_host: &RocHost) {
             {
                 let list = payload;
                 if list.has_one_ref() {
-                    for item in list.allocation_items() {
-                            decref_anon_struct24((*item), roc_host);
+                    for item_ref in list.allocation_items() {
+                        let item = *item_ref;
+                            decref_anon_struct24(item, roc_host);
                     }
                 }
                 list.decref(roc_host);

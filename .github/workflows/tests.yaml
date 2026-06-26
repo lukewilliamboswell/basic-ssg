@@ -1,60 +1,47 @@
+name: CI
+
 on:
   pull_request:
   workflow_dispatch:
 
+# this cancels workflows currently in progress if you start a new one
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Do not add permissions here! Configure them at the job level!
+permissions:
+  contents: read
+
 jobs:
-  build-and-test-native:
-    runs-on: ${{ matrix.operating-system }}
+  build-and-test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - operating-system: ubuntu-20.04
-            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
-          - operating-system: ubuntu-22.04
-            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
-          - operating-system: macos-13
-            roc-nightly-release: roc_nightly-macos_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-macos_x86_64-TESTING.tar.gz
-          - operating-system: macos-14
-            roc-nightly-release: roc_nightly-macos_apple_silicon-latest.tar.gz
-            roc-testing-release: roc_nightly-macos_apple_silicon-TESTING.tar.gz
+        os:
+          - macos-15         # Apple Silicon
+          - macos-15-intel   # Intel Mac
+          - ubuntu-22.04     # Linux x86_64
+          - ubuntu-24.04-arm # Linux ARM64
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: install z3 for macOS
-        if: runner.os == 'macOS'
-        run: brew install z3
+      - name: Install Roc
+        uses: hasnep/setup-roc@main
+        with:
+          roc-version: nightly
 
-      - id: try_fetching_testing_release
-        name: try TESTING release
-        continue-on-error: true
-        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
-
-      - name: fetch NIGHTLY release
-        if: steps.try_fetching_testing_release.outcome == 'failure'
-        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
-
-      - name: rename nightly tar
-        run: mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
-
-      - name: decompress the tar
-        run: tar -xzf roc_nightly.tar.gz
-
-      - name: remove tar
-        run: rm roc_nightly.tar.gz
-
-      - name: simplify nightly folder name
-        run: mv roc_nightly* roc_nightly
-
-      - name: Check roc version
-        run: ./roc_nightly/roc version
+      - name: Install Zig
+        uses: mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f # ratchet:mlugg/setup-zig@v2.0.5
+        with:
+          version: 0.16.0
 
       - name: Run all tests
-        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
+        run: ./ci/all_tests.sh

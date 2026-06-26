@@ -19,7 +19,7 @@ Env := [].{
     # Host function: the architecture and OS the platform was built for.
     host_arch_os! : {} => { arch : Str, os : Str }
 
-    ## Reads all the process's environment variables into a [Dict].
+    ## Reads all the process's environment variables into a `Dict`.
     ##
     ## If any key or value contains invalid Unicode, the
     ## [Unicode replacement character](https://unicode.org/glossary/#replacement_character)
