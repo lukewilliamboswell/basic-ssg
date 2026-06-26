@@ -5,7 +5,7 @@ set -e
 
 roc check main.roc
 
-roc build --linker=legacy main.roc
+roc build main.roc
 
 ./main content/ www/
 

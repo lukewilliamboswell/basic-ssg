@@ -1,41 +1,39 @@
-platform "roc-ssg"
-    requires {} { main! : Types.Args => Result {} [Exit I32 Str]_ }
-    exposes [
-        SSG,
-        Types,
-        Cmd,
-        Stdout,
-        Stderr,
-        Env,
-        Locale,
-        Utc,
-    ]
+platform ""
+    requires {} { main! : List(Str) => Try({}, [Exit(I32), ..]) }
+    exposes [SSG, Html, HtmlAttributes, IOErr, Stderr]
     packages {}
-    imports []
-    provides [main_for_host!]
+    provides { "roc_main": main_for_host! }
+    hosted {
+        "hosted_stderr_line": Stderr.line!,
+        "hosted_stderr_write": Stderr.write!,
+        "hosted_stderr_write_bytes": Stderr.write_bytes!,
+        # SSG-specific effects kept LAST so future SSG churn won't renumber the
+        # generated glue types of the shared modules above.
+        "hosted_ssg_find_files": SSG.host_find_files!,
+        "hosted_ssg_parse_markdown": SSG.host_parse_markdown!,
+        "hosted_ssg_write_file": SSG.host_write_file!,
+    }
+    targets: {
+        inputs_dir: "targets/",
+        x64mac: { inputs: ["libhost.a", app] },
+        arm64mac: { inputs: ["libhost.a", app] },
+        x64musl: { inputs: ["crt1.o", "libhost.a", "libunwind.a", app, "libc.a"] },
+        arm64musl: { inputs: ["crt1.o", "libhost.a", "libunwind.a", app, "libc.a"] },
+    }
 
-import Types
+import SSG
+import Html
+import HtmlAttributes
+import IOErr
 import Stderr
 
-main_for_host! : Types.Args => I32
-main_for_host! = \args ->
-    when main!(args) is
-        Ok({}) -> 0
-        Err(Exit(code, msg)) ->
-            if Str.is_empty(msg) then
-                code
-            else
-                _ = Stderr.line!(msg)
-                code
-
-        Err(msg) ->
-            help_msg =
-                """
-                Program exited with error:
-                    $(Inspect.to_str(msg))
-
-                Tip: If you do not want to exit on this error, use `Result.map_err` to handle the error. Docs for `Result.map_err`: <https://www.roc-lang.org/builtins/Result#map_err>
-                """
-
-            _ = Stderr.line!(help_msg)
-            1
+main_for_host! : List(Str) => I32
+main_for_host! = |args|
+    match main!(args) {
+        Ok({}) => 0
+        Err(Exit(code)) => code
+        Err(other) =>
+            match Stderr.line!("Program exited with error: ${Str.inspect(other)}") {
+                _ => 1
+            }
+    }

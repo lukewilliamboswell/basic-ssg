@@ -1,108 +1,46 @@
+//! Static-site-generation logic: discover markdown files, render markdown to
+//! HTML (with Roc/other syntax highlighting), and write output files.
+//!
+//! Ported from the old `crates/ssg` crate. The `roc_std` `#[repr(C)]` boundary
+//! types were removed (those now come from the generated glue and the marshalling
+//! lives in `lib.rs`); Roc-code highlighting now uses the self-contained
+//! `crate::roc_syntax` instead of the old `roc_highlight` crate.
+
 use pulldown_cmark::{html, Options, Parser};
-use roc_std::RocStr;
 use std::fs;
 use std::path::{Path, PathBuf};
-use syntect::easy::HighlightLines;
-use syntect::highlighting::ThemeSet;
 use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
-#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[repr(C)]
-pub struct Files {
-    pub path: roc_std::RocStr,
-    pub relpath: roc_std::RocStr,
-    pub url: roc_std::RocStr,
+/// A discovered markdown source file and its derived output paths. All fields are
+/// plain `String`s; `lib.rs` marshals them into the generated glue record.
+pub struct Found {
+    pub url: String,
+    pub path: String,
+    pub relpath: String,
 }
 
-impl roc_std::RocRefcounted for Files {
-    fn inc(&mut self) {
-        self.path.inc();
-        self.relpath.inc();
-        self.url.inc();
-    }
-    fn dec(&mut self) {
-        self.path.dec();
-        self.relpath.dec();
-        self.url.dec();
-    }
-    fn is_refcounted() -> bool {
-        true
-    }
-}
-
-#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[repr(C)]
-pub struct Args {
-    pub input_dir: roc_std::RocStr,
-    pub output_dir: roc_std::RocStr,
-}
-
-impl roc_std::RocRefcounted for Args {
-    fn inc(&mut self) {
-        self.input_dir.inc();
-        self.output_dir.inc();
-    }
-    fn dec(&mut self) {
-        self.input_dir.dec();
-        self.output_dir.dec();
-    }
-    fn is_refcounted() -> bool {
-        true
-    }
-}
-
-#[derive(Clone, Default, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
-#[repr(C)]
-pub struct Types {
-    pub a: Files,
-    pub b: Args,
-    pub c: roc_std::RocStr,
-    pub d: roc_std::RocStr,
-}
-
-impl roc_std::RocRefcounted for Types {
-    fn inc(&mut self) {
-        self.a.inc();
-        self.b.inc();
-        self.c.inc();
-        self.d.inc();
-    }
-    fn dec(&mut self) {
-        self.a.dec();
-        self.b.dec();
-        self.c.dec();
-        self.d.dec();
-    }
-    fn is_refcounted() -> bool {
-        true
-    }
-}
-
-/// Find the markdown `.md` files in a directory
-pub fn find_files(dir_path: PathBuf) -> Result<Vec<Files>, String> {
+/// Find the markdown `.md` files in a directory (searched recursively).
+pub fn find_files(dir_path: &Path) -> Result<Vec<Found>, String> {
     let mut file_paths = Vec::new();
 
-    match find_files_help(&dir_path, &mut file_paths) {
+    match find_files_help(dir_path, &mut file_paths) {
         Ok(()) => Ok(file_paths
             .iter()
             .filter(|path| path.extension().filter(|s| (*s).eq("md")).is_some())
             .filter_map(|path_buf| {
-                let path: RocStr = format!("{}", path_buf.display()).as_str().into();
+                let path = format!("{}", path_buf.display());
 
-                match path_buf.strip_prefix(&dir_path).map(|p| p.to_path_buf()) {
+                match path_buf.strip_prefix(dir_path).map(|p| p.to_path_buf()) {
                     Err(..) => None,
-                    Ok(ref mut stripped_path_buf) => {
+                    Ok(mut stripped_path_buf) => {
                         stripped_path_buf.set_extension("html");
 
-                        let relpath: RocStr =
-                            format!("{}", stripped_path_buf.display()).as_str().into();
+                        let relpath = format!("{}", stripped_path_buf.display());
+                        let url = format!("/{}", stripped_path_buf.display());
 
-                        let url: RocStr =
-                            format!("/{}", stripped_path_buf.display()).as_str().into();
-
-                        Some(Files { url, path, relpath })
+                        Some(Found { url, path, relpath })
                     }
                 }
             })
@@ -123,9 +61,9 @@ fn find_files_help(dir: &Path, file_paths: &mut Vec<PathBuf>) -> std::io::Result
     Ok(())
 }
 
-/// Parse a markdown file into html
-pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
-    let content_md = match fs::read_to_string(&input_file) {
+/// Parse a markdown file into html.
+pub fn parse_markdown(input_file: &Path) -> Result<String, String> {
+    let content_md = match fs::read_to_string(input_file) {
         Ok(str) => str,
         Err(err) => {
             return Err(format!(
@@ -156,7 +94,6 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
     let mut in_code_block = false;
     let mut is_roc_code = false;
     let syntax_set: syntect::parsing::SyntaxSet = SyntaxSet::load_defaults_newlines();
-    let theme_set: syntect::highlighting::ThemeSet = ThemeSet::load_defaults();
 
     for event in parser {
         match event {
@@ -166,8 +103,7 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                         .strip_prefix("roc!")
                         .expect("expected leading 'roc!'");
 
-                    let highlighted_html =
-                        roc_highlight::highlight_roc_code_inline(stripped.to_string().as_str());
+                    let highlighted_html = crate::roc_syntax::highlight_roc_code_inline(stripped);
 
                     parser_with_highlighting.push(pulldown_cmark::Event::Html(
                         pulldown_cmark::CowStr::from(highlighted_html),
@@ -191,14 +127,12 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                             code_to_highlight = read_replacement_snippet(
                                 replacement_file_name.trim(),
                                 snippet_name.trim(),
-                                input_file.as_path(),
+                                input_file,
                             )?;
                         }
                         ["file", replacement_file_name] => {
-                            code_to_highlight = read_replacement_file(
-                                replacement_file_name.trim(),
-                                input_file.as_path(),
-                            )?;
+                            code_to_highlight =
+                                read_replacement_file(replacement_file_name.trim(), input_file)?;
                         }
                         _ => {}
                     }
@@ -206,10 +140,8 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
                     // Format the whole multi-line code block as HTML all at once
                     let highlighted_html: String;
                     if is_roc_code {
-                        highlighted_html = roc_highlight::highlight_roc_code(&code_to_highlight)
+                        highlighted_html = crate::roc_syntax::highlight_roc_code(&code_to_highlight)
                     } else if let Some(syntax) = syntax_set.find_syntax_by_token(&extension_str) {
-                        HighlightLines::new(syntax, &theme_set.themes["base16-ocean.dark"]);
-
                         let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
                             syntax,
                             &syntax_set,
@@ -255,18 +187,22 @@ pub fn parse_markdown(input_file: PathBuf) -> Result<String, String> {
     Ok(content_html)
 }
 
-/// Write the contents to file
+/// Write the contents to file.
 pub fn write_file(
-    output_dir: PathBuf,
-    output_rel_path: PathBuf,
-    content: String,
+    output_dir: &Path,
+    output_rel_path: &Path,
+    content: &str,
 ) -> Result<(), String> {
     let output_file = output_dir.join(output_rel_path);
 
-    // Create parent directory if it doesn't exist
-    let parent_dir = output_file.parent().unwrap();
-    if !parent_dir.exists() {
-        fs::create_dir_all(parent_dir).unwrap();
+    // Create parent directory if it doesn't exist. The host is built with
+    // `panic = "abort"`, so surface errors as `Result` instead of `unwrap`.
+    if let Some(parent_dir) = output_file.parent() {
+        if !parent_dir.exists() {
+            fs::create_dir_all(parent_dir).map_err(|err| {
+                format!("Failed to create directory {}: {}", parent_dir.display(), err)
+            })?;
+        }
     }
 
     match fs::write(&output_file, content) {
@@ -294,7 +230,9 @@ fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> Resu
         ));
     }
 
-    let input_dir = input_file.parent().unwrap();
+    let input_dir = input_file
+        .parent()
+        .ok_or_else(|| format!("ERROR input file \"{}\" has no parent", input_file.display()))?;
     let replacement_file_path = input_dir.join(replacement_file_name);
 
     fs::read(&replacement_file_path)
@@ -304,7 +242,7 @@ fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> Resu
         .map_err(|err| {
             format!(
                 "ERROR File \"{}\" is unreadable:\n\t{}",
-                replacement_file_path.to_str().unwrap(),
+                replacement_file_path.display(),
                 err
             )
         })?
@@ -330,23 +268,20 @@ fn read_replacement_snippet(
 
     let replacement_file_content = read_replacement_file(replacement_file_name.trim(), input_file)?;
 
-    let start_position = &replacement_file_content
+    let start_position = replacement_file_content
         .find(&start_marker)
-        .ok_or(format!("ERROR Failed to find snippet start \"{}\". ", &start_marker).as_str())?;
+        .ok_or(format!("ERROR Failed to find snippet start \"{}\". ", &start_marker))?;
 
-    let end_position = &replacement_file_content
+    let end_position = replacement_file_content
         .find(&end_marker)
-        .ok_or(format!("ERROR Failed to find snippet end \"{}\". ", &end_marker).as_str())?;
+        .ok_or(format!("ERROR Failed to find snippet end \"{}\". ", &end_marker))?;
 
     if start_position >= end_position {
-        let start_position_str = start_position.to_string();
-        let end_position_str = end_position.to_string();
-
-        Err(format!("ERROR Detected start position ({start_position_str}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position_str})."))
+        Err(format!("ERROR Detected start position ({start_position}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position})."))
     } else {
         // We want to remove other snippet comments inside this one if they exist.
         Ok(remove_snippet_comments(
-            &replacement_file_content[start_position + start_marker.len()..*end_position],
+            &replacement_file_content[start_position + start_marker.len()..end_position],
         ))
     }
 }
