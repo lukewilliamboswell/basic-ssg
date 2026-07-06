@@ -100,5 +100,5 @@ Build all release targets before bundling:
 Create a Roc platform bundle for upload:
 
 ```sh
-./bundle.sh --release
+./bundle.sh
 ```

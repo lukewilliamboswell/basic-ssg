@@ -54,24 +54,14 @@ echo ""
 echo "=== Testing platform helper modules ==="
 $ROC test ./platform/Html.roc
 
-# NOTE: `roc build ./example/main.roc` currently triggers an upstream ARC borrow
-# certifier panic (roc-lang/roc#9825) when codegen-ing the Html.render tree, so
-# the build + run is allowed to fail until that lands. The test above proves the
-# example type-checks; the host/SSG pipeline is exercised whenever the build
-# succeeds. Remove the `|| true` guard once #9825 is fixed.
 echo ""
-echo "=== Building and running the example (tolerated failure: roc-lang/roc#9825) ==="
-EXAMPLE_OK=0
-$ROC build ./example/main.roc --output=./example/main || EXAMPLE_OK=$?
-if [ "$EXAMPLE_OK" -eq 0 ]; then
-    mkdir -p ./example/www
-    find ./example/www -type f -name '*.html' -delete
-    ./example/main ./example/content/ ./example/www/
-    echo "Generated pages:"
-    find ./example/www -type f -name '*.html' | sort
-else
-    echo "WARNING: example build failed (exit $EXAMPLE_OK) -- known-blocked on roc-lang/roc#9825."
-fi
+echo "=== Building and running the example ==="
+$ROC build ./example/main.roc --output=./example/main
+mkdir -p ./example/www
+find ./example/www -type f -name '*.html' -delete
+./example/main ./example/content/ ./example/www/
+echo "Generated pages:"
+find ./example/www -type f -name '*.html' | sort
 
 echo ""
 echo "=== Building and running the error-handling example ==="
@@ -81,11 +71,7 @@ $ROC build ./example/error-handling.roc --output=./example/error-handling
 # --- Docs ---------------------------------------------------------------------
 echo ""
 echo "=== Building platform docs ==="
-DOCS_OK=0
-$ROC docs ./platform/main.roc || DOCS_OK=$?
-if [ "$DOCS_OK" -ne 0 ]; then
-    echo "WARNING: platform docs failed (exit $DOCS_OK) -- known-blocked by a Roc compiler stack overflow with package imports."
-fi
+$ROC docs --output=generated-docs ./docs/basic-ssg.roc
 
 echo ""
 echo "=== Done ==="
