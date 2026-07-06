@@ -8,42 +8,42 @@
 
 use pulldown_cmark::{html, Options, Parser};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
-/// A discovered markdown source file and its derived output paths. All fields are
-/// plain `String`s; `lib.rs` marshals them into the generated glue record.
-pub struct Found {
+/// A discovered markdown source file and its derived output paths.
+pub struct Page {
     pub url: String,
-    pub path: String,
-    pub relpath: String,
+    pub source_path: PathBuf,
+    pub output_path: PathBuf,
 }
 
 /// Find the markdown `.md` files in a directory (searched recursively).
-pub fn find_files(dir_path: &Path) -> Result<Vec<Found>, String> {
+pub fn find_pages(dir_path: &Path) -> Result<Vec<Page>, String> {
     let mut file_paths = Vec::new();
 
     match find_files_help(dir_path, &mut file_paths) {
         Ok(()) => Ok(file_paths
             .iter()
             .filter(|path| path.extension().filter(|s| (*s).eq("md")).is_some())
-            .filter_map(|path_buf| {
-                let path = format!("{}", path_buf.display());
-
-                match path_buf.strip_prefix(dir_path).map(|p| p.to_path_buf()) {
+            .filter_map(
+                |path_buf| match path_buf.strip_prefix(dir_path).map(|p| p.to_path_buf()) {
                     Err(..) => None,
-                    Ok(mut stripped_path_buf) => {
-                        stripped_path_buf.set_extension("html");
+                    Ok(mut output_path) => {
+                        output_path.set_extension("html");
 
-                        let relpath = format!("{}", stripped_path_buf.display());
-                        let url = format!("/{}", stripped_path_buf.display());
+                        let url = page_url(&output_path);
 
-                        Some(Found { url, path, relpath })
+                        Some(Page {
+                            url,
+                            source_path: path_buf.to_path_buf(),
+                            output_path,
+                        })
                     }
-                }
-            })
+                },
+            )
             .collect()),
         Err(err) => Err(err.to_string()),
     }
@@ -59,6 +59,20 @@ fn find_files_help(dir: &Path, file_paths: &mut Vec<PathBuf>) -> std::io::Result
         }
     }
     Ok(())
+}
+
+fn page_url(output_path: &Path) -> String {
+    let mut parts = Vec::new();
+    for component in output_path.components() {
+        match component {
+            Component::Normal(part) => parts.push(part.to_string_lossy().into_owned()),
+            Component::CurDir => {}
+            Component::ParentDir => parts.push("..".to_owned()),
+            Component::RootDir | Component::Prefix(_) => {}
+        }
+    }
+
+    format!("/{}", parts.join("/"))
 }
 
 /// Parse a markdown file into html.
@@ -188,11 +202,7 @@ pub fn parse_markdown(input_file: &Path) -> Result<String, String> {
 }
 
 /// Write the contents to file.
-pub fn write_file(
-    output_dir: &Path,
-    output_rel_path: &Path,
-    content: &str,
-) -> Result<(), String> {
+pub fn write_file(output_dir: &Path, output_rel_path: &Path, content: &str) -> Result<(), String> {
     let output_file = output_dir.join(output_rel_path);
 
     // Create parent directory if it doesn't exist. The host is built with
@@ -200,7 +210,11 @@ pub fn write_file(
     if let Some(parent_dir) = output_file.parent() {
         if !parent_dir.exists() {
             fs::create_dir_all(parent_dir).map_err(|err| {
-                format!("Failed to create directory {}: {}", parent_dir.display(), err)
+                format!(
+                    "Failed to create directory {}: {}",
+                    parent_dir.display(),
+                    err
+                )
             })?;
         }
     }
@@ -230,9 +244,12 @@ fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> Resu
         ));
     }
 
-    let input_dir = input_file
-        .parent()
-        .ok_or_else(|| format!("ERROR input file \"{}\" has no parent", input_file.display()))?;
+    let input_dir = input_file.parent().ok_or_else(|| {
+        format!(
+            "ERROR input file \"{}\" has no parent",
+            input_file.display()
+        )
+    })?;
     let replacement_file_path = input_dir.join(replacement_file_name);
 
     fs::read(&replacement_file_path)
@@ -268,13 +285,15 @@ fn read_replacement_snippet(
 
     let replacement_file_content = read_replacement_file(replacement_file_name.trim(), input_file)?;
 
-    let start_position = replacement_file_content
-        .find(&start_marker)
-        .ok_or(format!("ERROR Failed to find snippet start \"{}\". ", &start_marker))?;
+    let start_position = replacement_file_content.find(&start_marker).ok_or(format!(
+        "ERROR Failed to find snippet start \"{}\". ",
+        &start_marker
+    ))?;
 
-    let end_position = replacement_file_content
-        .find(&end_marker)
-        .ok_or(format!("ERROR Failed to find snippet end \"{}\". ", &end_marker))?;
+    let end_position = replacement_file_content.find(&end_marker).ok_or(format!(
+        "ERROR Failed to find snippet end \"{}\". ",
+        &end_marker
+    ))?;
 
     if start_position >= end_position {
         Err(format!("ERROR Detected start position ({start_position}) of snippet \"{snippet_name}\" was greater than or equal to detected end position ({end_position})."))

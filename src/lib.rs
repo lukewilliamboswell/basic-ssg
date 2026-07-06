@@ -6,7 +6,7 @@
 use core::mem::ManuallyDrop;
 use std::ffi::{c_char, c_void, CStr};
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -21,7 +21,7 @@ use crate::roc_platform_abi::*;
 // stay robust against that renumbering we alias against the *semantic* names the
 // generator also emits (keyed by module + function name).
 // NOTE on result types: `roc glue` emits a stable, semantic name for every
-// hosted result type (e.g. `StdoutHostLineResult`, `SSGHostFindFilesResult`),
+// hosted result type (e.g. `StdoutHostLineResult`, `SSGHostFindPagesResult`),
 // keyed by module + function. We use those generated names directly below.
 //
 // Stdio/Cmd hosted fns use a `Str` error at the boundary: a `Try(_, IOErr)`
@@ -111,26 +111,27 @@ pub extern "C" fn hosted_stderr_write(message: RocStr) -> StderrHostLineResult {
 // ============================================================================
 // SSG effects
 //
-// All three return plain `Str` errors (no IOErr). The generated result types are
-// `SSGHost<Fn>Result` with a `{ payload, tag }` shape; `find_files` returns a
-// `RocList` of the generated `AnonStruct3` record `{ path, relpath, url }`.
+// All three return plain `Str` errors (no IOErr). Public Roc APIs use
+// `Path.Path`, but hosted functions receive `Path.Raw`
+// (`UnixBytes(List(U8)) | WindowsU16s(List(U16))`) so the host can preserve OS
+// path bytes at the boundary.
 // ============================================================================
 
-fn try_find_files_ok(list: RocList<SSGHostFindFilesOk>) -> SSGHostFindFilesResult {
-    SSGHostFindFilesResult {
-        payload: SSGHostFindFilesResultPayload {
+fn try_find_pages_ok(list: RocList<SSGHostFindPagesOk>) -> SSGHostFindPagesResult {
+    SSGHostFindPagesResult {
+        payload: SSGHostFindPagesResultPayload {
             ok: ManuallyDrop::new(list),
         },
-        tag: SSGHostFindFilesResultTag::Ok,
+        tag: SSGHostFindPagesResultTag::Ok,
     }
 }
 
-fn try_find_files_err(message: RocStr) -> SSGHostFindFilesResult {
-    SSGHostFindFilesResult {
-        payload: SSGHostFindFilesResultPayload {
+fn try_find_pages_err(message: RocStr) -> SSGHostFindPagesResult {
+    SSGHostFindPagesResult {
+        payload: SSGHostFindPagesResultPayload {
             err: ManuallyDrop::new(message),
         },
-        tag: SSGHostFindFilesResultTag::Err,
+        tag: SSGHostFindPagesResultTag::Err,
     }
 }
 
@@ -171,37 +172,43 @@ fn try_write_file_err(message: RocStr) -> SSGHostWriteFileResult {
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_ssg_find_files(dir: RocStr) -> SSGHostFindFilesResult {
+pub extern "C" fn hosted_ssg_find_pages(dir: UnixBytesOrWindowsU16s) -> SSGHostFindPagesResult {
     let roc_host = roc_host();
-    let dir_path = PathBuf::from(dir.as_str());
-    dir.decref(roc_host);
+    let dir_path = match pathbuf_from_roc_path(dir, roc_host) {
+        Ok(path) => path,
+        Err(message) => return try_find_pages_err(RocStr::from_str(&message, roc_host)),
+    };
 
-    match ssg::find_files(&dir_path) {
-        Ok(found) => {
-            if found.is_empty() {
-                return try_find_files_ok(RocList::empty());
+    match ssg::find_pages(&dir_path) {
+        Ok(pages) => {
+            if pages.is_empty() {
+                return try_find_pages_ok(RocList::empty());
             }
-            let list = RocList::<SSGHostFindFilesOk>::allocate(found.len(), roc_host);
-            for (index, file) in found.iter().enumerate() {
+            let list = RocList::<SSGHostFindPagesOk>::allocate(pages.len(), roc_host);
+            for (index, page) in pages.iter().enumerate() {
                 unsafe {
-                    list.elements.add(index).write(SSGHostFindFilesOk {
-                        path: RocStr::from_str(&file.path, roc_host),
-                        relpath: RocStr::from_str(&file.relpath, roc_host),
-                        url: RocStr::from_str(&file.url, roc_host),
+                    list.elements.add(index).write(SSGHostFindPagesOk {
+                        output_path: roc_path_from_path(&page.output_path, roc_host),
+                        source_path: roc_path_from_path(&page.source_path, roc_host),
+                        url: RocStr::from_str(&page.url, roc_host),
                     });
                 }
             }
-            try_find_files_ok(list)
+            try_find_pages_ok(list)
         }
-        Err(message) => try_find_files_err(RocStr::from_str(&message, roc_host)),
+        Err(message) => try_find_pages_err(RocStr::from_str(&message, roc_host)),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_ssg_parse_markdown(path: RocStr) -> SSGHostParseMarkdownResult {
+pub extern "C" fn hosted_ssg_parse_markdown(
+    path: UnixBytesOrWindowsU16s,
+) -> SSGHostParseMarkdownResult {
     let roc_host = roc_host();
-    let input_path = PathBuf::from(path.as_str());
-    path.decref(roc_host);
+    let input_path = match pathbuf_from_roc_path(path, roc_host) {
+        Ok(path) => path,
+        Err(message) => return try_parse_markdown_err(RocStr::from_str(&message, roc_host)),
+    };
 
     match ssg::parse_markdown(&input_path) {
         Ok(html) => try_parse_markdown_ok(RocStr::from_str(&html, roc_host)),
@@ -211,21 +218,130 @@ pub extern "C" fn hosted_ssg_parse_markdown(path: RocStr) -> SSGHostParseMarkdow
 
 #[no_mangle]
 pub extern "C" fn hosted_ssg_write_file(
-    output_dir: RocStr,
-    relpath: RocStr,
+    output_dir: UnixBytesOrWindowsU16s,
+    output_path: UnixBytesOrWindowsU16s,
     content: RocStr,
 ) -> SSGHostWriteFileResult {
     let roc_host = roc_host();
-    let output_dir_path = PathBuf::from(output_dir.as_str());
-    let rel_path = PathBuf::from(relpath.as_str());
-    let result = ssg::write_file(&output_dir_path, &rel_path, content.as_str());
-    output_dir.decref(roc_host);
-    relpath.decref(roc_host);
+    let output_dir_path = match pathbuf_from_roc_path(output_dir, roc_host) {
+        Ok(path) => path,
+        Err(message) => {
+            decref_unix_bytes_or_windows_u16s(output_path, roc_host);
+            content.decref(roc_host);
+            return try_write_file_err(RocStr::from_str(&message, roc_host));
+        }
+    };
+    let output_path = match pathbuf_from_roc_path(output_path, roc_host) {
+        Ok(path) => path,
+        Err(message) => {
+            content.decref(roc_host);
+            return try_write_file_err(RocStr::from_str(&message, roc_host));
+        }
+    };
+    let result = ssg::write_file(&output_dir_path, &output_path, content.as_str());
     content.decref(roc_host);
 
     match result {
         Ok(()) => try_write_file_ok(),
         Err(message) => try_write_file_err(RocStr::from_str(&message, roc_host)),
+    }
+}
+
+#[cfg(unix)]
+fn pathbuf_from_roc_path(
+    path: UnixBytesOrWindowsU16s,
+    roc_host: &RocHost,
+) -> Result<PathBuf, String> {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+
+    match path.tag {
+        UnixBytesOrWindowsU16sTag::UnixBytes => unsafe {
+            let bytes = ManuallyDrop::into_inner(path.payload.unix_bytes);
+            let path = PathBuf::from(OsString::from_vec(bytes.as_slice().to_vec()));
+            bytes.decref(roc_host);
+            Ok(path)
+        },
+        UnixBytesOrWindowsU16sTag::WindowsU16s => unsafe {
+            let u16s = ManuallyDrop::into_inner(path.payload.windows_u16s);
+            u16s.decref(roc_host);
+            Err("expected UnixBytes path on this platform, got WindowsU16s".to_owned())
+        },
+    }
+}
+
+#[cfg(windows)]
+fn pathbuf_from_roc_path(
+    path: UnixBytesOrWindowsU16s,
+    roc_host: &RocHost,
+) -> Result<PathBuf, String> {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStringExt;
+
+    match path.tag {
+        UnixBytesOrWindowsU16sTag::UnixBytes => unsafe {
+            let bytes = ManuallyDrop::into_inner(path.payload.unix_bytes);
+            bytes.decref(roc_host);
+            Err("expected WindowsU16s path on this platform, got UnixBytes".to_owned())
+        },
+        UnixBytesOrWindowsU16sTag::WindowsU16s => unsafe {
+            let u16s = ManuallyDrop::into_inner(path.payload.windows_u16s);
+            let path = PathBuf::from(OsString::from_wide(u16s.as_slice()));
+            u16s.decref(roc_host);
+            Ok(path)
+        },
+    }
+}
+
+#[cfg(not(any(unix, windows)))]
+fn pathbuf_from_roc_path(
+    path: UnixBytesOrWindowsU16s,
+    roc_host: &RocHost,
+) -> Result<PathBuf, String> {
+    decref_unix_bytes_or_windows_u16s(path, roc_host);
+    Err("filesystem paths are unsupported on this platform".to_owned())
+}
+
+#[cfg(unix)]
+fn roc_path_from_path(path: &Path, roc_host: &RocHost) -> UnixBytesOrWindowsU16s {
+    use std::os::unix::ffi::OsStrExt;
+
+    UnixBytesOrWindowsU16s {
+        payload: UnixBytesOrWindowsU16sPayload {
+            unix_bytes: ManuallyDrop::new(RocListWith::<u8, false>::from_slice(
+                path.as_os_str().as_bytes(),
+                roc_host,
+            )),
+        },
+        tag: UnixBytesOrWindowsU16sTag::UnixBytes,
+    }
+}
+
+#[cfg(windows)]
+fn roc_path_from_path(path: &Path, roc_host: &RocHost) -> UnixBytesOrWindowsU16s {
+    use std::os::windows::ffi::OsStrExt;
+
+    let units: Vec<u16> = path.as_os_str().encode_wide().collect();
+    UnixBytesOrWindowsU16s {
+        payload: UnixBytesOrWindowsU16sPayload {
+            windows_u16s: ManuallyDrop::new(RocListWith::<u16, false>::from_slice(
+                &units, roc_host,
+            )),
+        },
+        tag: UnixBytesOrWindowsU16sTag::WindowsU16s,
+    }
+}
+
+#[cfg(not(any(unix, windows)))]
+fn roc_path_from_path(path: &Path, roc_host: &RocHost) -> UnixBytesOrWindowsU16s {
+    UnixBytesOrWindowsU16s {
+        payload: UnixBytesOrWindowsU16sPayload {
+            unix_bytes: ManuallyDrop::new(RocListWith::<u8, false>::from_slice(
+                path.to_string_lossy().as_bytes(),
+                roc_host,
+            )),
+        },
+        tag: UnixBytesOrWindowsU16sTag::UnixBytes,
     }
 }
 
@@ -576,12 +692,4 @@ pub fn rust_main(argc: i32, argv: *const *const c_char) -> i32 {
 
     set_roc_host(core::ptr::null_mut());
     exit_code
-}
-
-// Convert a RocStr path argument into a PathBuf, decref'ing the RocStr.
-#[allow(dead_code)]
-fn path_from_roc_str(path: RocStr, roc_host: &RocHost) -> PathBuf {
-    let p = PathBuf::from(path.as_str());
-    path.decref(roc_host);
-    p
 }
