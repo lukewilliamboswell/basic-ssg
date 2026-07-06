@@ -21,13 +21,10 @@ use crate::roc_platform_abi::*;
 // stay robust against that renumbering we alias against the *semantic* names the
 // generator also emits (keyed by module + function name).
 // NOTE on result types: `roc glue` emits a stable, semantic name for every
-// hosted result type (e.g. `StdoutHostLineResult`, `SSGHostFindPagesResult`),
+// hosted result type (e.g. `HostStdoutLineResult`, `HostSsgFindPagesResult`),
 // keyed by module + function. We use those generated names directly below.
 //
-// Stdio/Cmd hosted fns use a `Str` error at the boundary: a `Try(_, IOErr)`
-// hosted result compiles to a 40-byte struct the current compiler misreads,
-// while `Try(_, Str)` (32-byte) is read correctly. The Roc wrappers rebuild the
-// structured `IOErr` error from the message.
+// Public Roc modules wrap the closed host errors in open app-facing error rows.
 
 extern "C" {
     fn roc_main(args: RocList<RocStr>) -> i32;
@@ -57,29 +54,74 @@ fn roc_host() -> &'static RocHost {
 }
 
 // ============================================================================
-// Stderr effects (Str error at the boundary)
+// Host error helpers
 // ============================================================================
 
-fn try_stderr_unit_ok() -> StderrHostLineResult {
-    StderrHostLineResult {
-        payload: StderrHostLineResultPayload {
-            ok: ManuallyDrop::new(()),
+fn io_err_other(message: String, roc_host: &RocHost) -> IOErr {
+    IOErr {
+        payload: IOErrPayload {
+            other: ManuallyDrop::new(RocStr::from_str(&message, roc_host)),
         },
-        tag: StderrHostLineResultTag::Ok,
+        tag: IOErrTag::Other,
     }
 }
 
-fn try_stderr_unit_err(message: RocStr) -> StderrHostLineResult {
-    StderrHostLineResult {
-        payload: StderrHostLineResultPayload {
-            err: ManuallyDrop::new(message),
+fn io_err_from_std(error: std::io::Error, roc_host: &RocHost) -> IOErr {
+    match error.kind() {
+        std::io::ErrorKind::NotFound => IOErr {
+            payload: IOErrPayload { not_found: [] },
+            tag: IOErrTag::NotFound,
         },
-        tag: StderrHostLineResultTag::Err,
+        std::io::ErrorKind::PermissionDenied => IOErr {
+            payload: IOErrPayload {
+                permission_denied: [],
+            },
+            tag: IOErrTag::PermissionDenied,
+        },
+        std::io::ErrorKind::BrokenPipe => IOErr {
+            payload: IOErrPayload { broken_pipe: [] },
+            tag: IOErrTag::BrokenPipe,
+        },
+        std::io::ErrorKind::AlreadyExists => IOErr {
+            payload: IOErrPayload { already_exists: [] },
+            tag: IOErrTag::AlreadyExists,
+        },
+        std::io::ErrorKind::Interrupted => IOErr {
+            payload: IOErrPayload { interrupted: [] },
+            tag: IOErrTag::Interrupted,
+        },
+        std::io::ErrorKind::Unsupported => IOErr {
+            payload: IOErrPayload { unsupported: [] },
+            tag: IOErrTag::Unsupported,
+        },
+        _ => io_err_other(error.to_string(), roc_host),
+    }
+}
+
+// ============================================================================
+// Stderr effects
+// ============================================================================
+
+fn try_stderr_unit_ok() -> HostStderrLineResult {
+    HostStderrLineResult {
+        payload: HostStderrLineResultPayload {
+            ok: ManuallyDrop::new(()),
+        },
+        tag: HostStderrLineResultTag::Ok,
+    }
+}
+
+fn try_stderr_unit_err(error: IOErr) -> HostStderrLineResult {
+    HostStderrLineResult {
+        payload: HostStderrLineResultPayload {
+            err: ManuallyDrop::new(error),
+        },
+        tag: HostStderrLineResultTag::Err,
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_stderr_line(message: RocStr) -> StderrHostLineResult {
+pub extern "C" fn hosted_stderr_line(message: RocStr) -> HostStderrLineResult {
     let roc_host = roc_host();
     let result = {
         let mut stderr = io::stderr().lock();
@@ -89,12 +131,12 @@ pub extern "C" fn hosted_stderr_line(message: RocStr) -> StderrHostLineResult {
 
     match result {
         Ok(()) => try_stderr_unit_ok(),
-        Err(error) => try_stderr_unit_err(RocStr::from_str(&error.to_string(), roc_host)),
+        Err(error) => try_stderr_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_stderr_write(message: RocStr) -> StderrHostLineResult {
+pub extern "C" fn hosted_stderr_write(message: RocStr) -> HostStderrLineResult {
     let roc_host = roc_host();
     let result = {
         let mut stderr = io::stderr().lock();
@@ -104,75 +146,75 @@ pub extern "C" fn hosted_stderr_write(message: RocStr) -> StderrHostLineResult {
 
     match result {
         Ok(()) => try_stderr_unit_ok(),
-        Err(error) => try_stderr_unit_err(RocStr::from_str(&error.to_string(), roc_host)),
+        Err(error) => try_stderr_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
 // ============================================================================
 // SSG effects
 //
-// All three return plain `Str` errors (no IOErr). Public Roc APIs use
-// `Path.Path`, but hosted functions receive `Path.Raw`
+// Public Roc APIs use `Path.Path`, but hosted functions receive `Path.Raw`
 // (`UnixBytes(List(U8)) | WindowsU16s(List(U16))`) so the host can preserve OS
-// path bytes at the boundary.
+// path bytes at the boundary. Host SSG errors are closed tag unions; public SSG
+// wrappers reopen them for app code.
 // ============================================================================
 
-fn try_find_pages_ok(list: RocList<SSGHostFindPagesOk>) -> SSGHostFindPagesResult {
-    SSGHostFindPagesResult {
-        payload: SSGHostFindPagesResultPayload {
+fn try_find_pages_ok(list: RocList<HostSsgFindPagesOk>) -> HostSsgFindPagesResult {
+    HostSsgFindPagesResult {
+        payload: HostSsgFindPagesResultPayload {
             ok: ManuallyDrop::new(list),
         },
-        tag: SSGHostFindPagesResultTag::Ok,
+        tag: HostSsgFindPagesResultTag::Ok,
     }
 }
 
-fn try_find_pages_err(message: RocStr) -> SSGHostFindPagesResult {
-    SSGHostFindPagesResult {
-        payload: SSGHostFindPagesResultPayload {
+fn try_find_pages_err(message: RocStr) -> HostSsgFindPagesResult {
+    HostSsgFindPagesResult {
+        payload: HostSsgFindPagesResultPayload {
             err: ManuallyDrop::new(message),
         },
-        tag: SSGHostFindPagesResultTag::Err,
+        tag: HostSsgFindPagesResultTag::Err,
     }
 }
 
-fn try_parse_markdown_ok(html: RocStr) -> SSGHostParseMarkdownResult {
-    SSGHostParseMarkdownResult {
-        payload: SSGHostParseMarkdownResultPayload {
+fn try_parse_markdown_ok(html: RocStr) -> HostSsgParseMarkdownResult {
+    HostSsgParseMarkdownResult {
+        payload: HostSsgParseMarkdownResultPayload {
             ok: ManuallyDrop::new(html),
         },
-        tag: SSGHostParseMarkdownResultTag::Ok,
+        tag: HostSsgParseMarkdownResultTag::Ok,
     }
 }
 
-fn try_parse_markdown_err(message: RocStr) -> SSGHostParseMarkdownResult {
-    SSGHostParseMarkdownResult {
-        payload: SSGHostParseMarkdownResultPayload {
+fn try_parse_markdown_err(message: RocStr) -> HostSsgParseMarkdownResult {
+    HostSsgParseMarkdownResult {
+        payload: HostSsgParseMarkdownResultPayload {
             err: ManuallyDrop::new(message),
         },
-        tag: SSGHostParseMarkdownResultTag::Err,
+        tag: HostSsgParseMarkdownResultTag::Err,
     }
 }
 
-fn try_write_file_ok() -> SSGHostWriteFileResult {
-    SSGHostWriteFileResult {
-        payload: SSGHostWriteFileResultPayload {
+fn try_write_file_ok() -> HostSsgWriteFileResult {
+    HostSsgWriteFileResult {
+        payload: HostSsgWriteFileResultPayload {
             ok: ManuallyDrop::new(()),
         },
-        tag: SSGHostWriteFileResultTag::Ok,
+        tag: HostSsgWriteFileResultTag::Ok,
     }
 }
 
-fn try_write_file_err(message: RocStr) -> SSGHostWriteFileResult {
-    SSGHostWriteFileResult {
-        payload: SSGHostWriteFileResultPayload {
+fn try_write_file_err(message: RocStr) -> HostSsgWriteFileResult {
+    HostSsgWriteFileResult {
+        payload: HostSsgWriteFileResultPayload {
             err: ManuallyDrop::new(message),
         },
-        tag: SSGHostWriteFileResultTag::Err,
+        tag: HostSsgWriteFileResultTag::Err,
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_ssg_find_pages(dir: UnixBytesOrWindowsU16s) -> SSGHostFindPagesResult {
+pub extern "C" fn hosted_ssg_find_pages(dir: UnixBytesOrWindowsU16s) -> HostSsgFindPagesResult {
     let roc_host = roc_host();
     let dir_path = match pathbuf_from_roc_path(dir, roc_host) {
         Ok(path) => path,
@@ -184,10 +226,10 @@ pub extern "C" fn hosted_ssg_find_pages(dir: UnixBytesOrWindowsU16s) -> SSGHostF
             if pages.is_empty() {
                 return try_find_pages_ok(RocList::empty());
             }
-            let list = RocList::<SSGHostFindPagesOk>::allocate(pages.len(), roc_host);
+            let list = RocList::<HostSsgFindPagesOk>::allocate(pages.len(), roc_host);
             for (index, page) in pages.iter().enumerate() {
                 unsafe {
-                    list.elements.add(index).write(SSGHostFindPagesOk {
+                    list.elements.add(index).write(HostSsgFindPagesOk {
                         output_path: roc_path_from_path(&page.output_path, roc_host),
                         source_path: roc_path_from_path(&page.source_path, roc_host),
                         url: RocStr::from_str(&page.url, roc_host),
@@ -203,7 +245,7 @@ pub extern "C" fn hosted_ssg_find_pages(dir: UnixBytesOrWindowsU16s) -> SSGHostF
 #[no_mangle]
 pub extern "C" fn hosted_ssg_parse_markdown(
     path: UnixBytesOrWindowsU16s,
-) -> SSGHostParseMarkdownResult {
+) -> HostSsgParseMarkdownResult {
     let roc_host = roc_host();
     let input_path = match pathbuf_from_roc_path(path, roc_host) {
         Ok(path) => path,
@@ -221,7 +263,7 @@ pub extern "C" fn hosted_ssg_write_file(
     output_dir: UnixBytesOrWindowsU16s,
     output_path: UnixBytesOrWindowsU16s,
     content: RocStr,
-) -> SSGHostWriteFileResult {
+) -> HostSsgWriteFileResult {
     let roc_host = roc_host();
     let output_dir_path = match pathbuf_from_roc_path(output_dir, roc_host) {
         Ok(path) => path,
@@ -349,26 +391,26 @@ fn roc_path_from_path(path: &Path, roc_host: &RocHost) -> UnixBytesOrWindowsU16s
 // Stdout effects
 // ============================================================================
 
-fn try_stdout_unit_ok() -> StdoutHostLineResult {
-    StdoutHostLineResult {
-        payload: StdoutHostLineResultPayload {
+fn try_stdout_unit_ok() -> HostStdoutLineResult {
+    HostStdoutLineResult {
+        payload: HostStdoutLineResultPayload {
             ok: ManuallyDrop::new(()),
         },
-        tag: StdoutHostLineResultTag::Ok,
+        tag: HostStdoutLineResultTag::Ok,
     }
 }
 
-fn try_stdout_unit_err(message: RocStr) -> StdoutHostLineResult {
-    StdoutHostLineResult {
-        payload: StdoutHostLineResultPayload {
-            err: ManuallyDrop::new(message),
+fn try_stdout_unit_err(error: IOErr) -> HostStdoutLineResult {
+    HostStdoutLineResult {
+        payload: HostStdoutLineResultPayload {
+            err: ManuallyDrop::new(error),
         },
-        tag: StdoutHostLineResultTag::Err,
+        tag: HostStdoutLineResultTag::Err,
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_stdout_line(message: RocStr) -> StdoutHostLineResult {
+pub extern "C" fn hosted_stdout_line(message: RocStr) -> HostStdoutLineResult {
     let roc_host = roc_host();
     let result = {
         let mut stdout = io::stdout().lock();
@@ -378,12 +420,12 @@ pub extern "C" fn hosted_stdout_line(message: RocStr) -> StdoutHostLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(RocStr::from_str(&error.to_string(), roc_host)),
+        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_stdout_write(message: RocStr) -> StdoutHostLineResult {
+pub extern "C" fn hosted_stdout_write(message: RocStr) -> HostStdoutLineResult {
     let roc_host = roc_host();
     let result = {
         let mut stdout = io::stdout().lock();
@@ -393,7 +435,7 @@ pub extern "C" fn hosted_stdout_write(message: RocStr) -> StdoutHostLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(RocStr::from_str(&error.to_string(), roc_host)),
+        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
@@ -401,21 +443,21 @@ pub extern "C" fn hosted_stdout_write(message: RocStr) -> StdoutHostLineResult {
 // Cmd effects
 // ============================================================================
 
-fn try_cmd_status_ok(code: i32) -> CmdHostStatusResult {
-    CmdHostStatusResult {
-        payload: CmdHostStatusResultPayload {
+fn try_cmd_status_ok(code: i32) -> HostCmdStatusResult {
+    HostCmdStatusResult {
+        payload: HostCmdStatusResultPayload {
             ok: ManuallyDrop::new(code),
         },
-        tag: CmdHostStatusResultTag::Ok,
+        tag: HostCmdStatusResultTag::Ok,
     }
 }
 
-fn try_cmd_status_err(message: RocStr) -> CmdHostStatusResult {
-    CmdHostStatusResult {
-        payload: CmdHostStatusResultPayload {
-            err: ManuallyDrop::new(message),
+fn try_cmd_status_err(error: IOErr) -> HostCmdStatusResult {
+    HostCmdStatusResult {
+        payload: HostCmdStatusResultPayload {
+            err: ManuallyDrop::new(error),
         },
-        tag: CmdHostStatusResultTag::Err,
+        tag: HostCmdStatusResultTag::Err,
     }
 }
 
@@ -444,7 +486,7 @@ fn build_process_command(
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_cmd_status(cmd: CmdHostStatusArgs) -> CmdHostStatusResult {
+pub extern "C" fn hosted_cmd_status(cmd: HostCmdStatusArgs) -> HostCmdStatusResult {
     let roc_host = roc_host();
     let mut command = build_process_command(&cmd.program, &cmd.args, &cmd.envs, cmd.clear_envs);
     let result = command.status();
@@ -454,12 +496,12 @@ pub extern "C" fn hosted_cmd_status(cmd: CmdHostStatusArgs) -> CmdHostStatusResu
 
     match result {
         Ok(status) => try_cmd_status_ok(status.code().unwrap_or(-1)),
-        Err(error) => try_cmd_status_err(RocStr::from_str(&error.to_string(), roc_host)),
+        Err(error) => try_cmd_status_err(io_err_from_std(error, roc_host)),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_cmd_output(cmd: CmdHostOutputArgs) -> CmdHostOutput {
+pub extern "C" fn hosted_cmd_output(cmd: HostCmdOutputArgs) -> HostCmdOutput {
     let roc_host = roc_host();
     let mut command = build_process_command(&cmd.program, &cmd.args, &cmd.envs, cmd.clear_envs);
     let result = command.output();
@@ -468,12 +510,12 @@ pub extern "C" fn hosted_cmd_output(cmd: CmdHostOutputArgs) -> CmdHostOutput {
     cmd.envs.decref(roc_host);
 
     match result {
-        Ok(output) => CmdHostOutput {
+        Ok(output) => HostCmdOutput {
             stderr: RocListWith::<u8, false>::from_slice(&output.stderr, roc_host),
             stdout: RocListWith::<u8, false>::from_slice(&output.stdout, roc_host),
             exit_code: output.status.code().unwrap_or(-1),
         },
-        Err(error) => CmdHostOutput {
+        Err(error) => HostCmdOutput {
             stderr: RocListWith::<u8, false>::from_slice(error.to_string().as_bytes(), roc_host),
             stdout: RocListWith::<u8, false>::from_slice(&[], roc_host),
             exit_code: -1,
@@ -486,29 +528,30 @@ pub extern "C" fn hosted_cmd_output(cmd: CmdHostOutputArgs) -> CmdHostOutput {
 // ============================================================================
 
 #[no_mangle]
-pub extern "C" fn hosted_env_var(name: RocStr) -> EnvVarResult {
+pub extern "C" fn hosted_env_var(name: RocStr) -> HostEnvVarResult {
     let roc_host = roc_host();
+    let name_str = name.as_str().to_owned();
     let value = std::env::var_os(name.as_str());
     name.decref(roc_host);
 
     match value {
-        Some(value) => EnvVarResult {
-            payload: EnvVarResultPayload {
+        Some(value) => HostEnvVarResult {
+            payload: HostEnvVarResultPayload {
                 ok: ManuallyDrop::new(RocStr::from_str(&value.to_string_lossy(), roc_host)),
             },
-            tag: EnvVarResultTag::Ok,
+            tag: HostEnvVarResultTag::Ok,
         },
-        None => EnvVarResult {
-            payload: EnvVarResultPayload {
-                err: ManuallyDrop::new(core::ptr::null_mut()),
+        None => HostEnvVarResult {
+            payload: HostEnvVarResultPayload {
+                err: ManuallyDrop::new(RocStr::from_str(&name_str, roc_host)),
             },
-            tag: EnvVarResultTag::Err,
+            tag: HostEnvVarResultTag::Err,
         },
     }
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_env_dict() -> RocList<EnvHostDict> {
+pub extern "C" fn hosted_env_dict() -> RocList<HostEnvDict> {
     let roc_host = roc_host();
     let vars: Vec<(String, String)> = std::env::vars_os()
         .map(|(k, v)| {
@@ -522,10 +565,10 @@ pub extern "C" fn hosted_env_dict() -> RocList<EnvHostDict> {
     if vars.is_empty() {
         return RocList::empty();
     }
-    let list = RocList::<EnvHostDict>::allocate(vars.len(), roc_host);
+    let list = RocList::<HostEnvDict>::allocate(vars.len(), roc_host);
     for (index, (key, value)) in vars.iter().enumerate() {
         unsafe {
-            list.elements.add(index).write(EnvHostDict {
+            list.elements.add(index).write(HostEnvDict {
                 _0: RocStr::from_str(key, roc_host),
                 _1: RocStr::from_str(value, roc_host),
             });
@@ -535,9 +578,9 @@ pub extern "C" fn hosted_env_dict() -> RocList<EnvHostDict> {
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_env_arch_os() -> EnvHostArchOs {
+pub extern "C" fn hosted_env_arch_os() -> HostEnvArchOs {
     let roc_host = roc_host();
-    EnvHostArchOs {
+    HostEnvArchOs {
         arch: RocStr::from_str(std::env::consts::ARCH, roc_host),
         os: RocStr::from_str(std::env::consts::OS, roc_host),
     }
@@ -564,20 +607,20 @@ fn locale_first() -> Option<String> {
 }
 
 #[no_mangle]
-pub extern "C" fn hosted_locale_get() -> LocaleGetResult {
+pub extern "C" fn hosted_locale_get() -> HostLocaleGetResult {
     let roc_host = roc_host();
     match locale_first() {
-        Some(tag) => LocaleGetResult {
-            payload: LocaleGetResultPayload {
+        Some(tag) => HostLocaleGetResult {
+            payload: HostLocaleGetResultPayload {
                 ok: ManuallyDrop::new(RocStr::from_str(&tag, roc_host)),
             },
-            tag: LocaleGetResultTag::Ok,
+            tag: HostLocaleGetResultTag::Ok,
         },
-        None => LocaleGetResult {
-            payload: LocaleGetResultPayload {
+        None => HostLocaleGetResult {
+            payload: HostLocaleGetResultPayload {
                 err: ManuallyDrop::new(core::ptr::null_mut()),
             },
-            tag: LocaleGetResultTag::Err,
+            tag: HostLocaleGetResultTag::Err,
         },
     }
 }

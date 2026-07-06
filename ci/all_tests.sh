@@ -46,12 +46,13 @@ echo "=== Building the platform host ==="
 
 # --- Example ------------------------------------------------------------------
 echo ""
-echo "=== Checking the example ==="
-$ROC check ./example/main.roc
+echo "=== Testing examples ==="
+$ROC test ./example/main.roc
+$ROC test ./example/error-handling.roc
 
 # NOTE: `roc build ./example/main.roc` currently triggers an upstream ARC borrow
 # certifier panic (roc-lang/roc#9825) when codegen-ing the Html.render tree, so
-# the build + run is allowed to fail until that lands. The check above proves the
+# the build + run is allowed to fail until that lands. The test above proves the
 # example type-checks; the host/SSG pipeline is exercised whenever the build
 # succeeds. Remove the `|| true` guard once #9825 is fixed.
 echo ""
@@ -67,6 +68,11 @@ if [ "$EXAMPLE_OK" -eq 0 ]; then
 else
     echo "WARNING: example build failed (exit $EXAMPLE_OK) -- known-blocked on roc-lang/roc#9825."
 fi
+
+echo ""
+echo "=== Building and running the error-handling example ==="
+$ROC build ./example/error-handling.roc --output=./example/error-handling
+./example/error-handling ./example/content/index.md
 
 # --- Docs ---------------------------------------------------------------------
 echo ""

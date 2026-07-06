@@ -10,21 +10,21 @@ platform ""
 	}
 	provides { "roc_main": main_for_host! }
 	hosted {
-		"hosted_stdout_line": Stdout.host_line!,
-		"hosted_stdout_write": Stdout.host_write!,
-		"hosted_stderr_line": Stderr.host_line!,
-		"hosted_stderr_write": Stderr.host_write!,
-		"hosted_cmd_status": Cmd.host_status!,
-		"hosted_cmd_output": Cmd.host_output!,
-		"hosted_env_var": Env.var!,
-		"hosted_env_dict": Env.host_dict!,
-		"hosted_env_arch_os": Env.host_arch_os!,
-		"hosted_locale_get": Locale.get!,
-		"hosted_locale_all": Locale.all!,
-		"hosted_utc_now": Utc.now!,
-		"hosted_ssg_find_pages": SSG.host_find_pages!,
-		"hosted_ssg_parse_markdown": SSG.host_parse_markdown!,
-		"hosted_ssg_write_file": SSG.host_write_file!,
+		"hosted_stdout_line": Host.stdout_line!,
+		"hosted_stdout_write": Host.stdout_write!,
+		"hosted_stderr_line": Host.stderr_line!,
+		"hosted_stderr_write": Host.stderr_write!,
+		"hosted_cmd_status": Host.cmd_status!,
+		"hosted_cmd_output": Host.cmd_output!,
+		"hosted_env_var": Host.env_var!,
+		"hosted_env_dict": Host.env_dict!,
+		"hosted_env_arch_os": Host.env_arch_os!,
+		"hosted_locale_get": Host.locale_get!,
+		"hosted_locale_all": Host.locale_all!,
+		"hosted_utc_now": Host.utc_now!,
+		"hosted_ssg_find_pages": Host.ssg_find_pages!,
+		"hosted_ssg_parse_markdown": Host.ssg_parse_markdown!,
+		"hosted_ssg_write_file": Host.ssg_write_file!,
 	}
 	targets: {
 		inputs_dir: "targets/",
@@ -36,6 +36,7 @@ platform ""
 
 import SSG
 import Path
+import Host
 import Html
 import HtmlAttributes
 import IOErr
