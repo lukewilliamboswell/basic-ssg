@@ -11,7 +11,7 @@ Env := [].{
     ## [Unicode replacement character](https://unicode.org/glossary/#replacement_character).
     ##
     ## Returns `Err(VarNotFound)` if the variable is not set.
-    var! : Str => Try(Str, [VarNotFound, ..])
+    var! : Str => Try(Str, [VarNotFound])
 
     # Host function: all environment variables as (key, value) pairs.
     host_dict! : {} => List((Str, Str))

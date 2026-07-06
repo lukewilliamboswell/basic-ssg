@@ -57,9 +57,10 @@ $ROC check ./example/main.roc
 echo ""
 echo "=== Building and running the example (tolerated failure: roc-lang/roc#9825) ==="
 EXAMPLE_OK=0
-$ROC build ./example/main.roc || EXAMPLE_OK=$?
+$ROC build ./example/main.roc --output=./example/main || EXAMPLE_OK=$?
 if [ "$EXAMPLE_OK" -eq 0 ]; then
-    rm -rf ./example/www
+    mkdir -p ./example/www
+    find ./example/www -type f -name '*.html' -delete
     ./example/main ./example/content/ ./example/www/
     echo "Generated pages:"
     find ./example/www -type f -name '*.html' | sort

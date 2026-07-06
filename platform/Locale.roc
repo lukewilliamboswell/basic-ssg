@@ -3,7 +3,7 @@ Locale := [].{
     ## `Err(NotAvailable)` if the locale could not be obtained.
     ##
     ## The returned `Str` is a BCP 47 language tag, like `en-US` or `fr-CA`.
-    get! : {} => Try(Str, [NotAvailable, ..])
+    get! : {} => Try(Str, [NotAvailable])
 
     ## Returns the preferred locales for the system or application.
     ##
