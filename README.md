@@ -46,7 +46,7 @@ render_pages! = |pages, output_dir|
 			markdown_html = SSG.parse_markdown!(page.source_path)?
 			page_html = "<!doctype html><html><body>${markdown_html}</body></html>"
 
-			_ = SSG.write_file!({
+			SSG.write_file!({
 				output_dir,
 				output_path: page.output_path,
 				content: page_html,

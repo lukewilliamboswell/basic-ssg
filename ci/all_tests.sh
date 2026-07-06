@@ -50,6 +50,10 @@ echo "=== Testing examples ==="
 $ROC test ./example/main.roc
 $ROC test ./example/error-handling.roc
 
+echo ""
+echo "=== Testing platform helper modules ==="
+$ROC test ./platform/Html.roc
+
 # NOTE: `roc build ./example/main.roc` currently triggers an upstream ARC borrow
 # certifier panic (roc-lang/roc#9825) when codegen-ing the Html.render tree, so
 # the build + run is allowed to fail until that lands. The test above proves the

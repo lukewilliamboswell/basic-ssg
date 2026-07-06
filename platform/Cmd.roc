@@ -5,13 +5,17 @@ import Host
 Cmd := [].{
 
 	## Represents a command to be executed in a child process.
-	##
-	## - `envs` is a flat list `[key0, value0, key1, value1, ...]`.
 	Command : {
 		program : Str,
 		args : List(Str),
-		envs : List(Str),
+		envs : List(EnvVar),
 		clear_envs : Bool,
+	}
+
+	## An environment variable override for a child process.
+	EnvVar : {
+		key : Str,
+		value : Str,
 	}
 
 	## Captured output of a command.
@@ -32,15 +36,15 @@ Cmd := [].{
 
 	## Add a single argument to the command.
 	arg : Command, Str -> Command
-	arg = |cmd, value| { ..cmd, args: List.append(cmd.args, value) }
+	arg = |cmd, value| { ..cmd, args: cmd.args.append(value) }
 
 	## Add multiple arguments to the command.
 	args : Command, List(Str) -> Command
-	args = |cmd, values| { ..cmd, args: List.concat(cmd.args, values) }
+	args = |cmd, values| { ..cmd, args: cmd.args.concat(values) }
 
 	## Add a single environment variable to the command.
 	env : Command, Str, Str -> Command
-	env = |cmd, key, value| { ..cmd, envs: List.append(List.append(cmd.envs, key), value) }
+	env = |cmd, key, value| { ..cmd, envs: cmd.envs.append({ key, value }) }
 
 	## Clear all environment variables, and prevent inheriting from the parent.
 	clear_envs : Command -> Command
@@ -50,14 +54,14 @@ Cmd := [].{
 	## return its exit code.
 	status! : Command => Try(I32, [CmdError(IOErr), ..])
 	status! = |cmd|
-		match Host.cmd_status!(cmd) {
+		match Host.cmd_status!(to_host_command(cmd)) {
 			Ok(code) => Ok(code)
 			Err(CmdError(err)) => Err(CmdError(err))
 		}
 
 	## Execute the command and capture its stdout and stderr.
 	output! : Command => Output
-	output! = |cmd| Host.cmd_output!(cmd)
+	output! = |cmd| Host.cmd_output!(to_host_command(cmd))
 
 	## Execute a program with arguments, inheriting stdin/stdout/stderr.
 	## Returns `Err(CmdError(...))` on failure, or `Err(NonZeroExit(code))` if the
@@ -72,3 +76,15 @@ Cmd := [].{
 		}
 	}
 }
+
+to_host_command : Cmd.Command -> Host.Command
+to_host_command = |cmd| {
+	program: cmd.program,
+	args: cmd.args,
+	envs: flatten_envs(cmd.envs),
+	clear_envs: cmd.clear_envs,
+}
+
+flatten_envs : List(Cmd.EnvVar) -> List(Str)
+flatten_envs = |envs|
+	envs.fold([], |acc, { key, value }| acc.append(key).append(value))

@@ -18,7 +18,7 @@ print_title! = |source_path| {
 	html = SSG.parse_markdown!(source_path) ? |ParseError(msg)| ExampleErr("markdown parse failed: ${msg}")
 	title = first_h1(html) ?? "Untitled"
 
-	_ = Stdout.line!("title: ${title}")?
+	Stdout.line!("title: ${title}")?
 	Ok({})
 }
 

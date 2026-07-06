@@ -27,7 +27,7 @@ process_all! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
 		[page, .. as rest] => {
-			_ = process_page!(output_dir, page)?
+			process_page!(output_dir, page)?
 			process_all!(rest, output_dir)
 		}
 	}
