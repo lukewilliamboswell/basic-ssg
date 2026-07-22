@@ -35,6 +35,9 @@ jobs:
         with:
           version: nightly-new-compiler
 
+      - name: Install Rust components
+        run: rustup component add rustfmt clippy
+
       - name: Install Zig
         if: runner.os != 'Windows'
         uses: mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f # ratchet:mlugg/setup-zig@v2.0.5
@@ -47,9 +50,7 @@ jobs:
 
       - name: Install Windows Rust components
         if: runner.os == 'Windows'
-        run: |
-          rustup target add x86_64-pc-windows-msvc
-          rustup component add rustfmt clippy
+        run: rustup target add x86_64-pc-windows-msvc
 
       - name: Run all Windows tests
         if: runner.os == 'Windows'

@@ -81,7 +81,13 @@ def macos_environment() -> dict[str, str]:
 
 def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
     heading("Validating Roc sources")
-    command(roc, "fmt", "--check", "platform", "examples", "docs", env=env)
+    roc_sources = sorted(
+        source
+        for directory in (ROOT / "platform", ROOT / "examples", ROOT / "docs")
+        for source in directory.rglob("*.roc")
+    )
+    for source in roc_sources:
+        command(roc, "fmt", "--check", source, env=env)
     for source in (
         "platform/Html.roc",
         "platform/PageDecoder.roc",
