@@ -88,7 +88,7 @@ jobs:
 
       - name: Validate release request
         id: validate
-        uses: roc-lang/release-package/actions/validate-release@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/validate-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ github.event_name == 'workflow_dispatch' && inputs.release_version || '' }}
           dry_run: ${{ github.event_name != 'workflow_dispatch' }}
@@ -118,12 +118,12 @@ jobs:
       - name: Resolve previous release
         if: github.event_name == 'workflow_dispatch'
         id: previous
-        uses: roc-lang/release-package/actions/resolve-previous-release@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/resolve-previous-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           github_token: ${{ github.token }}
 
       - name: Check version bump
-        uses: roc-lang/release-package/actions/run-bump-check@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/run-bump-check@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ steps.validate.outputs.release_version }}
           dry_run: ${{ github.event_name != 'workflow_dispatch' }}
@@ -136,7 +136,7 @@ jobs:
 
       - name: Prepare release bundle metadata
         id: bundles
-        uses: roc-lang/release-package/actions/prepare-bundles@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/prepare-bundles@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           bundle_glob: dist/*.tar.zst
           test_os_json: '["macos-15","macos-15-intel","ubuntu-22.04","ubuntu-24.04-arm"]'
@@ -188,68 +188,16 @@ jobs:
           path: .release/test-bundles
 
       - name: Test release bundle
-        uses: roc-lang/release-package/actions/test-bundle@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           test_bundle_command: ./scripts/test.py --bundle-path
           bundle_path: .release/test-bundles/${{ matrix.artifact_file }}
           bundle_name: ${{ matrix.bundle_name }}
           release_version: ${{ needs.build.outputs.release_version }}
 
-  build-docs:
-    name: Build docs archive
-    needs: build
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Checkout temporary path dependency for PR validation
-        if: github.event_name == 'pull_request'
-        env:
-          PATH_COMMIT: cb60ad44894447a8dc2f5126f49e2b7e98609b2a
-        run: |
-          git clone --filter=blob:none https://github.com/roc-lang/path.git "$GITHUB_WORKSPACE/../path"
-          git -C "$GITHUB_WORKSPACE/../path" checkout "$PATH_COMMIT"
-
-      - name: Install Roc
-        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
-        with:
-          version: nightly-new-compiler
-
-      - name: Generate versioned docs
-        env:
-          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
-          DOCS_URL_ROOT: /basic-ssg/${{ needs.build.outputs.docs_version }}
-        run: |
-          mkdir -p docs-site
-          ROC_DOCS_URL_ROOT="$DOCS_URL_ROOT" roc docs \
-            --output="docs-site/$DOCS_VERSION" \
-            docs/basic-ssg.roc
-
-      - name: Validate versioned docs
-        uses: roc-lang/release-package/actions/docs-validate@d2560ead9f724bfaabfbc8134b8895e120171064
-        with:
-          docs_root: docs-site
-          docs_version: ${{ needs.build.outputs.docs_version }}
-
-      - name: Archive versioned docs
-        env:
-          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
-        run: tar -czf docs.tar.gz -C docs-site "$DOCS_VERSION"
-
-      - name: Upload docs archive
-        uses: actions/upload-artifact@v7
-        with:
-          name: platform-docs
-          path: docs.tar.gz
-          if-no-files-found: error
-          retention-days: 7
-
   publish-release:
     name: Publish GitHub release
-    needs: [build, build-docs, test-bundles]
+    needs: [build, test-bundles]
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:
@@ -272,21 +220,93 @@ jobs:
           name: release-metadata
           path: .release
 
-      - name: Download docs archive
-        uses: actions/download-artifact@v8
-        with:
-          name: platform-docs
-
       - name: Make release notes
-        uses: roc-lang/release-package/actions/make-release-notes@d2560ead9f724bfaabfbc8134b8895e120171064
+        uses: roc-lang/release-package/actions/make-release-notes@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ needs.build.outputs.release_version }}
-          docs_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          docs_url: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ needs.build.outputs.docs_version }}/
           github_token: ${{ github.token }}
 
       - name: Publish release
-        uses: roc-lang/release-package/actions/publish-release@48ccc909bd8f6ba60feb1d33d8b6ac1dc1c7af36
+        uses: roc-lang/release-package/actions/publish-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ needs.build.outputs.release_version }}
-          additional_assets: docs.tar.gz
           github_token: ${{ github.token }}
+
+  publish-docs:
+    name: Publish versioned docs
+    needs: [build, publish-release]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Roc
+        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
+        with:
+          version: nightly-new-compiler
+
+      # Do not restore the separately deployed legacy-compiler docs. The first
+      # release starts a new versioned tree; later follow-up PRs preserve it.
+      - name: Snapshot existing docs
+        uses: roc-lang/release-package/actions/docs-snapshot@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          docs_root: www
+
+      - name: Generate release docs
+        env:
+          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
+          DOCS_URL_ROOT: /basic-ssg/${{ needs.build.outputs.docs_version }}
+        run: |
+          rm -rf "www/$DOCS_VERSION"
+          ROC_DOCS_URL_ROOT="$DOCS_URL_ROOT" roc docs \
+            --output="www/$DOCS_VERSION" \
+            docs/basic-ssg.roc
+
+      - name: Update docs index
+        uses: roc-lang/release-package/actions/docs-index@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          docs_root: www
+          docs_version: ${{ needs.build.outputs.docs_version }}
+
+      - name: Validate docs
+        uses: roc-lang/release-package/actions/docs-validate@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          docs_root: www
+          docs_version: ${{ needs.build.outputs.docs_version }}
+
+      - name: Open release follow-up PR
+        uses: roc-lang/release-package/actions/create-followup-pr@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          release_version: ${{ needs.build.outputs.release_version }}
+          paths: www
+          branch_prefix: release-followup
+          base_branch: ${{ github.event.repository.default_branch }}
+          commit_message: Update docs for ${{ needs.build.outputs.release_version }}
+          pr_title: Update docs for ${{ needs.build.outputs.release_version }}
+          pr_body: |
+            Release follow-up for ${{ needs.build.outputs.release_version }}.
+
+            Adds the generated versioned documentation for this release.
+          github_token: ${{ github.token }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: www
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

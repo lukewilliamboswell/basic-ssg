@@ -123,3 +123,11 @@ requests. Manual publication is deliberately blocked while the platform uses
 the temporary `../../path/package/main.roc` dependency. Checked-in examples
 continue to use the local platform path so regular CI always tests the current
 checkout; user-facing examples should use a published release URL.
+
+Release validation, bundle metadata and testing, publication, versioned docs,
+and the docs follow-up pull request use the official
+[`roc-lang/release-package`](https://github.com/roc-lang/release-package)
+actions. A successful manual release publishes the bundle, deploys the new docs
+version to Pages, and opens a pull request adding that generated version under
+`www/`. The first new-compiler release starts this tree from scratch rather than
+restoring the legacy-compiler Pages content.
