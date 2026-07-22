@@ -78,11 +78,11 @@ Cmd := [].{
 }
 
 to_host_command : Cmd.Command -> Host.Command
-to_host_command = |cmd| {
-	program: cmd.program,
-	args: cmd.args,
-	envs: flatten_envs(cmd.envs),
-	clear_envs: cmd.clear_envs,
+to_host_command = |{ program, args, envs, clear_envs }| {
+	program,
+	args,
+	envs: flatten_envs(envs),
+	clear_envs,
 }
 
 flatten_envs : List(Cmd.EnvVar) -> List(Str)

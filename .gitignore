@@ -3,11 +3,14 @@
 # dev files
 build
 target/
+__pycache__/
+*.pyc
 platform/*.a
 platform/*.lib
 platform/*.tar.br
 platform/*.tar.gz
-platform/*.lib
+*.tar.zst
+dist/
 # Built per-target host libs (produced by build.sh, bundled for release).
 # The musl toolchain inputs (crt1.o/libc.a/libunwind.a) ARE committed.
 platform/targets/*/libhost.a
@@ -15,6 +18,7 @@ platform/targets/*/host.lib
 
 # examples
 example/main
+example/error-handling
 example/output/
 example/**/*.html
 

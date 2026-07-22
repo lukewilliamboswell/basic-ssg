@@ -2,15 +2,16 @@ app [main!] { pf: platform "../platform/main.roc" }
 
 import pf.SSG
 import pf.Path
+import pf.OsStr exposing [OsStr]
 import pf.Html
 import pf.HtmlAttributes exposing [class, http_equiv, href, rel, content, lang, title]
 
-main! : List(Str) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
 main! = |args|
 	match args.drop_first(1) {
 		[input_dir_arg, output_dir_arg] => {
-			input_dir = Path.unix(input_dir_arg)
-			output_dir = Path.unix(output_dir_arg)
+			input_dir = Path.from_os_str(input_dir_arg)
+			output_dir = Path.from_os_str(output_dir_arg)
 
 			# get the path and url of markdown pages in the content directory
 			pages = SSG.pages!(input_dir)?
@@ -57,7 +58,7 @@ nav_links = [
 transform_file_content : Str, Str -> Str
 transform_file_content = |current_url, html_content|
 	match nav_links.find_first(|link| link.url == current_url) {
-		Ok(current_nav_link) => Html.render(view(current_nav_link, html_content))
+		Ok(current_nav_link) => Html.render_document(view(current_nav_link, html_content))
 		Err(_) => {
 			crash "unable to find a nav link for the requested URL"
 		}
@@ -98,9 +99,9 @@ view_body = |current_nav_link, html_content|
 				[class("main")],
 				[
 					Html.div([class("navbar")], [view_navbar(current_nav_link)]),
-					# For now `text` is not escaped so we can use it to insert HTML.
-					# We'll probably want something more explicit in the long term though!
-					Html.div([class("article")], [Html.text(html_content)]),
+					# This site's checked-in Markdown content is trusted, so its rendered HTML
+					# can be inserted raw. Use `Html.text` for user-controlled content.
+					Html.div([class("article")], [Html.raw(html_content)]),
 				],
 			),
 		],

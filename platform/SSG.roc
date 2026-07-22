@@ -42,8 +42,8 @@ SSG := [].{
 }
 
 from_host_page : Host.Page -> SSG.Page
-from_host_page = |page| {
-	url: page.url,
-	source_path: Path.from_raw(page.source_path),
-	output_path: Path.from_raw(page.output_path),
+from_host_page = |{ url, source_path, output_path }| {
+	url,
+	source_path: Path.from_raw(source_path),
+	output_path: Path.from_raw(output_path),
 }

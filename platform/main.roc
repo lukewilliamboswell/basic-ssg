@@ -1,12 +1,14 @@
 platform ""
 	requires {
-		main! : List(Str) => Try({}, [Exit(I32), ..])
+		main! : List([Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]) => Try({}, [Exit(I32), ..])
 	}
-	exposes [SSG, Path, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
+	exposes [SSG, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
 	packages {
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
-		path: "https://github.com/roc-lang/path/releases/download/1.0.0/8p8iryUUorAFTUDeqYcwc9bFYSwpbVqhYpuHvRAS5Cq4.tar.zst",
+		# Temporary local source dependency while the next path release builds.
+		# Replace this with the release bundle URL before publishing basic-ssg.
+		path: "../../path/package/main.roc",
 	}
 	provides { "roc_main": main_for_host! }
 	hosted {
@@ -36,6 +38,7 @@ platform ""
 
 import SSG
 import Path
+import OsStr
 import Host
 import Html
 import HtmlAttributes
@@ -47,13 +50,13 @@ import Env
 import Locale
 import Utc
 
-main_for_host! : List(Str) => I32
+main_for_host! : List(OsStr.OsStr) => I32
 main_for_host! = |args|
 	match main!(args) {
 		Ok({}) => 0
 		Err(Exit(code)) => code
-		Err(other) =>
-			match Stderr.line!("Program exited with error: ${Str.inspect(other)}") {
-				_ => 1
-			}
+		Err(other) => {
+			Stderr.line!("Program exited with error: ${Str.inspect(other)}") ?? {}
+			1
 		}
+	}

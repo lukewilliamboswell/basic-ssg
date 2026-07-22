@@ -22,14 +22,15 @@ URL from the [basic-ssg releases][releases] page into your app header.
 app [main!] { pf: platform "<basic-ssg release URL>" }
 
 import pf.Path
+import pf.OsStr exposing [OsStr]
 import pf.SSG
 
-main! : List(Str) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
 main! = |args|
 	match args.drop_first(1) {
 		[input_dir_arg, output_dir_arg] => {
-			input_dir = Path.unix(input_dir_arg)
-			output_dir = Path.unix(output_dir_arg)
+			input_dir = Path.from_os_str(input_dir_arg)
+			output_dir = Path.from_os_str(output_dir_arg)
 
 			pages = SSG.pages!(input_dir)?
 			render_pages!(pages, output_dir)
@@ -79,9 +80,17 @@ Each page has:
 `SSG.write_file!` writes generated content underneath an output directory,
 creating parent directories as needed.
 
-The platform uses [`roc-lang/path`][roc-path] for path values. The bundled
-targets are Unix-like, so examples that convert CLI strings use `Path.unix`.
-Use `Path.unix_bytes` when preserving raw Unix path bytes matters.
+The bundled `Html` module escapes `Html.text` content and attribute values by
+default. Use `Html.raw` only for trusted markup, including
+`SSG.parse_markdown!` output only when the source Markdown is trusted. Render
+complete pages with `Html.render_document`, or markup fragments without a
+doctype using `Html.render_fragment`. HTML void elements such as `meta`, `img`,
+and `input` accept attributes but no children.
+
+The platform uses [`roc-lang/path`][roc-path] for path values and passes command
+line arguments as `OsStr`, preserving native Unix bytes or Windows UTF-16.
+Use `Path.from_os_str` for path arguments and `Path.utf8` for portable text
+paths created by the application.
 
 ## Examples
 
@@ -95,8 +104,12 @@ Use `Path.unix_bytes` when preserving raw Unix path bytes matters.
 
 Published releases include these targets:
 
-- macOS aarch64 and x86_64
-- Linux aarch64 and x86_64
+| Operating system | Architecture | Bundle target |
+| --- | --- | --- |
+| macOS | Apple Silicon | `arm64mac` |
+| macOS | Intel | `x64mac` |
+| Linux (musl) | ARM64 | `arm64musl` |
+| Linux (musl) | x86_64 | `x64musl` |
 
 Contributor setup, local platform development, glue regeneration, and release
 bundling are covered in [CONTRIBUTING.md](CONTRIBUTING.md).

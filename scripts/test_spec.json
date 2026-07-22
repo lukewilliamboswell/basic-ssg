@@ -1,0 +1,10 @@
+{
+  "generated_pages": [
+    "fruit/apple.html",
+    "fruit/banana.html",
+    "fruit/cherry.html",
+    "index.html",
+    "people/index.html"
+  ],
+  "error_example_title": "title: Index Page"
+}

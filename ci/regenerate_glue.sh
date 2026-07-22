@@ -4,9 +4,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Roc's native glue plugin build currently requires one of TMPDIR/TEMP/TMP.
+# Standard Unix systems always provide /tmp even when the shell omits TMPDIR.
+export TMPDIR="${TMPDIR:-/tmp}"
+
 ROC_BIN="${ROC:-roc}"
 PLATFORM_FILE="${PLATFORM_FILE:-platform/main.roc}"
 GLUE_OUT_DIR="${GLUE_OUT_DIR:-src}"
+GLUE_OPT="${ROC_GLUE_OPT:-dev}"
 MODE="write"
 
 usage() {
@@ -17,13 +22,17 @@ Regenerate Rust ABI bindings for the basic-ssg Roc platform.
 
 Environment overrides:
   ROC             Roc executable to run. Default: roc
-  ROC_SRC         Path to a Roc source checkout containing src/glue/src/RustGlue.roc
-  ROC_GLUE_SPEC   Explicit path to RustGlue.roc
+  ROC_RUST_GLUE   Rust glue spec provided by a Roc release/setup-roc
+  ROC_GLUE_SPEC   Explicit glue spec path, URL, or installed shorthand
+  ROC_GLUE_DIR    Directory containing RustGlue.roc
+  ROC_GLUE_OPT    Glue compilation mode: dev, size, or speed. Default: dev
+  ROC_SRC         Compatibility fallback: path to a Roc source checkout
   PLATFORM_FILE   Platform file to analyze. Default: platform/main.roc
   GLUE_OUT_DIR    Output directory. Default: src
 
-By default the script looks for RustGlue.roc in ROC_GLUE_SPEC, ROC_SRC,
-next to the ROC binary if it is from a source checkout, then sibling ../roc.
+Roc releases expose the compiler-owned Rust glue spec as ROC_RUST_GLUE.
+For source builds, the script also looks next to the Roc binary and in a
+sibling ../roc checkout.
 EOF
 }
 
@@ -43,7 +52,16 @@ find_glue_spec() {
         return 0
     fi
 
+    if [ -n "${ROC_RUST_GLUE:-}" ]; then
+        echo "$ROC_RUST_GLUE"
+        return 0
+    fi
+
     candidates=()
+
+    if [ -n "${ROC_GLUE_DIR:-}" ]; then
+        candidates+=("${ROC_GLUE_DIR%/}/RustGlue.roc")
+    fi
 
     if [ -n "${ROC_SRC:-}" ]; then
         candidates+=("${ROC_SRC%/}/src/glue/src/RustGlue.roc")
@@ -79,12 +97,20 @@ find_glue_spec() {
         fi
     done
 
-    echo "Could not find RustGlue.roc." >&2
-    echo "Set ROC_SRC=/path/to/roc or ROC_GLUE_SPEC=/path/to/RustGlue.roc." >&2
+    echo "Could not find the Rust glue spec." >&2
+    echo "Install Roc via setup-roc, set ROC_RUST_GLUE, or set ROC_GLUE_SPEC." >&2
     return 1
 }
 
 GLUE_SPEC="$(find_glue_spec)"
+
+case "$GLUE_OPT" in
+    dev|size|speed) ;;
+    *)
+        echo "Invalid ROC_GLUE_OPT '$GLUE_OPT'; expected dev, size, or speed." >&2
+        exit 2
+        ;;
+esac
 
 if ! command -v "$ROC_BIN" >/dev/null 2>&1; then
     echo "Could not find roc executable '$ROC_BIN'. Set ROC=/path/to/roc." >&2
@@ -96,10 +122,22 @@ if [ ! -f "$PLATFORM_FILE" ]; then
     exit 1
 fi
 
+# `roc glue` also accepts bundle URLs and installed shorthands. Only validate
+# the spec here when it names a local path.
+case "$GLUE_SPEC" in
+    http://*|https://*) ;;
+    *)
+        if [[ "$GLUE_SPEC" == */* || "$GLUE_SPEC" == *.roc ]] && [ ! -f "$GLUE_SPEC" ]; then
+            echo "Glue spec not found: $GLUE_SPEC" >&2
+            exit 1
+        fi
+        ;;
+esac
+
 run_glue() {
     local out_dir=$1
     mkdir -p "$out_dir"
-    "$ROC_BIN" glue "$GLUE_SPEC" "$out_dir" "$PLATFORM_FILE"
+    "$ROC_BIN" glue --opt="$GLUE_OPT" "$GLUE_SPEC" "$out_dir" "$PLATFORM_FILE"
 }
 
 if [ "$MODE" = "check" ]; then
@@ -126,6 +164,7 @@ if [ "$MODE" = "check" ]; then
 else
     echo "Using roc: $ROC_BIN"
     echo "Using glue spec: $GLUE_SPEC"
+    echo "Using glue opt: $GLUE_OPT"
     echo "Platform: $PLATFORM_FILE"
     echo "Output dir: $GLUE_OUT_DIR"
     run_glue "$GLUE_OUT_DIR"

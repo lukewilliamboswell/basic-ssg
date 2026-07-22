@@ -3,19 +3,30 @@ import HtmlAttributes exposing [Attribute]
 Html := [].{
 	Node :: [
 		Text(Str),
+		Raw(Str),
 		Element(Str, U64, List(Attribute), List(Node)),
-		UnclosedElem(Str, U64, List(Attribute)),
+		VoidElement(Str, U64, List(Attribute)),
 	]
 
 	ElementBuilder : List(Attribute), List(Node) -> Node
 
-	UnclosedBuilder : List(Attribute) -> Node
+	VoidBuilder : List(Attribute) -> Node
 
 	attribute : Str -> (Str -> Attribute)
-	attribute = HtmlAttributes.attribute
+	attribute = |name| HtmlAttributes.attribute(name)
 
+	## Create an escaped text node. Characters with special meaning in HTML are
+	## encoded when the node is rendered.
 	text : Str -> Node
 	text = |s| Text(s)
+
+	## Insert trusted HTML without escaping it.
+	##
+	## Prefer [`text`](#text) for all user-controlled or plain-text content. Use
+	## `raw` only for trusted markup, such as `SSG.parse_markdown!` output when
+	## the source Markdown is trusted.
+	raw : Str -> Node
+	raw = |s| Raw(s)
 
 	## Define a non-standard HTML Element
 	##
@@ -47,8 +58,8 @@ Html := [].{
 			Element(tag_name, total_size, attrs, children)
 		}
 
-	unclosed_elem : Str -> (List(Attribute) -> Node)
-	unclosed_elem = |tag_name|
+	void_element : Str -> (List(Attribute) -> Node)
+	void_element = |tag_name|
 		|attrs| {
 			# While building the node tree, calculate the size of Str it will render to
 			with_tag = 2 * (3 + tag_name.count_utf8_bytes())
@@ -58,39 +69,36 @@ Html := [].{
 					acc + name.count_utf8_bytes() + val.count_utf8_bytes() + 4,
 			)
 
-			UnclosedElem(tag_name, total_size, attrs)
+			VoidElement(tag_name, total_size, attrs)
 		}
 
 	# internal helper
 	node_size : Node -> U64
 	node_size = |node|
 		match node {
-			Text(content) =>
+			Text(content) | Raw(content) =>
 				content.count_utf8_bytes()
 
 			Element(_, size, _, _) =>
 				size
 
-			UnclosedElem(_, size, _) =>
+			VoidElement(_, size, _) =>
 				size
 			}
 
-	## Render a Node to an HTML string
+	## Render a complete HTML document, including the `<!DOCTYPE html>` prefix.
 	##
-	## The output has no whitespace between nodes, to make it small.
-	## This is intended for generating full HTML documents, so it
-	## automatically adds `<!DOCTYPE html>` to the start of the string.
-	## See also `renderWithoutDocType`.
-	render : Node -> Str
-	render = |node| {
+	## The output has no whitespace inserted between nodes.
+	render_document : Node -> Str
+	render_document = |node| {
 		buffer = Str.reserve("<!DOCTYPE html>", node_size(node))
 
 		render_help(buffer, node)
 	}
 
-	## Render a Node to a string, without a DOCTYPE tag
-	render_without_doc_type : Node -> Str
-	render_without_doc_type = |node| {
+	## Render an HTML fragment without a doctype prefix.
+	render_fragment : Node -> Str
+	render_fragment = |node| {
 		buffer = Str.reserve("", node_size(node))
 
 		render_help(buffer, node)
@@ -101,6 +109,9 @@ Html := [].{
 	render_help = |buffer, node|
 		match node {
 			Text(content) =>
+				buffer.concat(escape_text(content))
+
+			Raw(content) =>
 				buffer.concat(content)
 
 			Element(tag_name, _, attrs, children) => {
@@ -118,7 +129,7 @@ Html := [].{
 				"${with_children}</${tag_name}>"
 			}
 
-			UnclosedElem(tag_name, _, attrs) =>
+			VoidElement(tag_name, _, attrs) =>
 				if attrs.is_empty() {
 					"${buffer}<${tag_name}>"
 				} else {
@@ -138,24 +149,40 @@ Html := [].{
 	# internal helper
 	render_attr : Str, Attribute -> Str
 	render_attr = |buffer, HtmlAttributes.Attribute.Attribute(key, val)|
-		"${buffer} ${key}=\"${val}\""
+		"${buffer} ${key}=\"${escape_attribute(val)}\""
+
+	# internal helper
+	escape_text : Str -> Str
+	escape_text = |content| {
+		with_ampersands = Str.join_with(content.split_on("&"), "&amp;")
+		with_less_thans = Str.join_with(with_ampersands.split_on("<"), "&lt;")
+		Str.join_with(with_less_thans.split_on(">"), "&gt;")
+	}
+
+	# internal helper
+	escape_attribute : Str -> Str
+	escape_attribute = |value| {
+		with_text_escaped = escape_text(value)
+		with_quotes = Str.join_with(with_text_escaped.split_on("\""), "&quot;")
+		Str.join_with(with_quotes.split_on("'"), "&#39;")
+	}
 
 	# Main root
 	html : ElementBuilder
 	html = element("html")
 
 	# Document metadata
-	base : ElementBuilder
-	base = element("base")
+	base : VoidBuilder
+	base = void_element("base")
 
 	head : ElementBuilder
 	head = element("head")
 
-	link : UnclosedBuilder
-	link = unclosed_elem("link")
+	link : VoidBuilder
+	link = void_element("link")
 
-	meta : UnclosedBuilder
-	meta = unclosed_elem("meta")
+	meta : VoidBuilder
+	meta = void_element("meta")
 
 	style : ElementBuilder
 	style = element("style")
@@ -232,8 +259,8 @@ Html := [].{
 	figure : ElementBuilder
 	figure = element("figure")
 
-	hr : ElementBuilder
-	hr = element("hr")
+	hr : VoidBuilder
+	hr = void_element("hr")
 
 	li : ElementBuilder
 	li = element("li")
@@ -269,8 +296,8 @@ Html := [].{
 	bdo : ElementBuilder
 	bdo = element("bdo")
 
-	br : ElementBuilder
-	br = element("br")
+	br : VoidBuilder
+	br = void_element("br")
 
 	cite : ElementBuilder
 	cite = element("cite")
@@ -340,31 +367,31 @@ Html := [].{
 	var_ : ElementBuilder
 	var_ = element("var")
 
-	wbr : ElementBuilder
-	wbr = element("wbr")
+	wbr : VoidBuilder
+	wbr = void_element("wbr")
 
 	# Image and multimedia
-	area : ElementBuilder
-	area = element("area")
+	area : VoidBuilder
+	area = void_element("area")
 
 	audio : ElementBuilder
 	audio = element("audio")
 
-	img : UnclosedBuilder
-	img = unclosed_elem("img")
+	img : VoidBuilder
+	img = void_element("img")
 
 	map : ElementBuilder
 	map = element("map")
 
-	track : ElementBuilder
-	track = element("track")
+	track : VoidBuilder
+	track = void_element("track")
 
 	video : ElementBuilder
 	video = element("video")
 
 	# Embedded content
-	embed : ElementBuilder
-	embed = element("embed")
+	embed : VoidBuilder
+	embed = void_element("embed")
 
 	iframe : ElementBuilder
 	iframe = element("iframe")
@@ -378,8 +405,8 @@ Html := [].{
 	portal : ElementBuilder
 	portal = element("portal")
 
-	source : ElementBuilder
-	source = element("source")
+	source : VoidBuilder
+	source = void_element("source")
 
 	# SVG and MathML
 	svg : ElementBuilder
@@ -409,8 +436,8 @@ Html := [].{
 	caption : ElementBuilder
 	caption = element("caption")
 
-	col : ElementBuilder
-	col = element("col")
+	col : VoidBuilder
+	col = void_element("col")
 
 	colgroup : ElementBuilder
 	colgroup = element("colgroup")
@@ -449,8 +476,8 @@ Html := [].{
 	form : ElementBuilder
 	form = element("form")
 
-	input : ElementBuilder
-	input = element("input")
+	input : VoidBuilder
+	input = void_element("input")
 
 	label : ElementBuilder
 	label = element("label")
@@ -497,20 +524,52 @@ Html := [].{
 	template = element("template")
 }
 
-## Html.render emits a doctype and renders attributes without extra whitespace.
+## Html.render_document emits a doctype and escapes text and attribute values.
 expect {
-	rendered = Html.render(Html.div([HtmlAttributes.class("main")], [Html.text("Hello")]))
-	rendered == "<!DOCTYPE html><div class=\"main\">Hello</div>"
+	rendered = Html.render_document(
+		Html.div(
+			[HtmlAttributes.title("A \"quote\" & <tag>")],
+			[Html.text("Hello & <world>")],
+		),
+	)
+	rendered == "<!DOCTYPE html><div title=\"A &quot;quote&quot; &amp; &lt;tag&gt;\">Hello &amp; &lt;world&gt;</div>"
 }
 
-## Html.render_without_doc_type renders unclosed elements without a doctype.
+## Html.render_fragment renders void elements without a doctype or closing tag.
 expect {
-	rendered = Html.render_without_doc_type(Html.meta([HtmlAttributes.charset("utf-8")]))
+	rendered = Html.render_fragment(Html.meta([HtmlAttributes.charset("utf-8")]))
 	rendered == "<meta charset=\"utf-8\">"
 }
 
-## HtmlAttributes.aria_hidden renders the aria-hidden attribute.
+## Html.raw explicitly preserves trusted markup while neighboring text is escaped.
 expect {
-	rendered = Html.render_without_doc_type(Html.div([HtmlAttributes.aria_hidden("true")], []))
-	rendered == "<div aria-hidden=\"true\"></div>"
+	rendered = Html.render_fragment(
+		Html.div([], [Html.text("<safe>"), Html.raw("<strong>trusted</strong>")]),
+	)
+	rendered == "<div>&lt;safe&gt;<strong>trusted</strong></div>"
+}
+
+## Every HTML void element renders without children or a closing tag.
+expect {
+	rendered = Html.render_fragment(
+		Html.div(
+			[],
+			[
+				Html.base([]),
+				Html.link([]),
+				Html.meta([]),
+				Html.hr([]),
+				Html.br([]),
+				Html.wbr([]),
+				Html.area([]),
+				Html.img([]),
+				Html.track([]),
+				Html.embed([]),
+				Html.source([]),
+				Html.col([]),
+				Html.input([]),
+			],
+		),
+	)
+	rendered == "<div><base><link><meta><hr><br><wbr><area><img><track><embed><source><col><input></div>"
 }

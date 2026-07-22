@@ -15,7 +15,7 @@ Host := [].{
 		stderr : List(U8),
 	}
 
-	Raw : [UnixBytes(List(U8)), WindowsU16s(List(U16))]
+	Raw : [Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]
 
 	Page : {
 		url : Str,

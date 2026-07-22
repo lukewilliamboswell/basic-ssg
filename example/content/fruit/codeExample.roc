@@ -22,7 +22,7 @@ nav_links = [
 transform_file_content : Str, Str -> Str
 transform_file_content = |current_url, html_content|
 	match nav_links.find_first(|{ url }| url == current_url) {
-		Ok(current_nav_link) => Html.render(view(current_nav_link, html_content))
+		Ok(current_nav_link) => Html.render_document(view(current_nav_link, html_content))
 		Err(_) => ""
 	}
 
@@ -57,9 +57,9 @@ view = |current_nav_link, html_content|
 							Html.div(
 								[class("article")],
 								[
-									# For now `text` is not escaped so we can use it to insert HTML
-									# We'll probably want something more explicit in the long term though!
-									Html.text(html_content),
+									# This site's checked-in Markdown content is trusted. Use
+									# `Html.text` instead for user-controlled content.
+									Html.raw(html_content),
 								],
 							),
 						],

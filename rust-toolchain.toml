@@ -1,21 +1,5 @@
 [toolchain]
-# How to update version:
-#  1. update `channel = "RUST_VERSION"`
-#  2. update the nightly version:
-#     a) Find the latest nightly release that matches RUST_VERSION here: https://github.com/oxalica/rust-overlay/tree/master/manifests/nightly/2024
-#     b) update `channel = "nightly-OLD_DATE"` below
-
-channel = "1.82.0"
-#
-# channel = "stable-2024-06-13"
-
-# we are using gnu here instead of musl because on linux
-# there is a bug where std::env::args_os returns empty.
-targets = [
-    "aarch64-apple-darwin",
-    "x86_64-apple-darwin",
-    "aarch64-unknown-linux-gnu",
-    "x86_64-unknown-linux-gnu",
-    "aarch64-pc-windows-msvc",
-    "x86_64-pc-windows-msvc",
-]
+# Keep this channel aligned with package.rust-version in Cargo.toml.
+# build.py uses llvm-strip to minimize Linux host archives.
+channel = "1.83.0"
+components = ["llvm-tools-preview", "rust-analyzer"]

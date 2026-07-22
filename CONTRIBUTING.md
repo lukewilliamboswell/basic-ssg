@@ -5,8 +5,11 @@ release-bundling scripts, and examples.
 
 ## Prerequisites
 
-- [Roc](https://www.roc-lang.org/install)
+- The new Zig-based [Roc compiler](https://www.roc-lang.org/install), available
+  as `nightly-new-compiler` through `roc-lang/setup-roc`
 - [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+- Python 3 for the build, bundle, and release validation scripts
+- Zig for reproducible cross-compilation of the Linux musl targets
 - Nix, optionally, for the checked-in development shell
 - `simple-http-server`, optionally, for `example/run.sh`
 
@@ -30,11 +33,12 @@ Run the full local validation script:
 ./ci/all_tests.sh
 ```
 
-The script builds the host, tests the examples, checks generated Rust glue when
-the Roc glue spec is available, and builds platform docs. The full
-`example/main.roc` binary build is currently allowed to fail while the upstream
-Roc ARC-certifier issue for large HTML trees is open; `roc test` still checks
-the example.
+The script format-checks the Roc and Rust sources, checks and tests the supported
+entry points and Rust host, runs Clippy with warnings denied, builds the host and
+examples, runs both examples, checks generated Rust glue, and builds platform
+docs. The glue check runs when a matching compiler-owned specification is
+available; otherwise the committed generated Rust remains the source of truth.
+A failure in any enabled step fails validation.
 
 Examples in this repo use:
 
@@ -85,9 +89,15 @@ Use `--check` to verify the committed glue without rewriting it:
 ./ci/regenerate_glue.sh --check
 ```
 
-The glue script needs `RustGlue.roc` from a Roc source checkout. It discovers a
-sibling `../roc` checkout automatically, or you can set `ROC_SRC` or
-`ROC_GLUE_SPEC`.
+The new compiler owns the `platform glue` specification. Compiler source builds
+provide it directly, while a matching nightly archive may expose it as
+`ROC_RUST_GLUE`. The script uses that variable automatically when present. It
+also discovers a sibling `../roc` source checkout; `ROC_GLUE_SPEC` can override
+the spec with a local path, bundle URL, or installed shorthand.
+
+Glue specs are compiled as cached host dynamic libraries. The script defaults
+to `--opt=dev`; set `ROC_GLUE_OPT` to `size` or `speed` to exercise an LLVM
+build. The old `interpreter` mode is no longer supported.
 
 ## Releases
 
@@ -102,3 +112,14 @@ Create a Roc platform bundle for upload:
 ```sh
 ./bundle.sh
 ```
+
+Bundling requires every supported target library plus `LICENSE` and
+`THIRD_PARTY_LICENSES.md`. Run `./scripts/test.py` to validate source behavior
+and the served bundle once `platform/main.roc` references an immutable Path
+release URL.
+
+The release workflow performs the same build and bundle validation on pull
+requests. Manual publication is deliberately blocked while the platform uses
+the temporary `../../path/package/main.roc` dependency. Checked-in examples
+continue to use the local platform path so regular CI always tests the current
+checkout; user-facing examples should use a published release URL.
