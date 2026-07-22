@@ -21,11 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15         # Apple Silicon
-          - macos-15-intel   # Intel Mac
-          - ubuntu-22.04     # Linux x86_64
-          - ubuntu-24.04-arm # Linux ARM64
-          - windows-2025     # Windows x86_64
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7

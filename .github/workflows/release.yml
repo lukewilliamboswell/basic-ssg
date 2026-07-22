@@ -18,7 +18,7 @@ concurrency:
 jobs:
   rust-version:
     name: Read Rust version
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -33,7 +33,7 @@ jobs:
   build-windows-host:
     name: Build Windows x64 host
     needs: rust-version
-    runs-on: windows-2025
+    runs-on: windows-latest
     permissions:
       contents: read
     steps:
@@ -59,7 +59,7 @@ jobs:
   build:
     name: Build and validate release bundle
     needs: [rust-version, build-windows-host]
-    runs-on: macos-15
+    runs-on: macos-latest
     permissions:
       contents: read
     outputs:
@@ -147,7 +147,7 @@ jobs:
         uses: roc-lang/release-package/actions/prepare-bundles@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           bundle_glob: dist/*.tar.zst
-          test_os_json: '["macos-15","macos-15-intel","ubuntu-22.04","ubuntu-24.04-arm","windows-2025"]'
+          test_os_json: '["macos-latest","ubuntu-latest","windows-latest"]'
 
       - name: Upload release bundles
         uses: actions/upload-artifact@v7
@@ -195,7 +195,7 @@ jobs:
           path: .release/test-bundles
 
       - name: Test release bundle (Unix)
-        if: matrix.os != 'windows-2025'
+        if: matrix.os != 'windows-latest'
         uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           test_bundle_command: python3 scripts/test.py --bundle-path
@@ -204,7 +204,7 @@ jobs:
           release_version: ${{ needs.build.outputs.release_version }}
 
       - name: Test release bundle (Windows)
-        if: matrix.os == 'windows-2025'
+        if: matrix.os == 'windows-latest'
         uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           test_bundle_command: python scripts/test.py --bundle-path
@@ -216,7 +216,7 @@ jobs:
     name: Publish GitHub release
     needs: [build, test-bundles]
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
@@ -254,7 +254,7 @@ jobs:
     name: Publish versioned docs
     needs: [build, publish-release]
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write

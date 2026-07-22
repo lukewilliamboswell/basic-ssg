@@ -138,7 +138,7 @@ python scripts/build.py --target x64win
 ```
 
 This produces `host.lib` and copies the required SDK import libraries into
-`platform/targets/x64win/`. Release CI builds that target on `windows-2025`,
+`platform/targets/x64win/`. Release CI builds that target on `windows-latest`,
 then combines its artifact with the four Unix hosts before bundling.
 
 Create a Roc platform bundle for upload:
