@@ -1,5 +1,5 @@
 [toolchain]
 # Keep this channel aligned with package.rust-version in Cargo.toml.
 # build.py uses llvm-strip to minimize Linux host archives.
-channel = "1.83.0"
+channel = "1.97.1"
 components = ["llvm-tools-preview", "rust-analyzer"]
