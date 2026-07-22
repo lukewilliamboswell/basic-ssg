@@ -86,11 +86,13 @@ frontmatter = |parse_metadata|
 	)
 
 split_frontmatter : Str -> Try({ metadata : Str, body : Str }, [InvalidFrontmatter(Str), ..])
-split_frontmatter = |source|
-	if !source.starts_with("---\n") {
+split_frontmatter = |source| {
+	normalized = Str.join_with(source.split_on("\r\n"), "\n")
+
+	if !normalized.starts_with("---\n") {
 		Err(InvalidFrontmatter("expected an opening --- delimiter"))
 	} else {
-		after_open = source.drop_prefix("---\n")
+		after_open = normalized.drop_prefix("---\n")
 		match after_open.split_on("\n---\n") {
 			[metadata, .. as body_parts] if !body_parts.is_empty() =>
 				Ok({ metadata, body: Str.join_with(body_parts, "\n---\n") })
@@ -98,6 +100,7 @@ split_frontmatter = |source|
 			_ => Err(InvalidFrontmatter("expected a closing --- delimiter"))
 		}
 	}
+}
 
 process_json_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str), WriteError(Str), ..])
 process_json_pages! = |pages, output_dir|
@@ -164,6 +167,12 @@ render_page = |{ title, body, generated_at, url }|
 
 ## Frontmatter splitting is independent of the parser used for its metadata.
 expect split_frontmatter("---\n{\"title\":\"Hello\"}\n---\n# Body")? == {
+	metadata: "{\"title\":\"Hello\"}",
+	body: "# Body",
+}
+
+## Frontmatter splitting accepts files with Windows CRLF line endings.
+expect split_frontmatter("---\r\n{\"title\":\"Hello\"}\r\n---\r\n# Body")? == {
 	metadata: "{\"title\":\"Hello\"}",
 	body: "# Body",
 }

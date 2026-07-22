@@ -73,6 +73,14 @@
           }
         },
         {
+          "name": "accepts Windows line endings in frontmatter",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "index.md", "text": "---\r\n{\"title\":\"CRLF Field Notes\",\"author\":\"Grace Hopper\"}\r\n---\r\n# Windows notes"}],
+          "args": ["{input}", "{output}"],
+          "files": ["about.html", "index.html"],
+          "file_contains": {"index.html": ["CRLF Field Notes", "Windows notes"]}
+        },
+        {
           "name": "reports malformed JSON frontmatter",
           "input": "examples/travel-journal/content",
           "input_files": [{"path": "index.md", "text": "---\n{broken json}\n---\n# Notes"}],

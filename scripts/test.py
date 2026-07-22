@@ -201,7 +201,7 @@ def run_case(binary: Path, app: dict[str, Any], case: dict[str, Any]) -> None:
             if "hex" in item:
                 destination.write_bytes(bytes.fromhex(item["hex"]))
             else:
-                destination.write_text(item["text"], encoding="utf-8")
+                destination.write_text(item["text"], encoding="utf-8", newline="")
         for relative in case.get("remove", []):
             path = input_dir / relative
             if path.is_dir():
