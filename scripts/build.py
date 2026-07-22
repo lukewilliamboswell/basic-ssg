@@ -17,6 +17,24 @@ TARGETS = {
     "arm64musl": "aarch64-unknown-linux-musl",
 }
 ALL_TARGETS = tuple(TARGETS)
+ROC_TARGETS = (*ALL_TARGETS, "x64win")
+WINDOWS_TARGET = "x86_64-pc-windows-msvc"
+WINDOWS_SYSTEM_LIBRARIES = (
+    "advapi32.lib",
+    "bcrypt.lib",
+    "crypt32.lib",
+    "dbghelp.lib",
+    "iphlpapi.lib",
+    "kernel32.lib",
+    "ncrypt.lib",
+    "ntdll.lib",
+    "ole32.lib",
+    "secur32.lib",
+    "shell32.lib",
+    "user32.lib",
+    "userenv.lib",
+    "ws2_32.lib",
+)
 
 
 def run(*args: str, env: dict[str, str] | None = None) -> None:
@@ -68,6 +86,8 @@ def detect_native_target() -> str:
     system = platform.system()
     machine = platform.machine().lower()
 
+    if system == "Windows" and machine in {"amd64", "x86_64"}:
+        return "x64win"
     if system == "Darwin":
         if machine in {"arm64", "aarch64"}:
             return "arm64mac"
@@ -96,8 +116,8 @@ def musl_build_env(rust_target: str) -> dict[str, str]:
     key = rust_target.replace("-", "_")
     env["ZIG"] = zig_bin
     env["ZIG_CC_TARGET"] = zig_target
-    env[f"CC_{key}"] = str(ROOT / "ci" / "zig-cc.sh")
-    env[f"AR_{key}"] = str(ROOT / "ci" / "zig-ar.sh")
+    env[f"CC_{key}"] = str(ROOT / "scripts" / "zig_cc.py")
+    env[f"AR_{key}"] = str(ROOT / "scripts" / "zig_ar.py")
     env[f"CFLAGS_{key}"] = "-Wno-error"
     print(f"  (using zig cc for {rust_target})")
     return env
@@ -140,6 +160,68 @@ def build_target(target_name: str, *, native: bool = False) -> None:
     strip_linux_host(target_name)
 
 
+def windows_sdk_version(path: Path) -> tuple[int, ...]:
+    try:
+        return tuple(int(part) for part in path.name.split("."))
+    except ValueError:
+        return ()
+
+
+def find_windows_sdk_lib_dir() -> Path:
+    program_files = os.environ.get("ProgramFiles(x86)")
+    if not program_files:
+        raise SystemExit("ProgramFiles(x86) is not set; cannot locate the Windows SDK")
+
+    sdk_root = Path(program_files) / "Windows Kits" / "10" / "Lib"
+    if not sdk_root.is_dir():
+        raise SystemExit(f"Could not find Windows SDK library directory: {sdk_root}")
+    candidates = sorted(
+        (
+            directory / "um" / "x64"
+            for directory in sdk_root.iterdir()
+            if directory.is_dir()
+            and (directory / "um" / "x64" / "ws2_32.lib").is_file()
+        ),
+        key=lambda path: windows_sdk_version(path.parents[1]),
+        reverse=True,
+    )
+    if not candidates:
+        raise SystemExit(f"Could not find x64 Windows SDK libraries under {sdk_root}")
+    return candidates[0]
+
+
+def build_windows() -> None:
+    print(f"Building for x64win ({WINDOWS_TARGET})...")
+    install_rust_target(WINDOWS_TARGET)
+    run(
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--lib",
+        "--target",
+        WINDOWS_TARGET,
+    )
+
+    output_dir = ROOT / "platform" / "targets" / "x64win"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    host_destination = output_dir / "host.lib"
+    shutil.copy2(
+        ROOT / "target" / WINDOWS_TARGET / "release" / "host.lib",
+        host_destination,
+    )
+    print(f"  -> {host_destination.relative_to(ROOT)}")
+
+    sdk_lib_dir = find_windows_sdk_lib_dir()
+    for name in WINDOWS_SYSTEM_LIBRARIES:
+        source = sdk_lib_dir / name
+        if not source.is_file():
+            raise SystemExit(f"Could not find required Windows SDK library: {source}")
+        destination = output_dir / name
+        shutil.copy2(source, destination)
+        print(f"  -> {destination.relative_to(ROOT)}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the basic-ssg platform host")
     parser.add_argument(
@@ -149,7 +231,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--target",
-        choices=ALL_TARGETS,
+        choices=ROC_TARGETS,
         help="build host inputs for one Roc platform target",
     )
     args = parser.parse_args()
@@ -158,16 +240,21 @@ def main() -> None:
         parser.error("--all and --target are mutually exclusive")
 
     if args.target:
-        rust_target = TARGETS[args.target]
-        install_rust_target(rust_target)
-        build_target(args.target, native=args.target == detect_native_target())
+        if args.target == "x64win":
+            if platform.system() != "Windows":
+                parser.error("x64win host inputs must be built on Windows")
+            build_windows()
+        else:
+            rust_target = TARGETS[args.target]
+            install_rust_target(rust_target)
+            build_target(args.target, native=args.target == detect_native_target())
         print("\nBuild complete!")
         return
 
     if args.all:
         if platform.system() not in {"Darwin", "Linux"}:
-            parser.error("--all requires a macOS or Linux host")
-        print("Building for all supported targets...\n")
+            parser.error("--all builds the macOS and Linux targets on a Unix host")
+        print("Building all macOS and Linux targets...\n")
         for rust_target in TARGETS.values():
             install_rust_target(rust_target)
         print()
@@ -179,8 +266,11 @@ def main() -> None:
 
     target_name = detect_native_target()
     print(f"Building for native target: {target_name}\n")
-    install_rust_target(TARGETS[target_name])
-    build_target(target_name, native=True)
+    if target_name == "x64win":
+        build_windows()
+    else:
+        install_rust_target(TARGETS[target_name])
+        build_target(target_name, native=True)
     print("\nBuild complete!")
 
 

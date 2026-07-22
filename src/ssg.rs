@@ -1,5 +1,5 @@
-//! Static-site-generation logic: discover markdown files, render markdown to
-//! HTML (with Roc/other syntax highlighting), and write output files.
+//! Static-site-generation logic: discover page sources, read application-defined
+//! formats, optionally render Markdown, and write output files.
 
 use pulldown_cmark::{html, Options, Parser};
 use std::fs;
@@ -8,15 +8,15 @@ use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
-/// A discovered markdown source file and its derived output paths.
+/// A discovered page source file and its derived output paths.
 pub struct Page {
     pub url: String,
     pub source_path: PathBuf,
     pub output_path: PathBuf,
 }
 
-/// Find the markdown `.md` files in a directory (searched recursively).
-pub fn find_pages(dir_path: &Path) -> Result<Vec<Page>, String> {
+/// Find files with `source_extension` in a directory (searched recursively).
+pub fn find_pages(dir_path: &Path, source_extension: &str) -> Result<Vec<Page>, String> {
     let mut file_paths = Vec::new();
 
     find_files_help(dir_path, &mut file_paths)
@@ -25,7 +25,11 @@ pub fn find_pages(dir_path: &Path) -> Result<Vec<Page>, String> {
 
     file_paths
         .into_iter()
-        .filter(|path| path.extension().filter(|s| (*s).eq("md")).is_some())
+        .filter(|path| {
+            path.extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| extension == source_extension)
+        })
         .map(|source_path| {
             let mut output_path = source_path
                 .strip_prefix(dir_path)
@@ -42,19 +46,25 @@ pub fn find_pages(dir_path: &Path) -> Result<Vec<Page>, String> {
         .collect()
 }
 
+/// Read a page source as UTF-8 text.
+pub fn read_source(input_file: &Path) -> Result<String, String> {
+    fs::read_to_string(input_file)
+        .map_err(|err| format!("failed to read {}: {err}", input_file.display()))
+}
+
 fn find_files_help(dir: &Path, file_paths: &mut Vec<PathBuf>) -> std::io::Result<()> {
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
-        let file_type = entry.file_type()?;
+        let pathbuf = entry.path();
+        let metadata = fs::symlink_metadata(&pathbuf)?;
 
-        // Do not follow directory symlinks (or other symlinks). Besides allowing
-        // discovery to leave the content root, directory symlinks can form cycles.
-        if file_type.is_symlink() {
+        // Do not follow links or Windows reparse points. Besides allowing
+        // discovery to leave the content root, directory links can form cycles.
+        if is_link_like(&metadata) {
             continue;
         }
 
-        let pathbuf = entry.path();
-        if file_type.is_dir() {
+        if metadata.is_dir() {
             find_files_help(&pathbuf, file_paths)?;
         } else {
             file_paths.push(pathbuf);
@@ -79,9 +89,13 @@ fn page_url(output_path: &Path) -> String {
 
 /// Parse a markdown file into html.
 pub fn parse_markdown(input_file: &Path) -> Result<String, String> {
-    let content_md = fs::read_to_string(input_file)
-        .map_err(|err| format!("failed to read {}: {err}", input_file.display()))?;
+    let content_md = read_source(input_file)?;
+    render_markdown(&content_md, input_file)
+}
 
+/// Render Markdown source to HTML, resolving replacement directives relative
+/// to `source_path`.
+pub fn render_markdown(content_md: &str, source_path: &Path) -> Result<String, String> {
     let mut content_html = String::new();
     let mut options = Options::all();
 
@@ -92,7 +106,7 @@ pub fn parse_markdown(input_file: &Path) -> Result<String, String> {
     // We could make this option user-configurable if people actually want it!
     options.remove(Options::ENABLE_SMART_PUNCTUATION);
 
-    let parser = Parser::new_ext(&content_md, options);
+    let parser = Parser::new_ext(content_md, options);
 
     // Build a new event stream because the parser can only be consumed once.
     let mut parser_with_highlighting = Vec::new();
@@ -139,10 +153,10 @@ pub fn parse_markdown(input_file: &Path) -> Result<String, String> {
                                 snippet_name,
                             }) => {
                                 code_to_highlight =
-                                    read_replacement_snippet(file_name, snippet_name, input_file)?;
+                                    read_replacement_snippet(file_name, snippet_name, source_path)?;
                             }
                             Some(ReplacementDirective::File { file_name }) => {
-                                code_to_highlight = read_replacement_file(file_name, input_file)?;
+                                code_to_highlight = read_replacement_file(file_name, source_path)?;
                             }
                             None => {}
                         }
@@ -229,7 +243,7 @@ pub fn write_file(output_dir: &Path, output_rel_path: &Path, content: &str) -> R
             parent_dir.push(part);
 
             match fs::symlink_metadata(&parent_dir) {
-                Ok(metadata) if metadata.file_type().is_symlink() => {
+                Ok(metadata) if is_link_like(&metadata) => {
                     return Err(format!(
                         "output directory component \"{}\" is a symbolic link",
                         parent_dir.display()
@@ -272,7 +286,7 @@ pub fn write_file(output_dir: &Path, output_rel_path: &Path, content: &str) -> R
     }
 
     if fs::symlink_metadata(&output_file)
-        .map(|metadata| metadata.file_type().is_symlink())
+        .map(|metadata| is_link_like(&metadata))
         .unwrap_or(false)
     {
         return Err(format!(
@@ -283,6 +297,26 @@ pub fn write_file(output_dir: &Path, output_rel_path: &Path, content: &str) -> R
 
     fs::write(&output_file, content)
         .map_err(|err| format!("failed to write {}: {err}", output_file.display()))
+}
+
+fn is_link_like(metadata: &fs::Metadata) -> bool {
+    if metadata.file_type().is_symlink() {
+        return true;
+    }
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+
+        // Junctions and other reparse points are not necessarily classified as
+        // symbolic links by FileType, but following them has the same confinement
+        // and recursion risks for the SSG.
+        const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+        return metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0;
+    }
+
+    #[cfg(not(windows))]
+    false
 }
 
 enum ReplacementDirective<'a> {
@@ -475,6 +509,21 @@ mod tests {
         parse_markdown(&input).expect("render markdown")
     }
 
+    #[cfg(windows)]
+    fn junction(target: &Path, link: &Path) {
+        let output = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(link)
+            .arg(target)
+            .output()
+            .expect("run mklink");
+        assert!(
+            output.status.success(),
+            "create junction: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
     #[test]
     fn discovery_is_sorted() {
         let test_dir = TestDir::new("sorted-discovery");
@@ -483,7 +532,7 @@ mod tests {
         write(&test_dir.path().join("nested/b.md"), "b");
         write(&test_dir.path().join("ignored.txt"), "ignored");
 
-        let pages = find_pages(test_dir.path()).expect("discover pages");
+        let pages = find_pages(test_dir.path(), "md").expect("discover pages");
         let output_paths: Vec<_> = pages.into_iter().map(|page| page.output_path).collect();
 
         assert_eq!(
@@ -492,6 +541,25 @@ mod tests {
                 PathBuf::from("a.html"),
                 PathBuf::from("nested/b.html"),
                 PathBuf::from("z.html"),
+            ]
+        );
+    }
+
+    #[test]
+    fn discovery_filters_the_requested_source_extension() {
+        let test_dir = TestDir::new("extension-discovery");
+        write(&test_dir.path().join("page.md"), "markdown");
+        write(&test_dir.path().join("page.json"), "{}");
+        write(&test_dir.path().join("nested/other.json"), "{}");
+
+        let pages = find_pages(test_dir.path(), "json").expect("discover JSON pages");
+        let output_paths: Vec<_> = pages.into_iter().map(|page| page.output_path).collect();
+
+        assert_eq!(
+            output_paths,
+            vec![
+                PathBuf::from("nested/other.html"),
+                PathBuf::from("page.html")
             ]
         );
     }
@@ -508,7 +576,23 @@ mod tests {
         write(&external.join("escaped.md"), "escaped");
         symlink(&external, content.join("linked")).expect("create directory symlink");
 
-        let pages = find_pages(&content).expect("discover pages");
+        let pages = find_pages(&content, "md").expect("discover pages");
+        let output_paths: Vec<_> = pages.into_iter().map(|page| page.output_path).collect();
+
+        assert_eq!(output_paths, vec![PathBuf::from("real.html")]);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn discovery_does_not_follow_directory_junctions() {
+        let test_dir = TestDir::new("junction-discovery");
+        let content = test_dir.path().join("content");
+        let external = test_dir.path().join("external");
+        write(&content.join("real.md"), "real");
+        write(&external.join("escaped.md"), "escaped");
+        junction(&external, &content.join("linked"));
+
+        let pages = find_pages(&content, "md").expect("discover pages");
         let output_paths: Vec<_> = pages.into_iter().map(|page| page.output_path).collect();
 
         assert_eq!(output_paths, vec![PathBuf::from("real.html")]);
@@ -544,6 +628,20 @@ mod tests {
         fs::create_dir_all(&output_dir).expect("create output directory");
         fs::create_dir_all(&external).expect("create external directory");
         symlink(&external, output_dir.join("linked")).expect("create output symlink");
+
+        assert!(write_file(&output_dir, Path::new("linked/missing/escaped.html"), "bad").is_err());
+        assert!(!external.join("missing").exists());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn write_file_rejects_junctions_that_escape_output_directory() {
+        let test_dir = TestDir::new("write-junction-confinement");
+        let output_dir = test_dir.path().join("output");
+        let external = test_dir.path().join("external");
+        fs::create_dir_all(&output_dir).expect("create output directory");
+        fs::create_dir_all(&external).expect("create external directory");
+        junction(&external, &output_dir.join("linked"));
 
         assert!(write_file(&output_dir, Path::new("linked/missing/escaped.html"), "bad").is_err());
         assert!(!external.join("missing").exists());
@@ -649,5 +747,19 @@ mod tests {
         symlink(&outside, input_dir.join("linked.roc")).expect("create replacement symlink");
 
         assert!(read_replacement_file("linked.roc", &input_file).is_err());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn replacement_files_cannot_escape_through_junctions() {
+        let test_dir = TestDir::new("replacement-junction-confinement");
+        let input_dir = test_dir.path().join("content");
+        let input_file = input_dir.join("page.md");
+        let outside_dir = test_dir.path().join("outside");
+        write(&input_file, "page");
+        write(&outside_dir.join("escaped.roc"), "outside");
+        junction(&outside_dir, &input_dir.join("linked"));
+
+        assert!(read_replacement_file("linked/escaped.roc", &input_file).is_err());
     }
 }

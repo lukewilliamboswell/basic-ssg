@@ -70,3 +70,9 @@ Path := [].{
 	from_raw : Raw -> PathPkg.Path
 	from_raw = |raw| PathPkg.from_raw(raw)
 }
+
+## Converting an OS string to a path preserves Windows UTF-16 code units.
+expect Path.to_raw(Path.from_os_str(OsStr.windows_u16s([0xD83D, 0xDC36]))) == WindowsU16s([0xD83D, 0xDC36])
+
+## Converting a path back to an OS string also preserves unpaired surrogates.
+expect OsStr.to_raw(Path.to_os_str(Path.windows_u16s([0xD800, 97]))) == WindowsU16s([0xD800, 97])

@@ -33,8 +33,10 @@ Host := [].{
 	locale_get! : () => Try(Str, [NotAvailable])
 	locale_all! : () => List(Str)
 
-	ssg_find_pages! : Raw => Try(List(Page), [PagesError(Str)])
+	ssg_find_pages! : Raw, Str => Try(List(Page), [PagesError(Str)])
+	ssg_read_source! : Raw => Try(Str, [ReadError(Str)])
 	ssg_parse_markdown! : Raw => Try(Str, [ParseError(Str)])
+	ssg_render_markdown! : Raw, Str => Try(Str, [ParseError(Str)])
 	ssg_write_file! : Raw, Raw, Str => Try({}, [WriteError(Str)])
 
 	stdout_line! : Str => Try({}, [StdoutErr(IOErr)])
@@ -43,5 +45,5 @@ Host := [].{
 	stderr_line! : Str => Try({}, [StderrErr(IOErr)])
 	stderr_write! : Str => Try({}, [StderrErr(IOErr)])
 
-	utc_now! : () => U128
+	utc_now! : () => Try(U128, [ClockBeforeEpoch])
 }

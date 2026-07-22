@@ -30,9 +30,35 @@ jobs:
           version=$(sed -n 's/^channel = "\(.*\)".*/\1/p' rust-toolchain.toml)
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+  build-windows-host:
+    name: Build Windows x64 host
+    needs: rust-version
+    runs-on: windows-2025
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        run: |
+          rustup toolchain install "${{ needs.rust-version.outputs.version }}" --profile minimal --target x86_64-pc-windows-msvc
+          rustup default "${{ needs.rust-version.outputs.version }}"
+
+      - name: Build Windows host
+        run: python scripts/build.py
+
+      - name: Upload Windows host
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-x64-host
+          path: platform/targets/x64win/*.lib
+          if-no-files-found: error
+          retention-days: 7
+
   build:
     name: Build and validate release bundle
-    needs: rust-version
+    needs: [rust-version, build-windows-host]
     runs-on: macos-15
     permissions:
       contents: read
@@ -40,7 +66,6 @@ jobs:
       release_version: ${{ steps.validate.outputs.release_version }}
       docs_version: ${{ steps.validate.outputs.docs_version }}
       test_matrix: ${{ steps.bundles.outputs.test_matrix }}
-      bundle_testable: ${{ steps.dependency-mode.outputs.bundle_testable }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -49,25 +74,7 @@ jobs:
 
       - name: Require immutable release dependencies
         if: github.event_name == 'workflow_dispatch'
-        run: ./scripts/check_release_ready.py
-
-      - name: Determine bundle-test mode
-        id: dependency-mode
-        run: |
-          if ./scripts/check_release_ready.py; then
-            echo "bundle_testable=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "bundle_testable=false" >> "$GITHUB_OUTPUT"
-            echo "PR uses the temporary sibling path package; validating sources and bundle contents without consumer bundle tests."
-          fi
-
-      - name: Checkout temporary path dependency for PR validation
-        if: github.event_name == 'pull_request'
-        env:
-          PATH_COMMIT: cb60ad44894447a8dc2f5126f49e2b7e98609b2a
-        run: |
-          git clone --filter=blob:none https://github.com/roc-lang/path.git "$GITHUB_WORKSPACE/../path"
-          git -C "$GITHUB_WORKSPACE/../path" checkout "$PATH_COMMIT"
+        run: python3 scripts/check_release_ready.py
 
       - name: Install Roc
         uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
@@ -85,6 +92,12 @@ jobs:
             --target x86_64-apple-darwin --target aarch64-apple-darwin \
             --target x86_64-unknown-linux-musl --target aarch64-unknown-linux-musl
           rustup default "${{ needs.rust-version.outputs.version }}"
+
+      - name: Download Windows host
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-x64-host
+          path: platform/targets/x64win
 
       - name: Validate release request
         id: validate
@@ -105,15 +118,10 @@ jobs:
           fi
 
       - name: Build platform for all targets
-        run: ./scripts/build.py --all
-
-      - name: Validate sources with the temporary dependency
-        if: steps.dependency-mode.outputs.bundle_testable != 'true'
-        run: ./ci/all_tests.sh
+        run: python3 scripts/build.py --all
 
       - name: Validate sources and the served bundle
-        if: steps.dependency-mode.outputs.bundle_testable == 'true'
-        run: ./scripts/test.py --no-build
+        run: python3 scripts/test.py --no-build
 
       - name: Resolve previous release
         if: github.event_name == 'workflow_dispatch'
@@ -132,14 +140,14 @@ jobs:
           previous_url: ${{ steps.previous.outputs.previous_url }}
 
       - name: Bundle platform
-        run: ./scripts/bundle.py --output-dir dist
+        run: python3 scripts/bundle.py --output-dir dist
 
       - name: Prepare release bundle metadata
         id: bundles
         uses: roc-lang/release-package/actions/prepare-bundles@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           bundle_glob: dist/*.tar.zst
-          test_os_json: '["macos-15","macos-15-intel","ubuntu-22.04","ubuntu-24.04-arm"]'
+          test_os_json: '["macos-15","macos-15-intel","ubuntu-22.04","ubuntu-24.04-arm","windows-2025"]'
 
       - name: Upload release bundles
         uses: actions/upload-artifact@v7
@@ -164,7 +172,6 @@ jobs:
   test-bundles:
     name: Test ${{ matrix.bundle_name }} bundle (${{ matrix.os }})
     needs: build
-    if: needs.build.outputs.bundle_testable == 'true'
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -187,10 +194,20 @@ jobs:
           name: release-bundles
           path: .release/test-bundles
 
-      - name: Test release bundle
+      - name: Test release bundle (Unix)
+        if: matrix.os != 'windows-2025'
         uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
-          test_bundle_command: ./scripts/test.py --bundle-path
+          test_bundle_command: python3 scripts/test.py --bundle-path
+          bundle_path: .release/test-bundles/${{ matrix.artifact_file }}
+          bundle_name: ${{ matrix.bundle_name }}
+          release_version: ${{ needs.build.outputs.release_version }}
+
+      - name: Test release bundle (Windows)
+        if: matrix.os == 'windows-2025'
+        uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          test_bundle_command: python scripts/test.py --bundle-path
           bundle_path: .release/test-bundles/${{ matrix.artifact_file }}
           bundle_name: ${{ matrix.bundle_name }}
           release_version: ${{ needs.build.outputs.release_version }}

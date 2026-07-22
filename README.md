@@ -5,13 +5,14 @@
 
 # Basic SSG
 
-`basic-ssg` is a Roc platform for static site generators. It discovers
-Markdown files, renders Markdown to HTML, and writes the generated files to an
-output directory.
+`basic-ssg` is a Roc platform for static site generators. It discovers source
+files, decodes application-defined page formats, renders Markdown when wanted,
+and writes generated files to an output directory. Markdown remains the
+zero-configuration default.
 
 Application authors normally use a published platform release by putting the
 release URL in the app header. The examples in this repository use a relative
-`../platform/main.roc` path only because they exercise the local checkout.
+platform path only because they exercise the local checkout.
 
 ## Getting Started
 
@@ -58,11 +59,19 @@ render_pages! = |pages, output_dir|
 	}
 ```
 
-Run the generated app with an input content directory and an output directory:
+Run the generated app with an input content directory and an output directory.
+On macOS and Linux:
 
 ```sh
 roc build site.roc --output=site
 ./site content/ www/
+```
+
+On Windows PowerShell, give the executable its native suffix:
+
+```powershell
+roc build site.roc --output=site.exe
+.\site.exe .\content .\www
 ```
 
 ## API
@@ -70,15 +79,55 @@ roc build site.roc --output=site
 `SSG.pages!` discovers Markdown files recursively and returns `List(SSG.Page)`.
 Each page has:
 
-- `source_path : Path.Path`, the Markdown source file.
+- `source_path : Path.Path`, the application-defined page source file.
 - `output_path : Path.Path`, a path relative to the output directory with the
   extension rewritten to `.html`.
 - `url : Str`, the site-absolute URL for the generated page.
 
 `SSG.parse_markdown!` renders a Markdown file to an HTML string.
 
+`SSG.pages_with!` discovers another source extension, such as `json`, and maps
+each source path to an `.html` output path. `SSG.decode_page!` reads the source
+as UTF-8 and runs an application-supplied pure or effectful decoder.
+
+`SSG.render_markdown!` renders Markdown supplied as text, resolving replacement
+directives relative to a supplied source path. This lets a decoder strip and
+parse frontmatter before rendering only the Markdown body.
+
 `SSG.write_file!` writes generated content underneath an output directory,
 creating parent directories as needed.
+
+## Pluggable Page Decoders
+
+`PageDecoder.Decoder(page, value, err)` is an effectful function from a page
+and its source text to a typed value. The platform does not prescribe the
+source format: pass `Json.parse`, a YAML parser, or a custom decoder using
+`PageDecoder.from_source` or `PageDecoder.from_effect`.
+
+Independent decoders compose with Roc's applicative record-builder syntax:
+
+```roc
+JsonPage : { title : Str, body : Str }
+
+page_decoder! = {
+	content: PageDecoder.from_source(Json.parse),
+	generated_at: PageDecoder.from_effect(|_| Ok(Utc.now!())),
+	page: PageDecoder.page!,
+}.PageDecoder
+
+decoded = SSG.decode_page!(page, page_decoder!)?
+```
+
+A frontmatter decoder uses the same interface. It splits the source into a
+metadata string and body, applies the application's chosen metadata parser,
+then can call `SSG.render_markdown!` on the body. Replacing `Json.parse` with a
+YAML parser does not require a platform change. Whole-file JSON and frontmatter
+Markdown pages can coexist in one build by discovering both extensions.
+
+`PageDecoder.map2` runs fields from left to right and stops at the first error,
+so effectful decoder fields retain normal `?` sequencing. The expected output
+type supplies Roc's `parser_for` constraint to `Json.parse`; a different parser
+can impose its own constraints without involving the platform.
 
 The bundled `Html` module escapes `Html.text` content and attribute values by
 default. Use `Html.raw` only for trusted markup, including
@@ -94,11 +143,15 @@ paths created by the application.
 
 ## Examples
 
-- [`example/main.roc`](example/main.roc) is a fuller site generator that renders
-  pages with the bundled `Html` API.
-- [`example/error-handling.roc`](example/error-handling.roc) shows infix `?` for
-  mapping platform errors into an app error, postfix `?` for propagation, and
-  `??` for a boundary fallback.
+- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown site
+  with nested pages, navigation, styling, syntax highlighting, and neighboring
+  source inclusion.
+- [`examples/article-inspector`](examples/article-inspector) is a focused CLI
+  utility that maps platform failures into an application error and prints a
+  Markdown article's first heading.
+- [`examples/travel-journal`](examples/travel-journal) builds whole-file JSON
+  pages alongside Markdown pages with JSON frontmatter, deriving typed parsers
+  and combining pure and effectful decoders with record-builder syntax.
 
 ## Supported Targets
 
@@ -110,6 +163,7 @@ Published releases include these targets:
 | macOS | Intel | `x64mac` |
 | Linux (musl) | ARM64 | `arm64musl` |
 | Linux (musl) | x86_64 | `x64musl` |
+| Windows | x86-64 | `x64win` |
 
 Contributor setup, local platform development, glue regeneration, and release
 bundling are covered in [CONTRIBUTING.md](CONTRIBUTING.md).

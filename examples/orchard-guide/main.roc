@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../platform/main.roc" }
+app [main!] { pf: platform "../../platform/main.roc" }
 
 import pf.SSG
 import pf.Path
@@ -48,11 +48,11 @@ NavLink : {
 
 nav_links : List(NavLink)
 nav_links = [
-	{ url: "/index.html", title: "Home", text: "Home" },
-	{ url: "/fruit/apple.html", title: "Gratia Pagina", text: "Apple" },
-	{ url: "/fruit/banana.html", title: "Pagina Musa", text: "Banana" },
-	{ url: "/fruit/cherry.html", title: "Exempli Cerasus", text: "Cherry" },
-	{ url: "/people/index.html", title: "People", text: "People" },
+	{ url: "/index.html", title: "The Orchard Guide", text: "Home" },
+	{ url: "/fruit/apple.html", title: "Growing Apples", text: "Apples" },
+	{ url: "/fruit/banana.html", title: "Growing Bananas", text: "Bananas" },
+	{ url: "/fruit/cherry.html", title: "Growing Cherries", text: "Cherries" },
+	{ url: "/people/index.html", title: "Orchard Keepers", text: "People" },
 ]
 
 transform_file_content : Str, Str -> Str

@@ -3,7 +3,7 @@
 //! This replaces the old `roc_highlight` crate (which depended on the old Rust
 //! compiler's `roc_parse` and does not exist in the new Zig compiler tree). It is
 //! a small hand-written scanner that targets *current* Roc syntax and emits the
-//! `<span class="…">` classes styled by the example's `www/style.css`
+//! `<span class="…">` classes styled by the Orchard Guide's `public/style.css`
 //! (`comment`, `kw`, `op`, `number`, `str`, `paren`, `bracket`, `brace`,
 //! `comma`, `colon`). Tokens with no styled class (identifiers, whitespace) are
 //! emitted as plain HTML-escaped text.

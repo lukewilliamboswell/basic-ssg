@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../platform/main.roc" }
+app [main!] { pf: platform "../../platform/main.roc" }
 
 import pf.IOErr exposing [IOErr]
 import pf.OsStr exposing [OsStr]
@@ -6,7 +6,7 @@ import pf.Path
 import pf.SSG
 import pf.Stdout
 
-main! : List(OsStr) => Try({}, [Exit(I32), ExampleErr(Str), StdoutErr(IOErr), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), InspectError(Str), StdoutErr(IOErr), ..])
 main! = |args|
 	match args.drop_first(1) {
 		[source_path_arg] => print_title!(Path.from_os_str(source_path_arg))
@@ -14,9 +14,9 @@ main! = |args|
 		_ => Err(Exit(1))
 	}
 
-print_title! : Path.Path => Try({}, [ExampleErr(Str), StdoutErr(IOErr), ..])
+print_title! : Path.Path => Try({}, [InspectError(Str), StdoutErr(IOErr), ..])
 print_title! = |source_path| {
-	html = SSG.parse_markdown!(source_path) ? |ParseError(msg)| ExampleErr("markdown parse failed: ${msg}")
+	html = SSG.parse_markdown!(source_path) ? |ParseError(msg)| InspectError("could not inspect article: ${msg}")
 	title = first_h1(html) ?? "Untitled"
 
 	Stdout.line!("title: ${title}")?

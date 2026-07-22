@@ -2,13 +2,11 @@ platform ""
 	requires {
 		main! : List([Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]) => Try({}, [Exit(I32), ..])
 	}
-	exposes [SSG, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
+	exposes [SSG, PageDecoder, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
 	packages {
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
-		# Temporary local source dependency while the next path release builds.
-		# Replace this with the release bundle URL before publishing basic-ssg.
-		path: "../../path/package/main.roc",
+		path: "https://github.com/roc-lang/path/releases/download/3.0.0-rc1/CgzGStCBCM4Cdt3izycwFuXZi5RPUiqSXJEnjSEMgmeG.tar.zst",
 	}
 	provides { "roc_main": main_for_host! }
 	hosted {
@@ -25,18 +23,22 @@ platform ""
 		"hosted_locale_all": Host.locale_all!,
 		"hosted_utc_now": Host.utc_now!,
 		"hosted_ssg_find_pages": Host.ssg_find_pages!,
+		"hosted_ssg_read_source": Host.ssg_read_source!,
 		"hosted_ssg_parse_markdown": Host.ssg_parse_markdown!,
+		"hosted_ssg_render_markdown": Host.ssg_render_markdown!,
 		"hosted_ssg_write_file": Host.ssg_write_file!,
 	}
 	targets: {
 		inputs_dir: "targets/",
 		x64mac: { inputs: ["libhost.a", app] },
 		arm64mac: { inputs: ["libhost.a", app] },
+		x64win: { inputs: ["host.lib", "advapi32.lib", "bcrypt.lib", "crypt32.lib", "dbghelp.lib", "iphlpapi.lib", "kernel32.lib", "ncrypt.lib", "ntdll.lib", "ole32.lib", "secur32.lib", "shell32.lib", "user32.lib", "userenv.lib", "ws2_32.lib", app] },
 		x64musl: { inputs: ["crt1.o", "libhost.a", "libunwind.a", app, "libc.a"] },
 		arm64musl: { inputs: ["crt1.o", "libhost.a", "libunwind.a", app, "libc.a"] },
 	}
 
 import SSG
+import PageDecoder
 import Path
 import OsStr
 import Host

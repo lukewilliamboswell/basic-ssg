@@ -242,6 +242,12 @@ expect Str.inspect(OsStr.windows("abc")) == "OsStr.windows(\"abc\")"
 ## Windows raw-unit inspection preserves invalid UTF-16 units.
 expect Str.inspect(OsStr.windows_u16s([0xD800, 97])) == "OsStr.windows_u16s([55296, 97])"
 
+## Windows construction encodes supplementary Unicode code points as surrogate pairs.
+expect OsStr.to_raw(OsStr.windows("🐶")) == WindowsU16s([0xD83D, 0xDC36])
+
+## Valid Windows surrogate pairs decode back to Unicode text.
+expect OsStr.to_str_try(OsStr.windows_u16s([0xD83D, 0xDC36])) == Ok("🐶")
+
 ## Interpolation creates a UTF-8 representation.
 expect {
 	name = "config"

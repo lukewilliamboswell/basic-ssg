@@ -1,4 +1,4 @@
-## This is a documentation comment
+## A small template included by the orchard guide documentation.
 # This is a comment
 app [transform_file_content] { pf: platform "platform/main.roc" }
 

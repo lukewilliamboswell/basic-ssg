@@ -11,16 +11,14 @@ platform/*.tar.br
 platform/*.tar.gz
 *.tar.zst
 dist/
-# Built per-target host libs (produced by build.sh, bundled for release).
+.release/
+# Built per-target host libraries (produced by scripts/build.py and bundled for release).
 # The musl toolchain inputs (crt1.o/libc.a/libunwind.a) ARE committed.
 platform/targets/*/libhost.a
-platform/targets/*/host.lib
+platform/targets/x64win/*.lib
 
 # examples
-example/main
-example/error-handling
-example/output/
-example/**/*.html
+examples/*/output/
 
 # generated files
 crates/roc_std/

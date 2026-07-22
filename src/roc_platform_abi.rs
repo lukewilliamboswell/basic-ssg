@@ -1427,6 +1427,81 @@ const _: () = assert!(core::mem::offset_of!(UnixBytesOrUtf8OrWindowsU16s, tag) =
 /// Tag discriminant for Try.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HostSsgReadSourceResultTag {
+    Err = 0,
+    Ok = 1,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union HostSsgReadSourceResultPayload {
+    pub err: core::mem::ManuallyDrop<RocStr>,
+    pub ok: core::mem::ManuallyDrop<RocStr>,
+}
+
+#[cfg(target_pointer_width = "32")]
+#[repr(align(4))]
+#[derive(Clone, Copy)]
+pub struct HostSsgReadSourceResultPayloadAlignment;
+
+/// Tag union: Try
+#[cfg(target_pointer_width = "32")]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostSsgReadSourceResult {
+    pub _payload_alignment: [HostSsgReadSourceResultPayloadAlignment; 0],
+    pub payload: [u8; 12],
+    pub tag: HostSsgReadSourceResultTag,
+}
+
+/// Tag union: Try
+#[cfg(not(target_pointer_width = "32"))]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostSsgReadSourceResult {
+    pub payload: HostSsgReadSourceResultPayload,
+    pub tag: HostSsgReadSourceResultTag,
+}
+
+impl HostSsgReadSourceResult {
+    #[cfg(target_pointer_width = "32")]
+    pub fn payload_err(&self) -> RocStr {
+        unsafe { core::ptr::read(self.payload.as_ptr() as *const RocStr) }
+    }
+
+    #[cfg(not(target_pointer_width = "32"))]
+    pub fn payload_err(&self) -> RocStr {
+        unsafe { core::mem::ManuallyDrop::into_inner(self.payload.err) }
+    }
+
+    #[cfg(target_pointer_width = "32")]
+    pub fn payload_ok(&self) -> RocStr {
+        unsafe { core::ptr::read(self.payload.as_ptr() as *const RocStr) }
+    }
+
+    #[cfg(not(target_pointer_width = "32"))]
+    pub fn payload_ok(&self) -> RocStr {
+        unsafe { core::mem::ManuallyDrop::into_inner(self.payload.ok) }
+    }
+
+}
+
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::size_of::<HostSsgReadSourceResult>() == 32, "HostSsgReadSourceResult size mismatch");
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::align_of::<HostSsgReadSourceResult>() == 8, "HostSsgReadSourceResult alignment mismatch");
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::offset_of!(HostSsgReadSourceResult, tag) == 24, "HostSsgReadSourceResult tag offset mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::size_of::<HostSsgReadSourceResult>() == 16, "HostSsgReadSourceResult size mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::align_of::<HostSsgReadSourceResult>() == 4, "HostSsgReadSourceResult alignment mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::offset_of!(HostSsgReadSourceResult, tag) == 12, "HostSsgReadSourceResult tag offset mismatch");
+
+/// Tag discriminant for Try.
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HostSsgParseMarkdownResultTag {
     Err = 0,
     Ok = 1,
@@ -1771,6 +1846,71 @@ const _: () = assert!(core::mem::align_of::<HostStderrLineResult>() == 4, "HostS
 #[cfg(target_pointer_width = "32")]
 const _: () = assert!(core::mem::offset_of!(HostStderrLineResult, tag) == 16, "HostStderrLineResult tag offset mismatch");
 
+/// Tag discriminant for Try.
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HostUtcNowResultTag {
+    Err = 0,
+    Ok = 1,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union HostUtcNowResultPayload {
+    pub err: [u8; 0],
+    pub ok: core::mem::ManuallyDrop<u128>,
+}
+
+#[cfg(target_pointer_width = "32")]
+#[repr(align(16))]
+#[derive(Clone, Copy)]
+pub struct HostUtcNowResultPayloadAlignment;
+
+/// Tag union: Try
+#[cfg(target_pointer_width = "32")]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostUtcNowResult {
+    pub _payload_alignment: [HostUtcNowResultPayloadAlignment; 0],
+    pub payload: [u8; 16],
+    pub tag: HostUtcNowResultTag,
+}
+
+/// Tag union: Try
+#[cfg(not(target_pointer_width = "32"))]
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostUtcNowResult {
+    pub payload: HostUtcNowResultPayload,
+    pub tag: HostUtcNowResultTag,
+}
+
+impl HostUtcNowResult {
+    #[cfg(target_pointer_width = "32")]
+    pub fn payload_ok(&self) -> u128 {
+        unsafe { core::ptr::read(self.payload.as_ptr() as *const u128) }
+    }
+
+    #[cfg(not(target_pointer_width = "32"))]
+    pub fn payload_ok(&self) -> u128 {
+        unsafe { core::mem::ManuallyDrop::into_inner(self.payload.ok) }
+    }
+
+}
+
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::size_of::<HostUtcNowResult>() == 32, "HostUtcNowResult size mismatch");
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::align_of::<HostUtcNowResult>() == 16, "HostUtcNowResult alignment mismatch");
+#[cfg(target_pointer_width = "64")]
+const _: () = assert!(core::mem::offset_of!(HostUtcNowResult, tag) == 16, "HostUtcNowResult tag offset mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::size_of::<HostUtcNowResult>() == 32, "HostUtcNowResult size mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::align_of::<HostUtcNowResult>() == 16, "HostUtcNowResult alignment mismatch");
+#[cfg(target_pointer_width = "32")]
+const _: () = assert!(core::mem::offset_of!(HostUtcNowResult, tag) == 16, "HostUtcNowResult tag offset mismatch");
+
 /// Tag discriminant for OsStr.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1861,14 +2001,14 @@ const _: () = assert!(core::mem::offset_of!(OsStr, tag) == 12, "OsStr tag offset
 /// Tag discriminant for Try.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TryType59Tag {
+pub enum TryType64Tag {
     Err = 0,
     Ok = 1,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub union TryType59Payload {
+pub union TryType64Payload {
     pub err: core::mem::ManuallyDrop<i32>,
     pub ok: [u8; 0],
 }
@@ -1876,28 +2016,28 @@ pub union TryType59Payload {
 #[cfg(target_pointer_width = "32")]
 #[repr(align(4))]
 #[derive(Clone, Copy)]
-pub struct TryType59PayloadAlignment;
+pub struct TryType64PayloadAlignment;
 
 /// Tag union: Try
 #[cfg(target_pointer_width = "32")]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct TryType59 {
-    pub _payload_alignment: [TryType59PayloadAlignment; 0],
+pub struct TryType64 {
+    pub _payload_alignment: [TryType64PayloadAlignment; 0],
     pub payload: [u8; 4],
-    pub tag: TryType59Tag,
+    pub tag: TryType64Tag,
 }
 
 /// Tag union: Try
 #[cfg(not(target_pointer_width = "32"))]
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct TryType59 {
-    pub payload: TryType59Payload,
-    pub tag: TryType59Tag,
+pub struct TryType64 {
+    pub payload: TryType64Payload,
+    pub tag: TryType64Tag,
 }
 
-impl TryType59 {
+impl TryType64 {
     #[cfg(target_pointer_width = "32")]
     pub fn payload_err(&self) -> i32 {
         unsafe { core::ptr::read(self.payload.as_ptr() as *const i32) }
@@ -1911,17 +2051,17 @@ impl TryType59 {
 }
 
 #[cfg(target_pointer_width = "64")]
-const _: () = assert!(core::mem::size_of::<TryType59>() == 8, "TryType59 size mismatch");
+const _: () = assert!(core::mem::size_of::<TryType64>() == 8, "TryType64 size mismatch");
 #[cfg(target_pointer_width = "64")]
-const _: () = assert!(core::mem::align_of::<TryType59>() == 4, "TryType59 alignment mismatch");
+const _: () = assert!(core::mem::align_of::<TryType64>() == 4, "TryType64 alignment mismatch");
 #[cfg(target_pointer_width = "64")]
-const _: () = assert!(core::mem::offset_of!(TryType59, tag) == 4, "TryType59 tag offset mismatch");
+const _: () = assert!(core::mem::offset_of!(TryType64, tag) == 4, "TryType64 tag offset mismatch");
 #[cfg(target_pointer_width = "32")]
-const _: () = assert!(core::mem::size_of::<TryType59>() == 8, "TryType59 size mismatch");
+const _: () = assert!(core::mem::size_of::<TryType64>() == 8, "TryType64 size mismatch");
 #[cfg(target_pointer_width = "32")]
-const _: () = assert!(core::mem::align_of::<TryType59>() == 4, "TryType59 alignment mismatch");
+const _: () = assert!(core::mem::align_of::<TryType64>() == 4, "TryType64 alignment mismatch");
 #[cfg(target_pointer_width = "32")]
-const _: () = assert!(core::mem::offset_of!(TryType59, tag) == 4, "TryType59 tag offset mismatch");
+const _: () = assert!(core::mem::offset_of!(TryType64, tag) == 4, "TryType64 tag offset mismatch");
 
 /// Return type record for Host.cmd_output!
 /// Fields ordered by compiler-emitted ABI offsets.
@@ -2063,12 +2203,13 @@ pub struct HostEnvVarArgs {
 }
 
 /// Arguments for Host.ssg_find_pages!
-/// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))] => Try(List({ output_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], source_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], url : Str }), [PagesError(Str)])
+/// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], Str => Try(List({ output_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], source_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], url : Str }), [PagesError(Str)])
 /// Refcounted fields are owned by the hosted function.
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct HostSsgFindPagesArgs {
     pub arg0: UnixBytesOrUtf8OrWindowsU16s,
+    pub arg1: RocStr,
 }
 
 /// Arguments for Host.ssg_parse_markdown!
@@ -2078,6 +2219,25 @@ pub struct HostSsgFindPagesArgs {
 #[derive(Clone, Copy)]
 pub struct HostSsgParseMarkdownArgs {
     pub arg0: UnixBytesOrUtf8OrWindowsU16s,
+}
+
+/// Arguments for Host.ssg_read_source!
+/// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))] => Try(Str, [ReadError(Str)])
+/// Refcounted fields are owned by the hosted function.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostSsgReadSourceArgs {
+    pub arg0: UnixBytesOrUtf8OrWindowsU16s,
+}
+
+/// Arguments for Host.ssg_render_markdown!
+/// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], Str => Try(Str, [ParseError(Str)])
+/// Refcounted fields are owned by the hosted function.
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct HostSsgRenderMarkdownArgs {
+    pub arg0: UnixBytesOrUtf8OrWindowsU16s,
+    pub arg1: RocStr,
 }
 
 /// Arguments for Host.ssg_write_file!
@@ -2135,6 +2295,9 @@ pub type HostCmdStatusArg0 = AnonStructDcec91e7888605f4;
 pub type HostEnvArchOs = AnonStructB635699b1cbc809a;
 pub type HostEnvDict = AnonStruct77eaba63dfee299d;
 pub type HostSsgFindPagesOk = AnonStructFa7793b7bd548fcf;
+pub type HostSsgRenderMarkdownResult = HostSsgParseMarkdownResult;
+pub type HostSsgRenderMarkdownResultPayload = HostSsgParseMarkdownResultPayload;
+pub type HostSsgRenderMarkdownResultTag = HostSsgParseMarkdownResultTag;
 pub type HostStderrWriteResult = HostStderrLineResult;
 pub type HostStderrWriteResultPayload = HostStderrLineResultPayload;
 pub type HostStderrWriteResultTag = HostStderrLineResultTag;
@@ -2541,6 +2704,47 @@ impl UnixBytesOrUtf8OrWindowsU16s {
     }
 }
 
+impl HostSsgReadSourceResult {
+    /// Recursively decrement Roc-owned payloads.
+    ///
+    /// # Safety
+    /// `self` must own one live Roc reference for each refcounted payload.
+    pub unsafe fn decref(self, roc_host: &RocHost) {
+        let value = self;
+        let _ = roc_host;
+        match value.tag {
+            HostSsgReadSourceResultTag::Err => {
+                let payload = value.payload_err();
+                unsafe { payload.decref(roc_host); }
+            },
+            HostSsgReadSourceResultTag::Ok => {
+                let payload = value.payload_ok();
+                unsafe { payload.decref(roc_host); }
+            },
+        }
+    }
+
+    /// Increment Roc-owned payloads.
+    ///
+    /// # Safety
+    /// `self` must point at live Roc allocations. The retained references must
+    /// be balanced by later decrefs.
+    pub unsafe fn incref(self, amount: isize) {
+        let value = self;
+        let _ = amount;
+        match value.tag {
+            HostSsgReadSourceResultTag::Err => {
+                let payload = value.payload_err();
+                unsafe { payload.incref(amount); }
+            },
+            HostSsgReadSourceResultTag::Ok => {
+                let payload = value.payload_ok();
+                unsafe { payload.incref(amount); }
+            },
+        }
+    }
+}
+
 impl HostSsgParseMarkdownResult {
     /// Recursively decrement Roc-owned payloads.
     ///
@@ -2734,6 +2938,35 @@ impl HostStderrLineResult {
     }
 }
 
+impl HostUtcNowResult {
+    /// Recursively decrement Roc-owned payloads.
+    ///
+    /// # Safety
+    /// `self` must own one live Roc reference for each refcounted payload.
+    pub unsafe fn decref(self, roc_host: &RocHost) {
+        let value = self;
+        let _ = roc_host;
+        match value.tag {
+            HostUtcNowResultTag::Err => {},
+            HostUtcNowResultTag::Ok => {},
+        }
+    }
+
+    /// Increment Roc-owned payloads.
+    ///
+    /// # Safety
+    /// `self` must point at live Roc allocations. The retained references must
+    /// be balanced by later decrefs.
+    pub unsafe fn incref(self, amount: isize) {
+        let value = self;
+        let _ = amount;
+        match value.tag {
+            HostUtcNowResultTag::Err => {},
+            HostUtcNowResultTag::Ok => {},
+        }
+    }
+}
+
 impl OsStr {
     /// Recursively decrement Roc-owned payloads.
     ///
@@ -2783,7 +3016,7 @@ impl OsStr {
     }
 }
 
-impl TryType59 {
+impl TryType64 {
     /// Recursively decrement Roc-owned payloads.
     ///
     /// # Safety
@@ -2792,8 +3025,8 @@ impl TryType59 {
         let value = self;
         let _ = roc_host;
         match value.tag {
-            TryType59Tag::Err => {},
-            TryType59Tag::Ok => {},
+            TryType64Tag::Err => {},
+            TryType64Tag::Ok => {},
         }
     }
 
@@ -2806,8 +3039,8 @@ impl TryType59 {
         let value = self;
         let _ = amount;
         match value.tag {
-            TryType59Tag::Err => {},
-            TryType59Tag::Ok => {},
+            TryType64Tag::Err => {},
+            TryType64Tag::Ok => {},
         }
     }
 }
@@ -2863,12 +3096,20 @@ unsafe extern "C" {
     pub fn hosted_locale_get() -> HostLocaleGetResult;
 
     /// Hosted symbol for Host.ssg_find_pages!
-    /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))] => Try(List({ output_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], source_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], url : Str }), [PagesError(Str)])
-    pub fn hosted_ssg_find_pages(arg0: UnixBytesOrUtf8OrWindowsU16s) -> HostSsgFindPagesResult;
+    /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], Str => Try(List({ output_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], source_path : [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], url : Str }), [PagesError(Str)])
+    pub fn hosted_ssg_find_pages(arg0: UnixBytesOrUtf8OrWindowsU16s, arg1: RocStr) -> HostSsgFindPagesResult;
 
     /// Hosted symbol for Host.ssg_parse_markdown!
     /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))] => Try(Str, [ParseError(Str)])
     pub fn hosted_ssg_parse_markdown(arg0: UnixBytesOrUtf8OrWindowsU16s) -> HostSsgParseMarkdownResult;
+
+    /// Hosted symbol for Host.ssg_read_source!
+    /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))] => Try(Str, [ReadError(Str)])
+    pub fn hosted_ssg_read_source(arg0: UnixBytesOrUtf8OrWindowsU16s) -> HostSsgReadSourceResult;
+
+    /// Hosted symbol for Host.ssg_render_markdown!
+    /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], Str => Try(Str, [ParseError(Str)])
+    pub fn hosted_ssg_render_markdown(arg0: UnixBytesOrUtf8OrWindowsU16s, arg1: RocStr) -> HostSsgParseMarkdownResult;
 
     /// Hosted symbol for Host.ssg_write_file!
     /// Roc signature: [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], [UnixBytes(List(U8)), Utf8(Str), WindowsU16s(List(U16))], Str => Try({}, [WriteError(Str)])
@@ -2891,8 +3132,8 @@ unsafe extern "C" {
     pub fn hosted_stdout_write(arg0: RocStr) -> HostStdoutLineResult;
 
     /// Hosted symbol for Host.utc_now!
-    /// Roc signature: {} => U128
-    pub fn hosted_utc_now() -> u128;
+    /// Roc signature: {} => Try(U128, [ClockBeforeEpoch])
+    pub fn hosted_utc_now() -> HostUtcNowResult;
 
 }
 

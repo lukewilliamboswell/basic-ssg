@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from build import ALL_TARGETS
+from build import ROC_TARGETS, WINDOWS_SYSTEM_LIBRARIES
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -19,8 +19,25 @@ TARGET_INPUTS = {
     "arm64mac": ("libhost.a",),
     "x64musl": ("crt1.o", "libhost.a", "libunwind.a", "libc.a"),
     "arm64musl": ("crt1.o", "libhost.a", "libunwind.a", "libc.a"),
+    "x64win": ("host.lib", *WINDOWS_SYSTEM_LIBRARIES),
 }
 LICENSE_NAMES = ("LICENSE", "THIRD_PARTY_LICENSES.md")
+
+
+def executable(command: str) -> str:
+    command_path = Path(command)
+    if command_path.is_absolute() or command_path.parent != Path("."):
+        if not command_path.is_absolute():
+            command_path = ROOT / command_path
+        resolved = str(command_path.resolve()) if command_path.is_file() else None
+    else:
+        resolved = shutil.which(command)
+    if resolved is None:
+        raise SystemExit(
+            f"Could not find Roc executable {command!r}. "
+            "Use --roc, set ROC, or add roc to PATH."
+        )
+    return resolved
 
 
 def relative_platform_path(path: Path) -> str:
@@ -28,10 +45,10 @@ def relative_platform_path(path: Path) -> str:
 
 
 def target_files() -> list[Path]:
-    if set(TARGET_INPUTS) != set(ALL_TARGETS):
+    if set(TARGET_INPUTS) != set(ROC_TARGETS):
         raise SystemExit(
             f"Bundle/build target mismatch: bundle={tuple(TARGET_INPUTS)}, "
-            f"build={ALL_TARGETS}"
+            f"build={ROC_TARGETS}"
         )
     files: list[Path] = []
     missing: list[str] = []
@@ -44,7 +61,7 @@ def target_files() -> list[Path]:
                 missing.append(relative_platform_path(path))
     if missing:
         raise SystemExit(
-            "Missing release target inputs; run `./build.sh --all` first:\n- "
+            "Missing release target inputs; build every release host first:\n- "
             + "\n- ".join(missing)
         )
     return files
@@ -53,7 +70,9 @@ def target_files() -> list[Path]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bundle the basic-ssg platform")
     parser.add_argument("--output-dir", type=Path, default=ROOT)
+    parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
     args, roc_args = parser.parse_known_args()
+    roc = executable(args.roc)
 
     output_dir = args.output_dir
     if not output_dir.is_absolute():
@@ -106,7 +125,7 @@ def main() -> None:
                 shutil.copy2(source, target)
             subprocess.run(
                 [
-                    os.environ.get("ROC", "roc"),
+                    roc,
                     "bundle",
                     *bundle_files,
                     "--output-dir",

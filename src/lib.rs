@@ -4,7 +4,9 @@
 #![allow(improper_ctypes_definitions)]
 
 use core::mem::ManuallyDrop;
-use std::ffi::{c_char, c_void, CStr};
+#[cfg(unix)]
+use std::ffi::CStr;
+use std::ffi::{c_char, c_void};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
@@ -228,6 +230,42 @@ fn try_parse_markdown_err(message: RocStr) -> HostSsgParseMarkdownResult {
     }
 }
 
+fn try_render_markdown_ok(html: RocStr) -> HostSsgRenderMarkdownResult {
+    HostSsgRenderMarkdownResult {
+        payload: HostSsgRenderMarkdownResultPayload {
+            ok: ManuallyDrop::new(html),
+        },
+        tag: HostSsgRenderMarkdownResultTag::Ok,
+    }
+}
+
+fn try_render_markdown_err(message: RocStr) -> HostSsgRenderMarkdownResult {
+    HostSsgRenderMarkdownResult {
+        payload: HostSsgRenderMarkdownResultPayload {
+            err: ManuallyDrop::new(message),
+        },
+        tag: HostSsgRenderMarkdownResultTag::Err,
+    }
+}
+
+fn try_read_source_ok(source: RocStr) -> HostSsgReadSourceResult {
+    HostSsgReadSourceResult {
+        payload: HostSsgReadSourceResultPayload {
+            ok: ManuallyDrop::new(source),
+        },
+        tag: HostSsgReadSourceResultTag::Ok,
+    }
+}
+
+fn try_read_source_err(message: RocStr) -> HostSsgReadSourceResult {
+    HostSsgReadSourceResult {
+        payload: HostSsgReadSourceResultPayload {
+            err: ManuallyDrop::new(message),
+        },
+        tag: HostSsgReadSourceResultTag::Err,
+    }
+}
+
 fn try_write_file_ok() -> HostSsgWriteFileResult {
     HostSsgWriteFileResult {
         payload: HostSsgWriteFileResultPayload { ok: [] },
@@ -247,14 +285,24 @@ fn try_write_file_err(message: RocStr) -> HostSsgWriteFileResult {
 #[no_mangle]
 pub extern "C" fn hosted_ssg_find_pages(
     dir: UnixBytesOrUtf8OrWindowsU16s,
+    source_extension: RocStr,
 ) -> HostSsgFindPagesResult {
     let roc_host = roc_host();
     let dir_path = match pathbuf_from_roc_path(dir, roc_host) {
         Ok(path) => path,
-        Err(message) => return try_find_pages_err(RocStr::from_str(&message, roc_host)),
+        Err(message) => {
+            unsafe {
+                source_extension.decref(roc_host);
+            }
+            return try_find_pages_err(RocStr::from_str(&message, roc_host));
+        }
     };
+    let source_extension_text = source_extension.as_str().to_owned();
+    unsafe {
+        source_extension.decref(roc_host);
+    }
 
-    match ssg::find_pages(&dir_path) {
+    match ssg::find_pages(&dir_path, &source_extension_text) {
         Ok(pages) => {
             if pages.is_empty() {
                 return try_find_pages_ok(RocList::empty());
@@ -276,6 +324,22 @@ pub extern "C" fn hosted_ssg_find_pages(
 }
 
 #[no_mangle]
+pub extern "C" fn hosted_ssg_read_source(
+    path: UnixBytesOrUtf8OrWindowsU16s,
+) -> HostSsgReadSourceResult {
+    let roc_host = roc_host();
+    let input_path = match pathbuf_from_roc_path(path, roc_host) {
+        Ok(path) => path,
+        Err(message) => return try_read_source_err(RocStr::from_str(&message, roc_host)),
+    };
+
+    match ssg::read_source(&input_path) {
+        Ok(source) => try_read_source_ok(RocStr::from_str(&source, roc_host)),
+        Err(message) => try_read_source_err(RocStr::from_str(&message, roc_host)),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn hosted_ssg_parse_markdown(
     path: UnixBytesOrUtf8OrWindowsU16s,
 ) -> HostSsgParseMarkdownResult {
@@ -288,6 +352,33 @@ pub extern "C" fn hosted_ssg_parse_markdown(
     match ssg::parse_markdown(&input_path) {
         Ok(html) => try_parse_markdown_ok(RocStr::from_str(&html, roc_host)),
         Err(message) => try_parse_markdown_err(RocStr::from_str(&message, roc_host)),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn hosted_ssg_render_markdown(
+    source_path: UnixBytesOrUtf8OrWindowsU16s,
+    markdown: RocStr,
+) -> HostSsgRenderMarkdownResult {
+    let roc_host = roc_host();
+    let source_path = match pathbuf_from_roc_path(source_path, roc_host) {
+        Ok(path) => path,
+        Err(message) => {
+            unsafe {
+                markdown.decref(roc_host);
+            }
+            return try_render_markdown_err(RocStr::from_str(&message, roc_host));
+        }
+    };
+
+    let result = ssg::render_markdown(markdown.as_str(), &source_path);
+    unsafe {
+        markdown.decref(roc_host);
+    }
+
+    match result {
+        Ok(html) => try_render_markdown_ok(RocStr::from_str(&html, roc_host)),
+        Err(message) => try_render_markdown_err(RocStr::from_str(&message, roc_host)),
     }
 }
 
@@ -716,12 +807,31 @@ pub extern "C" fn hosted_locale_all() -> RocList<RocStr> {
 // Utc effects
 // ============================================================================
 
+fn try_utc_now_ok(nanos: u128) -> HostUtcNowResult {
+    HostUtcNowResult {
+        payload: HostUtcNowResultPayload {
+            ok: ManuallyDrop::new(nanos),
+        },
+        tag: HostUtcNowResultTag::Ok,
+    }
+}
+
+fn try_utc_now_err() -> HostUtcNowResult {
+    HostUtcNowResult {
+        payload: HostUtcNowResultPayload { err: [] },
+        tag: HostUtcNowResultTag::Err,
+    }
+}
+
+// TODO(https://github.com/roc-lang/roc/issues/10163): revert to a bare u128
+// return once the compiler emits the clang/Rust u128 return convention on
+// x86_64-windows; bare u128 returns are currently misread there.
 #[no_mangle]
-pub extern "C" fn hosted_utc_now() -> u128 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|duration| duration.as_nanos())
-        .unwrap_or(0)
+pub extern "C" fn hosted_utc_now() -> HostUtcNowResult {
+    match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+        Ok(duration) => try_utc_now_ok(duration.as_nanos()),
+        Err(_) => try_utc_now_err(),
+    }
 }
 
 // ============================================================================
