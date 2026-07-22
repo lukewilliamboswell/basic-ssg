@@ -312,7 +312,7 @@ fn is_link_like(metadata: &fs::Metadata) -> bool {
         // symbolic links by FileType, but following them has the same confinement
         // and recursion risks for the SSG.
         const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
-        return metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0;
+        metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0
     }
 
     #[cfg(not(windows))]
