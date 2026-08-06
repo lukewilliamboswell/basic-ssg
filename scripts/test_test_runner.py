@@ -14,21 +14,23 @@ class ValgrindTests(unittest.TestCase):
     def test_command_keeps_valgrind_output_separate(self) -> None:
         with tempfile.TemporaryDirectory() as raw_directory:
             temporary = Path(raw_directory)
+            binary = Path("/tmp/app")
             command, log = test_runner.process_command(
-                Path("/tmp/app"), ["one", "two"], temporary, valgrind=True
+                binary, ["one", "two"], temporary, valgrind=True
             )
 
             self.assertEqual(command[0:2], ["valgrind", "--tool=memcheck"])
-            self.assertEqual(command[-3:], ["/tmp/app", "one", "two"])
+            self.assertEqual(command[-3:], [str(binary), "one", "two"])
             self.assertIn(f"--log-file={temporary / 'valgrind.log'}", command)
             self.assertEqual(log, temporary / "valgrind.log")
 
     def test_plain_command_has_no_log(self) -> None:
+        binary = Path("/tmp/app")
         command, log = test_runner.process_command(
-            Path("/tmp/app"), ["argument"], Path("/tmp"), valgrind=False
+            binary, ["argument"], Path("/tmp"), valgrind=False
         )
 
-        self.assertEqual(command, ["/tmp/app", "argument"])
+        self.assertEqual(command, [str(binary), "argument"])
         self.assertIsNone(log)
 
     def test_log_requires_observed_allocations_and_no_errors(self) -> None:
