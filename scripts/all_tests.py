@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from glue import find_glue_spec
+from roc_version import active_roc_version, require_pinned_roc
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -98,9 +98,6 @@ def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
 
 def validate_glue(roc: str, env: dict[str, str]) -> None:
     heading("Checking generated Rust glue")
-    if find_glue_spec(roc) is None:
-        print("Skipping glue check: no matching Rust glue spec is available.")
-        return
     command(
         sys.executable,
         ROOT / "scripts" / "glue.py",
@@ -112,6 +109,19 @@ def validate_glue(roc: str, env: dict[str, str]) -> None:
 
 
 def validate_host(cargo: str, env: dict[str, str]) -> None:
+    heading("Validating repository test infrastructure")
+    command(
+        sys.executable,
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts",
+        "-p",
+        "test_*.py",
+        env=env,
+    )
+
     heading("Validating the platform host")
     command(cargo, "fmt", "--check", env=env)
     command(cargo, "test", "--locked", env=env)
@@ -121,7 +131,13 @@ def validate_host(cargo: str, env: dict[str, str]) -> None:
     command(sys.executable, ROOT / "scripts" / "build.py", env=env)
 
 
-def validate_examples(roc: str, env: dict[str, str]) -> None:
+def validate_examples(
+    roc: str,
+    env: dict[str, str],
+    *,
+    allow_unpinned_roc: bool,
+    valgrind: bool,
+) -> None:
     heading("Testing documented examples")
     command(
         sys.executable,
@@ -131,6 +147,8 @@ def validate_examples(roc: str, env: dict[str, str]) -> None:
         "--platform-url",
         "../../platform/main.roc",
         "--no-build",
+        *(["--allow-unpinned-roc"] if allow_unpinned_roc else []),
+        *(["--valgrind"] if valgrind else []),
         env=env,
     )
 
@@ -151,10 +169,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
     parser.add_argument("--cargo", default=os.environ.get("CARGO", "cargo"))
     parser.add_argument(
+        "--allow-unpinned-roc",
+        action="store_true",
+        help="allow compatibility checks with a compiler newer than .roc-version",
+    )
+    parser.add_argument(
         "--section",
         action="append",
         choices=SECTIONS,
         help="run only this section; may be repeated (default: all sections)",
+    )
+    parser.add_argument(
+        "--valgrind",
+        action="store_true",
+        help="run x64 Linux example behavior cases under Valgrind Memcheck",
     )
     return parser.parse_args()
 
@@ -163,6 +191,8 @@ def main() -> None:
     configure_console()
     args = parse_args()
     sections = set(args.section or SECTIONS)
+    if args.valgrind and "examples" not in sections:
+        raise SystemExit("--valgrind requires the examples section")
     roc_sections = sections - {"host"}
     roc = executable(args.roc, "Roc") if roc_sections else None
     cargo = executable(args.cargo, "Cargo") if "host" in sections else args.cargo
@@ -170,10 +200,12 @@ def main() -> None:
 
     print("=== basic-ssg CI ===")
     if roc is not None:
-        version = subprocess.check_output(
-            [roc, "version"], cwd=ROOT, env=env, text=True
+        version = (
+            active_roc_version(roc, env=env)
+            if args.allow_unpinned_roc
+            else require_pinned_roc(roc, env=env)
         )
-        print(f"Using roc version: {version.strip()}")
+        print(f"Using roc version: {version}")
 
     if "roc" in sections:
         assert roc is not None
@@ -185,7 +217,12 @@ def main() -> None:
         validate_host(cargo, env)
     if "examples" in sections:
         assert roc is not None
-        validate_examples(roc, env)
+        validate_examples(
+            roc,
+            env,
+            allow_unpinned_roc=args.allow_unpinned_roc,
+            valgrind=args.valgrind,
+        )
     if "docs" in sections:
         assert roc is not None
         validate_docs(roc, env)

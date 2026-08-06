@@ -5,7 +5,7 @@ authors = ["The Roc Contributors"]
 edition = "2021"
 rust-version = "1.97"
 license = "UPL-1.0"
-repository = "https://github.com/roc-lang/basic-ssg"
+repository = "https://github.com/lukewilliamboswell/basic-ssg"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(no_roc_std_helpers)"] }
@@ -26,3 +26,14 @@ syntect = { version = "=5.2.0", default-features = false, features = [
 lto = true
 strip = "debuginfo"
 panic = "abort"
+
+# Validation-only native host for Linux Memcheck. One code-generation unit
+# keeps hosted callbacks together in the archive member selected by Roc's
+# linker, while retaining useful symbols without changing release artifacts.
+[profile.memcheck]
+inherits = "release"
+debug = 2
+strip = "none"
+opt-level = 1
+lto = false
+codegen-units = 1

@@ -18,7 +18,7 @@ concurrency:
 jobs:
   rust-version:
     name: Read Rust version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -33,7 +33,7 @@ jobs:
   build-windows-host:
     name: Build Windows x64 host
     needs: rust-version
-    runs-on: windows-latest
+    runs-on: windows-2025
     permissions:
       contents: read
     steps:
@@ -59,7 +59,7 @@ jobs:
   build:
     name: Build and validate release bundle
     needs: [rust-version, build-windows-host]
-    runs-on: macos-latest
+    runs-on: macos-15
     permissions:
       contents: read
     outputs:
@@ -73,13 +73,10 @@ jobs:
           fetch-depth: 0
 
       - name: Require immutable release dependencies
-        if: github.event_name == 'workflow_dispatch'
         run: python3 scripts/check_release_ready.py
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
-        with:
-          version: nightly-new-compiler
+        uses: ./.github/actions/setup-roc
 
       - name: Install Zig
         uses: mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f
@@ -147,7 +144,7 @@ jobs:
         uses: roc-lang/release-package/actions/prepare-bundles@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           bundle_glob: dist/*.tar.zst
-          test_os_json: '["macos-latest","ubuntu-latest","windows-latest"]'
+          test_os_json: '["macos-26","macos-26-intel","ubuntu-24.04","ubuntu-24.04-arm","windows-2025"]'
 
       - name: Upload release bundles
         uses: actions/upload-artifact@v7
@@ -184,9 +181,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
-        with:
-          version: nightly-new-compiler
+        uses: ./.github/actions/setup-roc
 
       - name: Download release bundles
         uses: actions/download-artifact@v8
@@ -195,7 +190,7 @@ jobs:
           path: .release/test-bundles
 
       - name: Test release bundle (Unix)
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-2025'
         uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           test_bundle_command: python3 scripts/test.py --bundle-path
@@ -204,7 +199,7 @@ jobs:
           release_version: ${{ needs.build.outputs.release_version }}
 
       - name: Test release bundle (Windows)
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2025'
         uses: roc-lang/release-package/actions/test-bundle@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           test_bundle_command: python scripts/test.py --bundle-path
@@ -216,7 +211,7 @@ jobs:
     name: Publish GitHub release
     needs: [build, test-bundles]
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -254,7 +249,7 @@ jobs:
     name: Publish versioned docs
     needs: [build, publish-release]
     if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       pull-requests: write
@@ -268,9 +263,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
-        with:
-          version: nightly-new-compiler
+        uses: ./.github/actions/setup-roc
 
       # Do not restore the separately deployed legacy-compiler docs. The first
       # release starts a new versioned tree; later follow-up PRs preserve it.

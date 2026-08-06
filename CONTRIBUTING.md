@@ -5,16 +5,22 @@ release-bundling scripts, and examples.
 
 ## Prerequisites
 
-- The new Zig-based [Roc compiler](https://www.roc-lang.org/install), available
-  as `nightly-new-compiler` through `roc-lang/setup-roc`
+- The exact new Zig-based [Roc compiler](https://www.roc-lang.org/install)
+  nightly named in [`.roc-version`](.roc-version)
 - [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 - Python 3.10 or newer for the build, bundle, and release validation scripts
 - Zig for reproducible cross-compilation of the Linux musl targets
+- Valgrind for x86-64 Linux memory validation (installed by CI)
 - On Windows, Visual Studio Build Tools with the MSVC x64 toolchain and Windows
   SDK
 
 Commands below use `python` as the Python 3.10+ launcher. If that command is not
 available, substitute `python3` on macOS or Linux, or `py -3.10` on Windows.
+
+Pinned CI and release jobs install `.roc-version` through the validating local
+setup action in `.github/actions/setup-roc`. A separate daily workflow exercises
+Roc sources, examples, and docs with the latest nightly so compiler changes are
+visible before the release pin moves.
 
 ## Local Development
 
@@ -30,12 +36,12 @@ Run the full local validation script:
 python scripts/all_tests.py
 ```
 
-The script format-checks the Roc and Rust sources, checks and tests the supported
-entry points and Rust host, runs Clippy with warnings denied, builds the host and
-examples, runs all examples, checks generated Rust glue, and builds platform
-docs. The glue check runs when a matching compiler-owned specification is
-available; otherwise the committed generated Rust remains the source of truth.
-A failure in any enabled step fails validation.
+The script verifies that `roc` matches `.roc-version`, format-checks the Roc and
+Rust sources, checks and tests the supported entry points and Rust host, runs
+Clippy with warnings denied, builds the host and examples, runs all examples,
+checks generated Rust glue, and builds platform docs. A missing or mismatched
+glue specification fails validation. A failure in any enabled step fails
+validation.
 
 Run one or more sections while iterating:
 
@@ -56,6 +62,20 @@ Run the example specification directly while iterating:
 ```sh
 python scripts/test.py --platform-url ../../platform/main.roc --no-build
 ```
+
+On x86-64 Linux, run the same behavior cases under Valgrind Memcheck and fail
+on memory errors or definitely/indirectly lost allocations:
+
+```sh
+python scripts/all_tests.py --valgrind
+```
+
+The existing x86-64 Linux CI matrix entry enables this mode; it is not a
+separate lane. Valgrind writes to a dedicated log so its diagnostics do not
+change the stdout and stderr assertions in `scripts/test_spec.json`. All leak
+kinds remain visible in that log; only `possibly lost` and `still reachable`
+allocations are non-fatal because libraries can retain or use interior pointers
+without losing ownership.
 
 Build and serve the Markdown example using only Python's standard library:
 
@@ -112,12 +132,10 @@ Use `--check` to verify the committed glue without rewriting it:
 python scripts/glue.py --check
 ```
 
-The new compiler owns the `platform glue` specification. Compiler source builds
-provide it directly, while a matching nightly archive may expose it as
-`ROC_RUST_GLUE`. The script uses that variable automatically when present. It
-also discovers a sibling `../roc` source checkout; `ROC_GLUE_SPEC` can override
-the spec with a local path, bundle URL, or installed shorthand.
-
+By default, the glue script uses the immutable `RustGlue.roc` from the Roc
+commit named in `.roc-version`. `ROC_RUST_GLUE` and `ROC_GLUE_SPEC` can override
+that URL with a local path, bundle URL, or installed shorthand;
+`ROC_GLUE_DIR` and `ROC_SRC` can select an explicit matching compiler checkout.
 Glue specs are compiled as cached host dynamic libraries. The script defaults
 to `--opt=dev`; set `ROC_GLUE_OPT` to `size` or `speed` to exercise an LLVM
 build. The old `interpreter` mode is no longer supported.
@@ -138,7 +156,7 @@ python scripts/build.py --target x64win
 ```
 
 This produces `host.lib` and copies the required SDK import libraries into
-`platform/targets/x64win/`. Release CI builds that target on `windows-latest`,
+`platform/targets/x64win/`. Release CI builds that target on `windows-2025`,
 then combines its artifact with the four Unix hosts before bundling.
 
 Create a Roc platform bundle for upload:

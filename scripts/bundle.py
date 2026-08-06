@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from build import ROC_TARGETS, WINDOWS_SYSTEM_LIBRARIES
+from roc_version import require_pinned_roc
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,6 +74,7 @@ def main() -> None:
     parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
     args, roc_args = parser.parse_known_args()
     roc = executable(args.roc)
+    require_pinned_roc(roc)
 
     output_dir = args.output_dir
     if not output_dir.is_absolute():

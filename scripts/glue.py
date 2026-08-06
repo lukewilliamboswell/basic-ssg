@@ -12,6 +12,9 @@ import sys
 import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.request import urlopen
+
+from roc_version import pinned_roc, require_pinned_roc
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,8 +42,8 @@ def find_executable(command: str) -> str:
     return executable
 
 
-def find_glue_spec(roc_executable: str) -> str | None:
-    """Return an explicit spec or the first compiler source spec found."""
+def find_glue_spec() -> str:
+    """Return an explicit spec or the immutable spec matching .roc-version."""
     for key in ("ROC_GLUE_SPEC", "ROC_RUST_GLUE"):
         if value := os.environ.get(key):
             return value
@@ -61,23 +64,15 @@ def find_glue_spec(roc_executable: str) -> str | None:
             / "RustGlue.roc"
         )
 
-    resolved_roc = shutil.which(roc_executable)
-    if resolved_roc is not None:
-        roc_bin_dir = Path(resolved_roc).resolve().parent
-        candidates.append(
-            roc_bin_dir.parent.parent / "src" / "glue" / "src" / "RustGlue.roc"
-        )
-
-    candidates.extend(
-        (
-            ROOT.parent / "roc" / "src" / "glue" / "src" / "RustGlue.roc",
-            ROOT.parent.parent / "roc" / "src" / "glue" / "src" / "RustGlue.roc",
-        )
-    )
     for candidate in candidates:
         if candidate.is_file():
             return str(candidate.resolve())
-    return None
+
+    _tag, revision = pinned_roc()
+    return (
+        "https://raw.githubusercontent.com/roc-lang/roc/"
+        f"{revision}/src/glue/src/RustGlue.roc"
+    )
 
 
 def local_spec_path(spec: str) -> Path | None:
@@ -96,6 +91,24 @@ def local_spec_path(spec: str) -> Path | None:
     ):
         return None
     return path if path.is_absolute() else ROOT / path
+
+
+def materialize_remote_spec(spec: str, directory: Path) -> str:
+    """Download an HTTP glue source so Roc treats it as a source file."""
+    parsed = urlparse(spec)
+    if parsed.scheme not in {"http", "https"}:
+        return spec
+
+    destination = directory / "RustGlue.roc"
+    try:
+        with urlopen(spec, timeout=30) as response:
+            content = response.read()
+    except OSError as error:
+        raise GlueError(f"Could not download glue spec {spec}: {error}") from error
+    if not content:
+        raise GlueError(f"Downloaded glue spec is empty: {spec}")
+    destination.write_bytes(content)
+    return str(destination)
 
 
 def roc_environment() -> dict[str, str]:
@@ -191,6 +204,7 @@ def main() -> None:
         )
 
     roc = find_executable(args.roc)
+    version = require_pinned_roc(roc, env=roc_environment())
     platform_file = args.platform_file
     if not platform_file.is_absolute():
         platform_file = ROOT / platform_file
@@ -201,46 +215,49 @@ def main() -> None:
     if not output_dir.is_absolute():
         output_dir = ROOT / output_dir
 
-    spec = args.glue_spec or find_glue_spec(roc)
-    if spec is None:
-        raise GlueError(
-            "Could not find the Rust glue spec. Install Roc via setup-roc, "
-            "use --glue-spec, set ROC_RUST_GLUE/ROC_GLUE_SPEC, or set ROC_SRC."
-        )
+    spec = args.glue_spec or find_glue_spec()
     if (local_spec := local_spec_path(spec)) is not None:
         if not local_spec.is_file():
             raise GlueError(f"Glue spec not found: {local_spec}")
         spec = str(local_spec.resolve())
 
-    print(f"Using roc: {roc}")
-    print(f"Using glue spec: {spec}")
-    print(f"Using glue opt: {args.opt}")
-    print(f"Platform: {platform_file}")
+    with tempfile.TemporaryDirectory(prefix="basic-ssg-glue-spec-") as temporary:
+        runnable_spec = materialize_remote_spec(spec, Path(temporary))
 
-    if args.check:
-        committed = output_dir / GENERATED_FILE
-        if not committed.is_file():
-            raise GlueError(f"Missing generated glue file: {committed}")
-        with tempfile.TemporaryDirectory(prefix="basic-ssg-glue-") as temporary:
-            generated_dir = Path(temporary)
-            run_glue(roc, spec, generated_dir, platform_file, args.opt)
-            generated = generated_dir / GENERATED_FILE
-            if not generated.is_file():
-                raise GlueError(f"Roc did not generate the expected file: {generated}")
-            if committed.read_bytes() != generated.read_bytes():
-                print_diff(committed, generated)
+        print(f"Using roc: {roc}")
+        print(f"Using roc version: {version}")
+        print(f"Using glue spec: {spec}")
+        print(f"Using glue opt: {args.opt}")
+        print(f"Platform: {platform_file}")
+
+        if args.check:
+            committed = output_dir / GENERATED_FILE
+            if not committed.is_file():
+                raise GlueError(f"Missing generated glue file: {committed}")
+            with tempfile.TemporaryDirectory(prefix="basic-ssg-glue-") as generated:
+                generated_dir = Path(generated)
+                run_glue(roc, runnable_spec, generated_dir, platform_file, args.opt)
+                generated_file = generated_dir / GENERATED_FILE
+                if not generated_file.is_file():
+                    raise GlueError(
+                        f"Roc did not generate the expected file: {generated_file}"
+                    )
+                if committed.read_bytes() != generated_file.read_bytes():
+                    print_diff(committed, generated_file)
+                    raise GlueError(
+                        "Generated Rust glue is stale. Run scripts/glue.py and "
+                        "commit the result."
+                    )
+            print(f"Rust glue is up to date: {committed}")
+        else:
+            print(f"Output directory: {output_dir}")
+            run_glue(roc, runnable_spec, output_dir, platform_file, args.opt)
+            generated_file = output_dir / GENERATED_FILE
+            if not generated_file.is_file():
                 raise GlueError(
-                    "Generated Rust glue is stale. Run scripts/glue.py and "
-                    "commit the result."
+                    f"Roc did not generate the expected file: {generated_file}"
                 )
-        print(f"Rust glue is up to date: {committed}")
-    else:
-        print(f"Output directory: {output_dir}")
-        run_glue(roc, spec, output_dir, platform_file, args.opt)
-        generated = output_dir / GENERATED_FILE
-        if not generated.is_file():
-            raise GlueError(f"Roc did not generate the expected file: {generated}")
-        print(f"Generated: {generated}")
+            print(f"Generated: {generated_file}")
 
 
 if __name__ == "__main__":

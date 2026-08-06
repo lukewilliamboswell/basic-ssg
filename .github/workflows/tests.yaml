@@ -21,17 +21,17 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
+          - macos-26         # Apple Silicon
+          - macos-26-intel   # Intel Mac
+          - ubuntu-24.04     # Linux x86_64
+          - ubuntu-24.04-arm # Linux ARM64
+          - windows-2025     # Windows x86_64
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Install Roc
-        uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
-        with:
-          version: nightly-new-compiler
+        uses: ./.github/actions/setup-roc
 
       - name: Install Rust components
         run: rustup component add rustfmt clippy
@@ -42,9 +42,19 @@ jobs:
         with:
           version: 0.16.0
 
+      - name: Install Valgrind
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes valgrind
+
       - name: Run all tests
         if: runner.os != 'Windows'
         run: python3 scripts/all_tests.py
+
+      - name: Run example behavior with Valgrind
+        if: matrix.os == 'ubuntu-24.04'
+        run: python3 scripts/all_tests.py --section examples --valgrind
 
       - name: Install Windows Rust components
         if: runner.os == 'Windows'
