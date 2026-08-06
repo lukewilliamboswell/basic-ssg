@@ -280,7 +280,7 @@ jobs:
           rm -rf "www/$DOCS_VERSION"
           ROC_DOCS_URL_ROOT="$DOCS_URL_ROOT" roc docs \
             --output="www/$DOCS_VERSION" \
-            docs/basic-ssg.roc
+            platform/main.roc
 
       - name: Update docs index
         uses: roc-lang/release-package/actions/docs-index@bb018c8c96b439b9545db6c792adc0549cf01ee1

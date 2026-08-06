@@ -83,7 +83,7 @@ def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
     heading("Validating Roc sources")
     roc_sources = sorted(
         source
-        for directory in (ROOT / "platform", ROOT / "examples", ROOT / "docs")
+        for directory in (ROOT / "platform", ROOT / "examples")
         for source in directory.rglob("*.roc")
     )
     for source in roc_sources:
@@ -91,7 +91,7 @@ def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
     for source in (
         "platform/Html.roc",
         "platform/PageDecoder.roc",
-        "docs/basic-ssg.roc",
+        "platform/main.roc",
     ):
         command(roc, "check", source, *roc_extra_args(), env=env)
 
@@ -159,7 +159,7 @@ def validate_docs(roc: str, env: dict[str, str]) -> None:
         roc,
         "docs",
         f"--output={ROOT / 'generated-docs'}",
-        ROOT / "docs" / "basic-ssg.roc",
+        ROOT / "platform" / "main.roc",
         env=env,
     )
 
