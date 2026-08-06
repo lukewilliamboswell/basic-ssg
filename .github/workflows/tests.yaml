@@ -49,8 +49,19 @@ jobs:
           sudo apt-get install --yes valgrind
 
       - name: Run all tests
-        if: runner.os != 'Windows'
+        if: matrix.os == 'ubuntu-24.04'
         run: python3 scripts/all_tests.py
+
+      # RustGlue is target-independent. Validate it once on Linux because the
+      # compiler's glue helper currently cannot link libSystem on macOS 26.
+      - name: Run cross-platform tests
+        if: runner.os != 'Windows' && matrix.os != 'ubuntu-24.04'
+        run: >-
+          python3 scripts/all_tests.py
+          --section roc
+          --section host
+          --section examples
+          --section docs
 
       - name: Run example behavior with Valgrind
         if: matrix.os == 'ubuntu-24.04'
@@ -62,4 +73,9 @@ jobs:
 
       - name: Run all Windows tests
         if: runner.os == 'Windows'
-        run: python scripts/all_tests.py
+        run: >-
+          python scripts/all_tests.py
+          --section roc
+          --section host
+          --section examples
+          --section docs

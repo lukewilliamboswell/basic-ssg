@@ -10,7 +10,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from glue import find_glue_spec, materialize_remote_spec
+from glue import (
+    find_glue_spec,
+    generated_source_matches,
+    materialize_remote_spec,
+)
 
 
 class GlueSpecTests(unittest.TestCase):
@@ -45,6 +49,18 @@ class GlueSpecTests(unittest.TestCase):
     def test_keeps_local_specs_local(self, opener: object) -> None:
         self.assertEqual(materialize_remote_spec("spec.roc", Path("unused")), "spec.roc")
         opener.assert_not_called()
+
+    def test_generated_source_comparison_ignores_native_newlines(self) -> None:
+        directory = self.temporary_directory()
+        committed = directory / "committed.rs"
+        generated = directory / "generated.rs"
+        committed.write_bytes(b"pub struct Value;\nimpl Value {}\n")
+        generated.write_bytes(b"pub struct Value;\r\nimpl Value {}\r\n")
+
+        self.assertTrue(generated_source_matches(committed, generated))
+
+        generated.write_bytes(b"pub struct Other;\r\nimpl Value {}\r\n")
+        self.assertFalse(generated_source_matches(committed, generated))
 
 
 if __name__ == "__main__":

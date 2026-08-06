@@ -162,6 +162,13 @@ def print_diff(committed: Path, generated: Path) -> None:
     sys.stdout.writelines(diff)
 
 
+def generated_source_matches(committed: Path, generated: Path) -> bool:
+    """Compare generated source without treating native newlines as ABI drift."""
+    before = committed.read_text(encoding="utf-8", errors="replace").splitlines()
+    after = generated.read_text(encoding="utf-8", errors="replace").splitlines()
+    return before == after
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate Rust ABI bindings for the basic-ssg Roc platform."
@@ -242,7 +249,7 @@ def main() -> None:
                     raise GlueError(
                         f"Roc did not generate the expected file: {generated_file}"
                     )
-                if committed.read_bytes() != generated_file.read_bytes():
+                if not generated_source_matches(committed, generated_file):
                     print_diff(committed, generated_file)
                     raise GlueError(
                         "Generated Rust glue is stale. Run scripts/glue.py and "
