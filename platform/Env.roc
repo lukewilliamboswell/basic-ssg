@@ -1,93 +1,56 @@
-module [
-    var!,
-    decode!,
-    dict!,
-    platform!,
-]
-
-import EnvDecoding
 import Host
 
-## Reads the given environment variable.
-##
-## If the value is invalid Unicode, the invalid parts will be replaced with the
-## [Unicode replacement character](https://unicode.org/glossary/#replacement_character) ('�').
-var! : Str => Result Str [VarNotFound]
-var! = \name ->
-    Host.env_var!(name)
-    |> Result.map_err(\{} -> VarNotFound)
+Env := [].{
 
-## Reads the given environment variable and attempts to decode it.
-##
-## The type being decoded into will be determined by type inference. For example,
-## if this ends up being used like a `Task U16 _` then the environment variable
-## will be decoded as a string representation of a `U16`. Trying to decode into
-## any other type will fail with a `DecodeErr`.
-##
-## Supported types include;
-## - Strings,
-## - Numbers, as long as they contain only numeric digits, up to one `.`, and an optional `-` at the front for negative numbers, and
-## - Comma-separated lists (of either strings or numbers), as long as there are no spaces after the commas.
-##
-## For example, consider we want to decode the environment variable `NUM_THINGS`;
-##
-## ```
-## # Reads "NUM_THINGS" and decodes into a U16
-## getU16Var : Str -> Task U16 [VarNotFound, DecodeErr DecodeError] [Read [Env]]
-## getU16Var = \var -> Env.decode! var
-## ```
-##
-## If `NUM_THINGS=123` then `getU16Var` succeeds with the value of `123u16`.
-## However if `NUM_THINGS=123456789`, then `getU16Var` will
-## fail with [DecodeErr](https://www.roc-lang.org/builtins/Decode#DecodeError)
-## because `123456789` is too large to fit in a [U16](https://www.roc-lang.org/builtins/Num#U16).
-##
-decode! : Str => Result val [VarNotFound, DecodeErr DecodeError] where val implements Decoding
-decode! = \name ->
-    when Host.env_var!(name) is
-        Err({}) -> Err(VarNotFound)
-        Ok(var_str) ->
-            Str.to_utf8(var_str)
-            |> Decode.from_bytes(EnvDecoding.format({}))
-            |> Result.map_err(\_ -> DecodeErr(TooShort))
+	## The CPU architecture the platform was built for.
+	Arch : [X86, X64, Arm, Aarch64, Other(Str)]
 
-## Reads all the process's environment variables into a [Dict].
-##
-## If any key or value contains invalid Unicode, the [Unicode replacement character](https://unicode.org/glossary/#replacement_character)
-## will be used in place of any parts of keys or values that are invalid Unicode.
-dict! : {} => Dict Str Str
-dict! = \{} ->
-    Host.env_dict!({})
-    |> Dict.from_list
+	## The operating system the platform was built for.
+	Os : [Linux, Macos, Windows, Other(Str)]
 
-ARCH : [X86, X64, ARM, AARCH64, OTHER Str]
-OS : [LINUX, MACOS, WINDOWS, OTHER Str]
+	## Reads the given environment variable.
+	##
+	## If the value is invalid Unicode, the invalid parts will be replaced with the
+	## [Unicode replacement character](https://unicode.org/glossary/#replacement_character).
+	##
+	## Returns `Err(VarNotFound(name))` if the variable is not set.
+	var! : Str => Try(Str, [VarNotFound(Str), ..])
+	var! = |name|
+		match Host.env_var!(name) {
+			Ok(value) => Ok(value)
+			Err(VarNotFound(var_name)) => Err(VarNotFound(var_name))
+		}
 
-## Returns the current Achitecture and Operating System.
-##
-## `ARCH : [X86, X64, ARM, AARCH64, OTHER Str]`
-## `OS : [LINUX, MACOS, WINDOWS, OTHER Str]`
-##
-## Note these values are constants from when the platform is built.
-##
-platform! : {} => { arch : ARCH, os : OS }
-platform! = \{} ->
+	## Reads all the process's environment variables into a `Dict`.
+	##
+	## If any key or value contains invalid Unicode, the
+	## [Unicode replacement character](https://unicode.org/glossary/#replacement_character)
+	## is used in place of the invalid parts.
+	dict! : () => Dict(Str, Str)
+	dict! = || Dict.from_list(Host.env_dict!())
 
-    from_rust = Host.current_arch_os!({})
+	## Returns the current architecture and operating system.
+	##
+	## Note these values are constants from when the platform was built.
+	platform! : () => { arch : Arch, os : Os }
+	platform! = || {
+		from_host = Host.env_arch_os!()
 
-    arch =
-        when from_rust.arch is
-            "x86" -> X86
-            "x86_64" -> X64
-            "arm" -> ARM
-            "aarch64" -> AARCH64
-            _ -> OTHER(from_rust.arch)
+		arch = match from_host.arch {
+			"x86" => X86
+			"x86_64" => X64
+			"arm" => Arm
+			"aarch64" => Aarch64
+			_ => Other(from_host.arch)
+		}
 
-    os =
-        when from_rust.os is
-            "linux" -> LINUX
-            "macos" -> MACOS
-            "windows" -> WINDOWS
-            _ -> OTHER(from_rust.os)
+		os = match from_host.os {
+			"linux" => Linux
+			"macos" => Macos
+			"windows" => Windows
+			_ => Other(from_host.os)
+		}
 
-    { arch, os }
+		{ arch, os }
+	}
+}

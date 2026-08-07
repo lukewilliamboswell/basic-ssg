@@ -1,60 +1,81 @@
+name: CI
+
 on:
   pull_request:
   workflow_dispatch:
 
+# this cancels workflows currently in progress if you start a new one
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
-  build-and-test-native:
-    runs-on: ${{ matrix.operating-system }}
+  build-and-test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - operating-system: ubuntu-20.04
-            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
-          - operating-system: ubuntu-22.04
-            roc-nightly-release: roc_nightly-linux_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-linux_x86_64-TESTING.tar.gz
-          - operating-system: macos-13
-            roc-nightly-release: roc_nightly-macos_x86_64-latest.tar.gz
-            roc-testing-release: roc_nightly-macos_x86_64-TESTING.tar.gz
-          - operating-system: macos-14
-            roc-nightly-release: roc_nightly-macos_apple_silicon-latest.tar.gz
-            roc-testing-release: roc_nightly-macos_apple_silicon-TESTING.tar.gz
+        os:
+          - macos-26         # Apple Silicon
+          - macos-26-intel   # Intel Mac
+          - ubuntu-24.04     # Linux x86_64
+          - ubuntu-24.04-arm # Linux ARM64
+          - windows-2025     # Windows x86_64
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7
 
-      - name: install z3 for macOS
-        if: runner.os == 'macOS'
-        run: brew install z3
+      - name: Install Roc
+        uses: ./.github/actions/setup-roc
 
-      - id: try_fetching_testing_release
-        name: try TESTING release
-        continue-on-error: true
-        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-testing-release }}
+      - name: Install Rust components
+        run: rustup component add rustfmt clippy
 
-      - name: fetch NIGHTLY release
-        if: steps.try_fetching_testing_release.outcome == 'failure'
-        run: curl -fOL https://github.com/roc-lang/roc/releases/download/nightly/${{ matrix.roc-nightly-release }}
+      - name: Install Zig
+        if: runner.os != 'Windows'
+        uses: mlugg/setup-zig@8d6198c65fb0feaa111df26e6b467fea8345e46f # ratchet:mlugg/setup-zig@v2.0.5
+        with:
+          version: 0.16.0
 
-      - name: rename nightly tar
-        run: mv $(ls | grep "roc_nightly.*tar\.gz") roc_nightly.tar.gz
-
-      - name: decompress the tar
-        run: tar -xzf roc_nightly.tar.gz
-
-      - name: remove tar
-        run: rm roc_nightly.tar.gz
-
-      - name: simplify nightly folder name
-        run: mv roc_nightly* roc_nightly
-
-      - name: Check roc version
-        run: ./roc_nightly/roc version
+      - name: Install Valgrind
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes valgrind
 
       - name: Run all tests
-        run: ROC=./roc_nightly/roc ./ci/all_tests.sh
+        if: matrix.os == 'ubuntu-24.04'
+        run: python3 scripts/all_tests.py
+
+      # RustGlue is target-independent. Validate it once on Linux because the
+      # compiler's glue helper currently cannot link libSystem on macOS 26.
+      - name: Run cross-platform tests
+        if: runner.os != 'Windows' && matrix.os != 'ubuntu-24.04'
+        run: >-
+          python3 scripts/all_tests.py
+          --section roc
+          --section host
+          --section examples
+          --section docs
+
+      - name: Run example behavior with Valgrind
+        if: matrix.os == 'ubuntu-24.04'
+        run: python3 scripts/all_tests.py --section examples --valgrind
+
+      - name: Install Windows Rust components
+        if: runner.os == 'Windows'
+        run: rustup target add x86_64-pc-windows-msvc
+
+      - name: Run all Windows tests
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/all_tests.py
+          --section roc
+          --section host
+          --section examples
+          --section docs

@@ -1,136 +1,90 @@
-module [
-    Cmd,
-    Output,
-    new,
-    arg,
-    args,
-    env,
-    envs,
-    clear_envs,
-    status!,
-    output!,
-    exec!,
-]
-
-import InternalCmd
-import InternalIOErr
+import IOErr exposing [IOErr]
 import Host
 
-## Represents a command to be executed in a child process.
-Cmd := InternalCmd.Command
+## Execute programs in child processes.
+Cmd := [].{
 
-## Represents the output of a command.
-Output : InternalCmd.Output
+	## Represents a command to be executed in a child process.
+	Command : {
+		program : Str,
+		args : List(Str),
+		envs : List(EnvVar),
+		clear_envs : Bool,
+	}
 
-## Create a new command to execute the given program in a child process.
-new : Str -> Cmd
-new = |program|
-    @Cmd(
-        {
-            program,
-            args: [],
-            envs: [],
-            clear_envs: Bool.false,
-        },
-    )
+	## An environment variable override for a child process.
+	EnvVar : {
+		key : Str,
+		value : Str,
+	}
 
-## Add a single argument to the command.
-## ! Shell features like variable subsitition (e.g. `$FOO`), glob patterns (e.g. `*.txt`), ... are not available.
-##
-## ```
-## # Represent the command "ls -l"
-## Cmd.new("ls")
-## |> Cmd.arg("-l")
-## ```
-##
-arg : Cmd, Str -> Cmd
-arg = |@Cmd(cmd), value|
-    @Cmd({ cmd & args: List.append(cmd.args, value) })
+	## Captured output of a command.
+	Output : {
+		exit_code : I32,
+		stdout : List(U8),
+		stderr : List(U8),
+	}
 
-## Add multiple arguments to the command.
-## ! Shell features like variable subsitition (e.g. `$FOO`), glob patterns (e.g. `*.txt`), ... are not available.
-##
-## ```
-## # Represent the command "ls -l -a"
-## Cmd.new("ls")
-## |> Cmd.args(["-l", "-a"])
-## ```
-##
-args : Cmd, List Str -> Cmd
-args = |@Cmd(cmd), values|
-    @Cmd({ cmd & args: List.concat(cmd.args, values) })
+	## Create a new command to execute the given program in a child process.
+	new : Str -> Command
+	new = |program| {
+		program,
+		args: [],
+		envs: [],
+		clear_envs: Bool.False,
+	}
 
-## Add a single environment variable to the command.
-##
-## ```
-## # Run "env" and add the environment variable "FOO" with value "BAR"
-## Cmd.new("env")
-## |> Cmd.env("FOO", "BAR")
-## ```
-##
-env : Cmd, Str, Str -> Cmd
-env = |@Cmd(cmd), key, value|
-    @Cmd({ cmd & envs: List.concat(cmd.envs, [key, value]) })
+	## Add a single argument to the command.
+	arg : Command, Str -> Command
+	arg = |cmd, value| { ..cmd, args: cmd.args.append(value) }
 
-## Add multiple environment variables to the command.
-##
-## ```
-## # Run "env" and add the variables "FOO" and "BAZ"
-## Cmd.new("env")
-## |> Cmd.envs([("FOO", "BAR"), ("BAZ", "DUCK")])
-## ```
-##
-envs : Cmd, List (Str, Str) -> Cmd
-envs = |@Cmd(cmd), key_values|
-    values = key_values |> List.join_map(|(key, value)| [key, value])
-    @Cmd({ cmd & envs: List.concat(cmd.envs, values) })
+	## Add multiple arguments to the command.
+	args : Command, List(Str) -> Command
+	args = |cmd, values| { ..cmd, args: cmd.args.concat(values) }
 
-## Clear all environment variables, and prevent inheriting from parent, only
-## the environment variables provided to command are available to the child.
-##
-## ```
-## # Represents "env" with only "FOO" environment variable set
-## Cmd.new("env")
-## |> Cmd.clear_envs
-## |> Cmd.env("FOO", "BAR")
-## ```
-##
-clear_envs : Cmd -> Cmd
-clear_envs = |@Cmd(cmd)|
-    @Cmd({ cmd & clear_envs: Bool.true })
+	## Add a single environment variable to the command.
+	env : Command, Str, Str -> Command
+	env = |cmd, key, value| { ..cmd, envs: cmd.envs.append({ key, value }) }
 
-## Execute command and capture stdout and stderr
-##
-## > Stdin is not inherited from the parent and any attempt by the child process
-## > to read from the stdin stream will result in the stream immediately closing.
-##
-output! : Cmd => Output
-output! = |@Cmd(cmd)|
-    Host.command_output!(cmd)
-    |> InternalCmd.from_host_output
+	## Clear all environment variables, and prevent inheriting from the parent.
+	clear_envs : Command -> Command
+	clear_envs = |cmd| { ..cmd, clear_envs: Bool.True }
 
-## Execute command and inherit stdin, stdout and stderr from parent
-##
-status! : Cmd => Result I32 [CmdStatusErr InternalIOErr.IOErr]
-status! = |@Cmd(cmd)|
-    Host.command_status!(cmd)
-    |> Result.map_err(InternalIOErr.handle_err)
-    |> Result.map_err(CmdStatusErr)
+	## Execute the command, inheriting stdin/stdout/stderr from the parent, and
+	## return its exit code.
+	status! : Command => Try(I32, [CmdError(IOErr), ..])
+	status! = |cmd|
+		match Host.cmd_status!(to_host_command(cmd)) {
+			Ok(code) => Ok(code)
+			Err(CmdError(err)) => Err(CmdError(err))
+		}
 
-## Execute command and inherit stdin, stdout and stderr from parent
-##
-## ```
-## # Call echo to print "hello world"
-## Cmd.exec!("echo", ["hello world"])
-## ```
-exec! : Str, List Str => Result {} [CmdStatusErr InternalIOErr.IOErr]
-exec! = |program, arguments|
-    exit_code =
-        new(program)
-        |> args(arguments)
-        |> status!?
+	## Execute the command and capture its stdout and stderr.
+	output! : Command => Output
+	output! = |cmd| Host.cmd_output!(to_host_command(cmd))
 
-    if exit_code == 0i32 then
-        Ok({})
-    else
-        Err(CmdStatusErr(Other("Non-zero exit code ${Num.to_str(exit_code)}")))
+	## Execute a program with arguments, inheriting stdin/stdout/stderr.
+	## Returns `Err(CmdError(...))` on failure, or `Err(NonZeroExit(code))` if the
+	## program exits non-zero.
+	exec! : Str, List(Str) => Try({}, [CmdError(IOErr), NonZeroExit(I32), ..])
+	exec! = |program, arguments| {
+		code = Cmd.status!(Cmd.args(Cmd.new(program), arguments))?
+		if code == 0 {
+			Ok({})
+		} else {
+			Err(NonZeroExit(code))
+		}
+	}
+}
+
+to_host_command : Cmd.Command -> Host.Command
+to_host_command = |{ program, args, envs, clear_envs }| {
+	program,
+	args,
+	envs: flatten_envs(envs),
+	clear_envs,
+}
+
+flatten_envs : List(Cmd.EnvVar) -> List(Str)
+flatten_envs = |envs|
+	envs.fold([], |acc, { key, value }| acc.append(key).append(value))

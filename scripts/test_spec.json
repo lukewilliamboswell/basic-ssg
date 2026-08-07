@@ -1,0 +1,160 @@
+{
+  "stages": {
+    "fmt": true,
+    "check": true,
+    "test": true,
+    "build": true,
+    "run": true
+  },
+  "apps": [
+    {
+      "name": "The Orchard Guide",
+      "path": "examples/orchard-guide/main.roc",
+      "cases": [
+        {
+          "name": "builds the complete guide",
+          "input": "examples/orchard-guide/content",
+          "public": "examples/orchard-guide/public",
+          "args": ["{input}", "{output}"],
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html", "style.css"],
+          "file_contains": {
+            "index.html": ["The Orchard Guide", "/fruit/apple.html"],
+            "fruit/apple.html": ["Growing Apples", "start snippet view"],
+            "style.css": ["color-scheme"]
+          }
+        },
+        {
+          "name": "works in Unicode directories",
+          "unicode_paths": true,
+          "input": "examples/orchard-guide/content",
+          "args": ["{input}", "{output}"],
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html"]
+        },
+        {
+          "name": "ignores non-Markdown source files",
+          "input": "examples/orchard-guide/content",
+          "input_files": [{"path": "fruit/notes.txt", "text": "not a page"}],
+          "args": ["{input}", "{output}"],
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html"]
+        },
+        {
+          "name": "reports a missing content directory",
+          "args": ["{root}/missing", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["PagesError"]
+        },
+        {
+          "name": "reports an unwritable output path",
+          "input": "examples/orchard-guide/content",
+          "output_as_file": true,
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["WriteError"]
+        },
+        {
+          "name": "requires input and output arguments",
+          "args": [],
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "name": "Melbourne Field Notes",
+      "path": "examples/travel-journal/main.roc",
+      "cases": [
+        {
+          "name": "combines whole JSON and Markdown frontmatter pages",
+          "input": "examples/travel-journal/content",
+          "args": ["{input}", "{output}"],
+          "files": ["about.html", "index.html"],
+          "file_contains": {
+            "about.html": ["About the journal", "URL: /about.html"],
+            "index.html": ["Melbourne Field Notes", "<strong>bluestone", "URL: /index.html"]
+          }
+        },
+        {
+          "name": "accepts Windows line endings in frontmatter",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "index.md", "text": "---\r\n{\"title\":\"CRLF Field Notes\",\"author\":\"Grace Hopper\"}\r\n---\r\n# Windows notes"}],
+          "args": ["{input}", "{output}"],
+          "files": ["about.html", "index.html"],
+          "file_contains": {"index.html": ["CRLF Field Notes", "Windows notes"]}
+        },
+        {
+          "name": "reports malformed JSON frontmatter",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "index.md", "text": "---\n{broken json}\n---\n# Notes"}],
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["InvalidJson"]
+        },
+        {
+          "name": "reports missing frontmatter fields",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "index.md", "text": "---\n{\"title\":\"Incomplete\"}\n---\n# Notes"}],
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["MissingRequiredField"]
+        },
+        {
+          "name": "reports a missing frontmatter delimiter",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "index.md", "text": "{\"title\":\"No delimiter\"}\n# Notes"}],
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["InvalidFrontmatter"]
+        },
+        {
+          "name": "reports malformed whole-file JSON",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "about.json", "text": "[not valid JSON"}],
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["InvalidJson"]
+        },
+        {
+          "name": "reports source bytes that are not UTF-8",
+          "input": "examples/travel-journal/content",
+          "input_files": [{"path": "about.json", "hex": "fffe"}],
+          "args": ["{input}", "{output}"],
+          "exit_code": 1,
+          "stderr_contains": ["ReadError"]
+        },
+        {
+          "name": "requires input and output arguments",
+          "args": [],
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "name": "Article Inspector",
+      "path": "examples/article-inspector/main.roc",
+      "cases": [
+        {
+          "name": "prints the first article heading",
+          "input": "examples/article-inspector/sample",
+          "args": ["{input}/welcome.md"],
+          "stdout_contains": ["title: Welcome to the Orchard"]
+        },
+        {
+          "name": "uses a fallback title when no heading exists",
+          "input_files": [{"path": "plain.md", "text": "A paragraph without a heading."}],
+          "args": ["{input}/plain.md"],
+          "stdout_contains": ["title: Untitled"]
+        },
+        {
+          "name": "maps parser failures into its application error",
+          "args": ["{root}/missing.md"],
+          "exit_code": 1,
+          "stderr_contains": ["InspectError", "could not inspect article"]
+        },
+        {
+          "name": "requires an article path",
+          "args": [],
+          "exit_code": 1
+        }
+      ]
+    }
+  ]
+}

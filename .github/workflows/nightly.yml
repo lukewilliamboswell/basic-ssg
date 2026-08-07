@@ -1,0 +1,37 @@
+name: Validate with latest nightly Roc
+
+on:
+  schedule:
+    # Leave a buffer after Roc's usual late-morning UTC publication window.
+    - cron: "0 13 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  validate:
+    name: validate against the latest Roc nightly
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install the latest Roc nightly
+        uses: ./.github/actions/setup-roc
+        with:
+          # This compatibility job deliberately tests beyond .roc-version.
+          use-latest: "true"
+
+      - name: Validate Roc sources, examples, and docs
+        run: >-
+          python3 scripts/all_tests.py
+          --allow-unpinned-roc
+          --section roc
+          --section examples
+          --section docs
