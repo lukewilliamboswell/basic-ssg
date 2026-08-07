@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PageDecoder Docs</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../search.js" defer></script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <defs>
+    <symbol id="link-icon" viewBox="0 0 640 512">
+      <path d="M562.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L405.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C189.5 251.2 196 330 246 380c56.5 56.5 148 56.5 204.5 0L562.8 267.7zM43.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C57 372 57 321 88.5 289.5L200.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C416.5 260.8 410 182 360 132c-56.5-56.5-148-56.5-204.5 0L43.2 244.3z"/>
+    </symbol>
+  </defs>
+</svg>
+    <nav id="sidebar-nav">
+        <div class="pkg-and-logo">
+            <a class="logo" href="../"><svg viewBox="0 -6 51 58" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logo-link">
+    <title id="logo-link">Home</title>
+    <polygon role="presentation" points="0,0 23.8834,3.21052 37.2438,19.0101 45.9665,16.6324 50.5,22 45,22 44.0315,26.3689 26.4673,39.3424 27.4527,45.2132 17.655,53 23.6751,22.7086" />
+</svg></a>
+            <h1 class="pkg-full-name"><a href="../">main</a></h1>
+        </div>
+        <div class="module-links-container">
+            <ul class="module-links">
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Cmd" href="../Cmd/"><span>Cmd</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Cmd entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.new">new</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.arg">arg</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.args">args</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.env">env</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.clear_envs">clear_envs</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.status!">status!</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.output!">output!</a></li>
+                        <li><a class="sidebar-value" href="../Cmd/#Cmd.exec!">exec!</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Cmd/#Cmd.Command">Command</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Cmd/#Cmd.EnvVar">EnvVar</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Cmd/#Cmd.Output">Output</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Env" href="../Env/"><span>Env</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Env entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Env/#Env.var!">var!</a></li>
+                        <li><a class="sidebar-value" href="../Env/#Env.dict!">dict!</a></li>
+                        <li><a class="sidebar-value" href="../Env/#Env.platform!">platform!</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Env/#Env.Arch">Arch</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Env/#Env.Os">Os</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Html" href="../Html/"><span>Html</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Html entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Html/#Html.attribute">attribute</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.text">text</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.raw">raw</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.element">element</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.void_element">void_element</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.node_size">node_size</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.render_document">render_document</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.render_fragment">render_fragment</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.render_help">render_help</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.render_children">render_children</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.render_attr">render_attr</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.escape_text">escape_text</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.escape_attribute">escape_attribute</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.html">html</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.base">base</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.head">head</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.link">link</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.meta">meta</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.style">style</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.title">title</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.body">body</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.address">address</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.article">article</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.aside">aside</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.footer">footer</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.header">header</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h1">h1</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h2">h2</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h3">h3</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h4">h4</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h5">h5</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.h6">h6</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.main">main</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.nav">nav</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.section">section</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.blockquote">blockquote</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.dd">dd</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.div">div</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.dl">dl</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.dt">dt</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.figcaption">figcaption</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.figure">figure</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.hr">hr</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.li">li</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.menu">menu</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.ol">ol</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.p">p</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.pre">pre</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.ul">ul</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.a">a</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.abbr">abbr</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.b">b</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.bdi">bdi</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.bdo">bdo</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.br">br</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.cite">cite</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.code">code</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.data">data</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.dfn">dfn</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.em">em</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.i">i</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.kbd">kbd</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.mark">mark</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.q">q</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.rp">rp</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.rt">rt</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.ruby">ruby</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.s">s</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.samp">samp</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.small">small</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.span">span</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.strong">strong</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.sub">sub</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.sup">sup</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.time">time</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.u">u</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.var_">var_</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.wbr">wbr</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.area">area</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.audio">audio</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.img">img</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.map">map</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.track">track</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.video">video</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.embed">embed</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.iframe">iframe</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.object">object</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.picture">picture</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.portal">portal</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.source">source</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.svg">svg</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.math">math</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.canvas">canvas</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.noscript">noscript</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.script">script</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.del">del</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.ins">ins</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.caption">caption</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.col">col</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.colgroup">colgroup</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.table">table</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.tbody">tbody</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.td">td</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.tfoot">tfoot</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.th">th</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.thead">thead</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.tr">tr</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.button">button</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.datalist">datalist</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.fieldset">fieldset</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.form">form</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.input">input</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.label">label</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.legend">legend</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.meter">meter</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.optgroup">optgroup</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.option">option</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.output">output</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.progress">progress</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.select">select</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.textarea">textarea</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.details">details</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.dialog">dialog</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.summary">summary</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.slot">slot</a></li>
+                        <li><a class="sidebar-value" href="../Html/#Html.template">template</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Html/#Html.Node">Node</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Html/#Html.ElementBuilder">ElementBuilder</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Html/#Html.VoidBuilder">VoidBuilder</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="HtmlAttributes" href="../HtmlAttributes/"><span>HtmlAttributes</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="HtmlAttributes entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.attribute">attribute</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.accept">accept</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.accept_charset">accept_charset</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.accesskey">accesskey</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.action">action</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.align">align</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.allow">allow</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.alt">alt</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.aria_label">aria_label</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.aria_labelled_by">aria_labelled_by</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.aria_hidden">aria_hidden</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.async">async</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.autocapitalize">autocapitalize</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.autocomplete">autocomplete</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.autofocus">autofocus</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.autoplay">autoplay</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.background">background</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.bgcolor">bgcolor</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.border">border</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.buffered">buffered</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.capture">capture</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.challenge">challenge</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.charset">charset</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.checked">checked</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.cite">cite</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.class">class</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.code">code</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.codebase">codebase</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.color">color</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.cols">cols</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.colspan">colspan</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.content">content</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.contenteditable">contenteditable</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.contextmenu">contextmenu</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.controls">controls</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.coords">coords</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.crossorigin">crossorigin</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.csp">csp</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.data">data</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.data_attr">data_attr</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.datetime">datetime</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.decoding">decoding</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.default">default</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.defer">defer</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.dir">dir</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.dirname">dirname</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.disabled">disabled</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.download">download</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.draggable">draggable</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.enctype">enctype</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.enterkeyhint">enterkeyhint</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.for_">for_</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.form">form</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.formaction">formaction</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.formenctype">formenctype</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.formmethod">formmethod</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.formnovalidate">formnovalidate</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.formtarget">formtarget</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.headers">headers</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.height">height</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.hidden">hidden</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.high">high</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.href">href</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.hreflang">hreflang</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.http_equiv">http_equiv</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.icon">icon</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.id">id</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.importance">importance</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.integrity">integrity</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.intrinsicsize">intrinsicsize</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.inputmode">inputmode</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.ismap">ismap</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.itemprop">itemprop</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.keytype">keytype</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.kind">kind</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.label">label</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.lang">lang</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.language">language</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.loading">loading</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.list">list</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.loop">loop</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.low">low</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.manifest">manifest</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.max">max</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.maxlength">maxlength</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.minlength">minlength</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.media">media</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.method">method</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.min">min</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.multiple">multiple</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.muted">muted</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.name">name</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.novalidate">novalidate</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.open">open</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.optimum">optimum</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.pattern">pattern</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.ping">ping</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.placeholder">placeholder</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.poster">poster</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.preload">preload</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.radiogroup">radiogroup</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.readonly">readonly</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.referrerpolicy">referrerpolicy</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.rel">rel</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.required">required</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.reversed">reversed</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.role">role</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.rows">rows</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.rowspan">rowspan</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.sandbox">sandbox</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.scope">scope</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.scoped">scoped</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.selected">selected</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.shape">shape</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.size">size</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.sizes">sizes</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.slot">slot</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.span">span</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.spellcheck">spellcheck</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.src">src</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.srcdoc">srcdoc</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.srclang">srclang</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.srcset">srcset</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.start">start</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.step">step</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.style">style</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.summary">summary</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.tabindex">tabindex</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.target">target</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.title">title</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.translate">translate</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.type">type</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.usemap">usemap</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.value">value</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.width">width</a></li>
+                        <li><a class="sidebar-value" href="../HtmlAttributes/#HtmlAttributes.wrap">wrap</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../HtmlAttributes/#HtmlAttributes.Attribute">Attribute</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../HtmlAttributes/#HtmlAttributes.AttrBuilder">AttrBuilder</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="IOErr" href="../IOErr/"><span>IOErr</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="IOErr entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Locale" href="../Locale/"><span>Locale</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Locale entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Locale/#Locale.get!">get!</a></li>
+                        <li><a class="sidebar-value" href="../Locale/#Locale.all!">all!</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="OsStr" href="../OsStr/"><span>OsStr</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="OsStr entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.from_str">from_str</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.utf8">utf8</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.unix">unix</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.unix_bytes">unix_bytes</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.windows">windows</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.windows_u16s">windows_u16s</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.from_quote">from_quote</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.from_interpolation">from_interpolation</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.to_str_try">to_str_try</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.display">display</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.to_inspect">to_inspect</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.is_eq">is_eq</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.to_hash">to_hash</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.to_raw">to_raw</a></li>
+                        <li><a class="sidebar-value" href="../OsStr/#OsStr.from_raw">from_raw</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link active" data-module-name="PageDecoder" href="../PageDecoder/"><span>PageDecoder</span></a>
+                    <details open>
+                        <summary class="sidebar-module-summary" aria-label="PageDecoder entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.page!">page!</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.source!">source!</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.from_source">from_source</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.from_effect">from_effect</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.map">map</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.map2">map2</a></li>
+                        <li><a class="sidebar-value" href="../PageDecoder/#PageDecoder.run!">run!</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../PageDecoder/#PageDecoder.Input">Input</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../PageDecoder/#PageDecoder.Decoder">Decoder</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Path" href="../Path/"><span>Path</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Path entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Path/#Path.from_os_str">from_os_str</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.to_os_str">to_os_str</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.utf8">utf8</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.from_quote">from_quote</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.unix">unix</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.unix_bytes">unix_bytes</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.windows">windows</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.windows_u16s">windows_u16s</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.to_str">to_str</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.display">display</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.filename">filename</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.ext">ext</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.join">join</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.to_raw">to_raw</a></li>
+                        <li><a class="sidebar-value" href="../Path/#Path.from_raw">from_raw</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Path/#Path.Path">Path</a>
+                        </li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../Path/#Path.Raw">Raw</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="SSG" href="../SSG/"><span>SSG</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="SSG entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../SSG/#SSG.pages!">pages!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.pages_with!">pages_with!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.read_source!">read_source!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.decode_page!">decode_page!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.parse_markdown!">parse_markdown!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.render_markdown!">render_markdown!</a></li>
+                        <li><a class="sidebar-value" href="../SSG/#SSG.write_file!">write_file!</a></li>
+                        <li class="sidebar-type">
+                          <a class="sidebar-type-name" href="../SSG/#SSG.Page">Page</a>
+                        </li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Stderr" href="../Stderr/"><span>Stderr</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Stderr entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Stderr/#Stderr.line!">line!</a></li>
+                        <li><a class="sidebar-value" href="../Stderr/#Stderr.write!">write!</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Stdout" href="../Stdout/"><span>Stdout</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Stdout entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Stdout/#Stdout.line!">line!</a></li>
+                        <li><a class="sidebar-value" href="../Stdout/#Stdout.write!">write!</a></li>
+                        </ul>
+                    </details>
+                </li>
+                <li class="sidebar-entry">
+                    <a class="sidebar-module-link" data-module-name="Utc" href="../Utc/"><span>Utc</span></a>
+                    <details>
+                        <summary class="sidebar-module-summary" aria-label="Utc entries"><span class="entry-toggle" aria-hidden="true"></span></summary>
+                        <ul class="sidebar-sub-entries">
+                        <li><a class="sidebar-value" href="../Utc/#Utc.now!">now!</a></li>
+                        <li><a class="sidebar-value" href="../Utc/#Utc.to_millis_since_epoch">to_millis_since_epoch</a></li>
+                        <li><a class="sidebar-value" href="../Utc/#Utc.from_millis_since_epoch">from_millis_since_epoch</a></li>
+                        <li><a class="sidebar-value" href="../Utc/#Utc.delta_as_nanos">delta_as_nanos</a></li>
+                        <li><a class="sidebar-value" href="../Utc/#Utc.delta_as_millis">delta_as_millis</a></li>
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <main>
+        <form id="module-search-form">
+            <input type="search" id="module-search" placeholder="Search Documentation" autocomplete="off" />
+            <input type="search" id="module-search-nojs" placeholder="Enable JavaScript to search" autocomplete="off" disabled aria-label="Search requires JavaScript" />
+            <noscript><style>#module-search{display:none}#module-search-nojs{display:block}</style></noscript>
+            <button class="menu-toggle" type="button" aria-label="Toggle sidebar"><svg viewBox="0 6 18 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 6h18v2H0V6zm0 5h18v2H0v-2zm0 5h18v2H0v-2z"/>
+</svg></button>
+            <ul id="search-type-ahead" class="hidden">
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.new"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">new</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Command</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.arg"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">arg</span> <span class="type-ahead-signature">: <span class="type">Command</span>, <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Command</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.args"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">args</span> <span class="type-ahead-signature">: <span class="type">Command</span>, <span class="type">List</span>(<span class="type">Str</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Command</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.env"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">env</span> <span class="type-ahead-signature">: <span class="type">Command</span>, <span class="type">Str</span>, <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Command</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.clear_envs"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">clear_envs</span> <span class="type-ahead-signature">: <span class="type">Command</span><span class="sig-arrow"> -&gt; </span><span class="type">Command</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.status!"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">status!</span> <span class="type-ahead-signature">: <span class="type">Command</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">I32</span>, [<span class="type">CmdError</span>(<span class="type">IOErr</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.output!"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">output!</span> <span class="type-ahead-signature">: <span class="type">Command</span><span class="sig-arrow"> =&gt; </span><span class="type">Output</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.exec!"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">exec!</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">List</span>(<span class="type">Str</span>)<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">CmdError</span>(<span class="type">IOErr</span>), <span class="type">NonZeroExit</span>(<span class="type">I32</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.Command"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">Command</span> <span class="type-ahead-signature">: { program : <span class="type">Str</span>, args : <span class="type">List</span>(<span class="type">Str</span>), envs : <span class="type">List</span>(<span class="type">EnvVar</span>), clear_envs : <span class="type">Bool</span> }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.EnvVar"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">EnvVar</span> <span class="type-ahead-signature">: { key : <span class="type">Str</span>, value : <span class="type">Str</span> }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Cmd/#Cmd.Output"><span class="type-ahead-module-name">Cmd</span>.<span class="type-ahead-def-name">Output</span> <span class="type-ahead-signature">: { exit_code : <span class="type">I32</span>, stdout : <span class="type">List</span>(<span class="type">U8</span>), stderr : <span class="type">List</span>(<span class="type">U8</span>) }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Env/#Env.var!"><span class="type-ahead-module-name">Env</span>.<span class="type-ahead-def-name">var!</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">VarNotFound</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Env/#Env.dict!"><span class="type-ahead-module-name">Env</span>.<span class="type-ahead-def-name">dict!</span> <span class="type-ahead-signature">: ()<span class="sig-arrow"> =&gt; </span><span class="type">Dict</span>(<span class="type">Str</span>, <span class="type">Str</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Env/#Env.platform!"><span class="type-ahead-module-name">Env</span>.<span class="type-ahead-def-name">platform!</span> <span class="type-ahead-signature">: ()<span class="sig-arrow"> =&gt; </span>{ arch : <span class="type">Arch</span>, os : <span class="type">Os</span> }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Env/#Env.Arch"><span class="type-ahead-module-name">Env</span>.<span class="type-ahead-def-name">Arch</span> <span class="type-ahead-signature">: [<span class="type">X86</span>, <span class="type">X64</span>, <span class="type">Arm</span>, <span class="type">Aarch64</span>, <span class="type">Other</span>(<span class="type">Str</span>)]</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Env/#Env.Os"><span class="type-ahead-module-name">Env</span>.<span class="type-ahead-def-name">Os</span> <span class="type-ahead-signature">: [<span class="type">Linux</span>, <span class="type">Macos</span>, <span class="type">Windows</span>, <span class="type">Other</span>(<span class="type">Str</span>)]</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.attribute"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">attribute</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Attribute</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.text"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">text</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.raw"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">raw</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.element"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">element</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">List</span>(<span class="type">Attribute</span>), <span class="type">List</span>(<span class="type">Node</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.void_element"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">void_element</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">List</span>(<span class="type">Attribute</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.node_size"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">node_size</span> <span class="type-ahead-signature">: <span class="type">Node</span><span class="sig-arrow"> -&gt; </span><span class="type">U64</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.render_document"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">render_document</span> <span class="type-ahead-signature">: <span class="type">Node</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.render_fragment"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">render_fragment</span> <span class="type-ahead-signature">: <span class="type">Node</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.render_help"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">render_help</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">Node</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.render_children"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">render_children</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">List</span>(<span class="type">Node</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.render_attr"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">render_attr</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">Attribute</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.escape_text"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">escape_text</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.escape_attribute"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">escape_attribute</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.html"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">html</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.base"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">base</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.head"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">head</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.link"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">link</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.meta"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">meta</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.style"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">style</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.title"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">title</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.body"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">body</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.address"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">address</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.article"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">article</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.aside"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">aside</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.footer"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">footer</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.header"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">header</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h1"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h1</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h2"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h2</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h3"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h3</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h4"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h4</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h5"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h5</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.h6"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">h6</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.main"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">main</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.nav"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">nav</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.section"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">section</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.blockquote"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">blockquote</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.dd"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">dd</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.div"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">div</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.dl"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">dl</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.dt"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">dt</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.figcaption"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">figcaption</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.figure"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">figure</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.hr"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">hr</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.li"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">li</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.menu"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">menu</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.ol"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">ol</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.p"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">p</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.pre"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">pre</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.ul"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">ul</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.a"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">a</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.abbr"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">abbr</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.b"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">b</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.bdi"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">bdi</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.bdo"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">bdo</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.br"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">br</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.cite"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">cite</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.code"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">code</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.data"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">data</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.dfn"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">dfn</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.em"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">em</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.i"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">i</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.kbd"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">kbd</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.mark"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">mark</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.q"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">q</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.rp"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">rp</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.rt"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">rt</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.ruby"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">ruby</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.s"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">s</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.samp"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">samp</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.small"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">small</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.span"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">span</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.strong"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">strong</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.sub"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">sub</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.sup"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">sup</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.time"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">time</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.u"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">u</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.var_"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">var_</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.wbr"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">wbr</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.area"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">area</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.audio"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">audio</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.img"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">img</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.map"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">map</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.track"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">track</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.video"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">video</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.embed"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">embed</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.iframe"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">iframe</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.object"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">object</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.picture"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">picture</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.portal"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">portal</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.source"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">source</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.svg"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">svg</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.math"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">math</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.canvas"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">canvas</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.noscript"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">noscript</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.script"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">script</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.del"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">del</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.ins"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">ins</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.caption"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">caption</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.col"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">col</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.colgroup"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">colgroup</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.table"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">table</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.tbody"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">tbody</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.td"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">td</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.tfoot"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">tfoot</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.th"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">th</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.thead"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">thead</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.tr"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">tr</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.button"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">button</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.datalist"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">datalist</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.fieldset"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">fieldset</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.form"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">form</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.input"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">input</span> <span class="type-ahead-signature">: <span class="type">VoidBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.label"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">label</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.legend"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">legend</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.meter"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">meter</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.optgroup"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">optgroup</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.option"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">option</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.output"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">output</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.progress"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">progress</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.select"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">select</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.textarea"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">textarea</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.details"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">details</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.dialog"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">dialog</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.summary"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">summary</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.slot"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">slot</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.template"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">template</span> <span class="type-ahead-signature">: <span class="type">ElementBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.Node"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">Node</span> <span class="type-ahead-signature"></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.ElementBuilder"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">ElementBuilder</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">Attribute</span>), <span class="type">List</span>(<span class="type">Node</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Html/#Html.VoidBuilder"><span class="type-ahead-module-name">Html</span>.<span class="type-ahead-def-name">VoidBuilder</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">Attribute</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Node</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.attribute"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">attribute</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Attribute</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.accept"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">accept</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.accept_charset"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">accept_charset</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.accesskey"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">accesskey</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.action"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">action</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.align"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">align</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.allow"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">allow</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.alt"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">alt</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.aria_label"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">aria_label</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.aria_labelled_by"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">aria_labelled_by</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.aria_hidden"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">aria_hidden</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.async"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">async</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.autocapitalize"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">autocapitalize</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.autocomplete"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">autocomplete</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.autofocus"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">autofocus</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.autoplay"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">autoplay</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.background"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">background</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.bgcolor"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">bgcolor</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.border"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">border</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.buffered"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">buffered</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.capture"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">capture</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.challenge"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">challenge</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.charset"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">charset</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.checked"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">checked</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.cite"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">cite</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.class"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">class</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.code"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">code</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.codebase"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">codebase</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.color"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">color</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.cols"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">cols</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.colspan"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">colspan</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.content"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">content</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.contenteditable"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">contenteditable</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.contextmenu"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">contextmenu</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.controls"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">controls</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.coords"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">coords</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.crossorigin"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">crossorigin</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.csp"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">csp</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.data"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">data</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.data_attr"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">data_attr</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Attribute</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.datetime"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">datetime</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.decoding"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">decoding</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.default"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">default</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.defer"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">defer</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.dir"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">dir</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.dirname"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">dirname</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.disabled"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">disabled</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.download"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">download</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.draggable"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">draggable</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.enctype"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">enctype</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.enterkeyhint"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">enterkeyhint</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.for_"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">for_</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.form"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">form</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.formaction"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">formaction</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.formenctype"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">formenctype</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.formmethod"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">formmethod</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.formnovalidate"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">formnovalidate</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.formtarget"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">formtarget</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.headers"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">headers</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.height"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">height</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.hidden"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">hidden</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.high"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">high</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.href"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">href</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.hreflang"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">hreflang</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.http_equiv"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">http_equiv</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.icon"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">icon</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.id"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">id</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.importance"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">importance</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.integrity"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">integrity</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.intrinsicsize"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">intrinsicsize</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.inputmode"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">inputmode</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.ismap"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">ismap</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.itemprop"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">itemprop</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.keytype"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">keytype</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.kind"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">kind</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.label"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">label</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.lang"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">lang</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.language"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">language</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.loading"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">loading</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.list"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">list</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.loop"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">loop</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.low"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">low</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.manifest"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">manifest</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.max"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">max</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.maxlength"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">maxlength</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.minlength"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">minlength</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.media"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">media</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.method"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">method</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.min"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">min</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.multiple"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">multiple</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.muted"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">muted</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.name"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">name</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.novalidate"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">novalidate</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.open"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">open</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.optimum"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">optimum</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.pattern"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">pattern</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.ping"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">ping</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.placeholder"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">placeholder</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.poster"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">poster</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.preload"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">preload</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.radiogroup"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">radiogroup</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.readonly"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">readonly</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.referrerpolicy"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">referrerpolicy</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.rel"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">rel</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.required"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">required</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.reversed"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">reversed</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.role"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">role</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.rows"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">rows</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.rowspan"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">rowspan</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.sandbox"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">sandbox</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.scope"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">scope</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.scoped"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">scoped</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.selected"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">selected</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.shape"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">shape</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.size"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">size</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.sizes"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">sizes</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.slot"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">slot</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.span"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">span</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.spellcheck"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">spellcheck</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.src"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">src</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.srcdoc"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">srcdoc</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.srclang"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">srclang</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.srcset"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">srcset</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.start"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">start</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.step"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">step</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.style"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">style</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.summary"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">summary</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.tabindex"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">tabindex</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.target"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">target</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.title"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">title</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.translate"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">translate</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.type"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">type</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.usemap"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">usemap</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.value"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">value</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.width"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">width</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.wrap"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">wrap</span> <span class="type-ahead-signature">: <span class="type">AttrBuilder</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.Attribute"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">Attribute</span> <span class="type-ahead-signature">:= [<span class="type">Attribute</span>(<span class="type">Str</span>, <span class="type">Str</span>)]</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../HtmlAttributes/#HtmlAttributes.AttrBuilder"><span class="type-ahead-module-name">HtmlAttributes</span>.<span class="type-ahead-def-name">AttrBuilder</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Attribute</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Locale/#Locale.get!"><span class="type-ahead-module-name">Locale</span>.<span class="type-ahead-def-name">get!</span> <span class="type-ahead-signature">: ()<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">NotAvailable</span>, ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Locale/#Locale.all!"><span class="type-ahead-module-name">Locale</span>.<span class="type-ahead-def-name">all!</span> <span class="type-ahead-signature">: ()<span class="sig-arrow"> =&gt; </span><span class="type">List</span>(<span class="type">Str</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.from_str"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">from_str</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.utf8"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">utf8</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.unix"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">unix</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.unix_bytes"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">unix_bytes</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">U8</span>)<span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.windows"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">windows</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.windows_u16s"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">windows_u16s</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">U16</span>)<span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.from_quote"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">from_quote</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">OsStr</span>, [<span class="type">BadQuotedBytes</span>(<span class="type">Str</span>)])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.from_interpolation"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">from_interpolation</span> <span class="type-ahead-signature">: <span class="type">Str</span>, <span class="type">Iter</span>((<span class="type">Str</span>, <span class="type">Str</span>))<span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.to_str_try"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">to_str_try</span> <span class="type-ahead-signature">: <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">InvalidStr</span>(<span class="type">U64</span>)])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.display"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">display</span> <span class="type-ahead-signature">: <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.to_inspect"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">to_inspect</span> <span class="type-ahead-signature">: <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.is_eq"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">is_eq</span> <span class="type-ahead-signature">: <span class="type">OsStr</span>, <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span><span class="type">Bool</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.to_hash"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">to_hash</span> <span class="type-ahead-signature">: <span class="type">OsStr</span>, <span class="type">Hasher</span><span class="sig-arrow"> -&gt; </span><span class="type">Hasher</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.to_raw"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">to_raw</span> <span class="type-ahead-signature">: <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span>[<span class="type">Utf8</span>(<span class="type">Str</span>), <span class="type">UnixBytes</span>(<span class="type">List</span>(<span class="type">U8</span>)), <span class="type">WindowsU16s</span>(<span class="type">List</span>(<span class="type">U16</span>))]</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../OsStr/#OsStr.from_raw"><span class="type-ahead-module-name">OsStr</span>.<span class="type-ahead-def-name">from_raw</span> <span class="type-ahead-signature">: [<span class="type">Utf8</span>(<span class="type">Str</span>), <span class="type">UnixBytes</span>(<span class="type">List</span>(<span class="type">U8</span>)), <span class="type">WindowsU16s</span>(<span class="type">List</span>(<span class="type">U16</span>))]<span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.page!"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">page!</span> <span class="type-ahead-signature">: <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">page</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.source!"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">source!</span> <span class="type-ahead-signature">: <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type">Str</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.from_source"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">from_source</span> <span class="type-ahead-signature">: (<span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, <span class="type-var">err</span>))<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.from_effect"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">from_effect</span> <span class="type-ahead-signature">: (<span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, <span class="type-var">err</span>))<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.map"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">map</span> <span class="type-ahead-signature">: <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">a</span>, <span class="type-var">err</span>), (<span class="type-var">a</span><span class="sig-arrow"> -&gt; </span><span class="type-var">b</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">b</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.map2"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">map2</span> <span class="type-ahead-signature">: <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">a</span>, <span class="type-var">err</span>), <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">b</span>, <span class="type-var">err</span>), (<span class="type-var">a</span>, <span class="type-var">b</span><span class="sig-arrow"> -&gt; </span><span class="type-var">c</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">c</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.run!"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">run!</span> <span class="type-ahead-signature">: <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>), <span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.Input"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">Input</span> <span class="type-ahead-signature">: { page : <span class="type-var">page</span>, source : <span class="type">Str</span> }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../PageDecoder/#PageDecoder.Decoder"><span class="type-ahead-module-name">PageDecoder</span>.<span class="type-ahead-def-name">Decoder</span> <span class="type-ahead-signature">: <span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, <span class="type-var">err</span>)</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.from_os_str"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">from_os_str</span> <span class="type-ahead-signature">: <span class="type">OsStr</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.to_os_str"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">to_os_str</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">OsStr</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.utf8"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">utf8</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.from_quote"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">from_quote</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">Path</span>, [<span class="type">BadQuotedBytes</span>(<span class="type">Str</span>)])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.unix"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">unix</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.unix_bytes"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">unix_bytes</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">U8</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.windows"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">windows</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.windows_u16s"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">windows_u16s</span> <span class="type-ahead-signature">: <span class="type">List</span>(<span class="type">U16</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.to_str"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">to_str</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">InvalidStr</span>(<span class="type">U64</span>)])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.display"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">display</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">Str</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.filename"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">filename</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">Path</span>, [<span class="type">IsDirPath</span>, <span class="type">EndsInDots</span>])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.ext"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">ext</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">Try</span>(<span class="type">Path</span>, [<span class="type">IsDirPath</span>, <span class="type">EndsInDots</span>])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.join"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">join</span> <span class="type-ahead-signature">: <span class="type">Path</span>, <span class="type">Str</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.to_raw"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">to_raw</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> -&gt; </span><span class="type">Raw</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.from_raw"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">from_raw</span> <span class="type-ahead-signature">: <span class="type">Raw</span><span class="sig-arrow"> -&gt; </span><span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.Path"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">Path</span> <span class="type-ahead-signature">: <span class="type">Path</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Path/#Path.Raw"><span class="type-ahead-module-name">Path</span>.<span class="type-ahead-def-name">Raw</span> <span class="type-ahead-signature">: [<span class="type">Utf8</span>(<span class="type">Str</span>), <span class="type">UnixBytes</span>(<span class="type">List</span>(<span class="type">U8</span>)), <span class="type">WindowsU16s</span>(<span class="type">List</span>(<span class="type">U16</span>))]</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.pages!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">pages!</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">List</span>(<span class="type">Page</span>), [<span class="type">PagesError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.pages_with!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">pages_with!</span> <span class="type-ahead-signature">: { input_dir : <span class="type">Path</span>, source_extension : <span class="type">Str</span> }<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">List</span>(<span class="type">Page</span>), [<span class="type">PagesError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.read_source!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">read_source!</span> <span class="type-ahead-signature">: <span class="type">Page</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">ReadError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.decode_page!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">decode_page!</span> <span class="type-ahead-signature">: <span class="type">Page</span>, ({ page : <span class="type">Page</span>, source : <span class="type">Str</span> }<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, [<span class="type">ReadError</span>(<span class="type">Str</span>), ..<span class="type-var">err</span>]))<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type-var">value</span>, [<span class="type">ReadError</span>(<span class="type">Str</span>), ..<span class="type-var">err</span>])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.parse_markdown!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">parse_markdown!</span> <span class="type-ahead-signature">: <span class="type">Path</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">ParseError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.render_markdown!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">render_markdown!</span> <span class="type-ahead-signature">: { source_path : <span class="type">Path</span>, markdown : <span class="type">Str</span> }<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>(<span class="type">Str</span>, [<span class="type">ParseError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.write_file!"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">write_file!</span> <span class="type-ahead-signature">: { output_dir : <span class="type">Path</span>, output_path : <span class="type">Path</span>, content : <span class="type">Str</span> }<span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">WriteError</span>(<span class="type">Str</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../SSG/#SSG.Page"><span class="type-ahead-module-name">SSG</span>.<span class="type-ahead-def-name">Page</span> <span class="type-ahead-signature">: { url : <span class="type">Str</span>, source_path : <span class="type">Path</span>, output_path : <span class="type">Path</span> }</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Stderr/#Stderr.line!"><span class="type-ahead-module-name">Stderr</span>.<span class="type-ahead-def-name">line!</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">StderrErr</span>(<span class="type">IOErr</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Stderr/#Stderr.write!"><span class="type-ahead-module-name">Stderr</span>.<span class="type-ahead-def-name">write!</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">StderrErr</span>(<span class="type">IOErr</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Stdout/#Stdout.line!"><span class="type-ahead-module-name">Stdout</span>.<span class="type-ahead-def-name">line!</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">StdoutErr</span>(<span class="type">IOErr</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Stdout/#Stdout.write!"><span class="type-ahead-module-name">Stdout</span>.<span class="type-ahead-def-name">write!</span> <span class="type-ahead-signature">: <span class="type">Str</span><span class="sig-arrow"> =&gt; </span><span class="type">Try</span>({  }, [<span class="type">StdoutErr</span>(<span class="type">IOErr</span>), ..])</span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Utc/#Utc.now!"><span class="type-ahead-module-name">Utc</span>.<span class="type-ahead-def-name">now!</span> <span class="type-ahead-signature">: ()<span class="sig-arrow"> =&gt; </span><span class="type">U128</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Utc/#Utc.to_millis_since_epoch"><span class="type-ahead-module-name">Utc</span>.<span class="type-ahead-def-name">to_millis_since_epoch</span> <span class="type-ahead-signature">: <span class="type">U128</span><span class="sig-arrow"> -&gt; </span><span class="type">U128</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Utc/#Utc.from_millis_since_epoch"><span class="type-ahead-module-name">Utc</span>.<span class="type-ahead-def-name">from_millis_since_epoch</span> <span class="type-ahead-signature">: <span class="type">U128</span><span class="sig-arrow"> -&gt; </span><span class="type">U128</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Utc/#Utc.delta_as_nanos"><span class="type-ahead-module-name">Utc</span>.<span class="type-ahead-def-name">delta_as_nanos</span> <span class="type-ahead-signature">: <span class="type">U128</span>, <span class="type">U128</span><span class="sig-arrow"> -&gt; </span><span class="type">U128</span></span></a></li>
+            <li class="hidden"><a class="type-ahead-link" href="../Utc/#Utc.delta_as_millis"><span class="type-ahead-module-name">Utc</span>.<span class="type-ahead-def-name">delta_as_millis</span> <span class="type-ahead-signature">: <span class="type">U128</span>, <span class="type">U128</span><span class="sig-arrow"> -&gt; </span><span class="type">U128</span></span></a></li>
+            </ul>
+        </form>
+        <div class="main-content">
+<!--! -->
+        <h1 class="module-name">PageDecoder</h1>
+<!--!-->
+        <pre class="entry-type-def"><code class="entry-type-def-code">:= []</code></pre>
+<!--!-->
+        <div class="module-doc">
+                <p>Compose pure or effectful decoders that derive typed data from a page source.</p>
+                <p>A decoder receives the discovered page value together with its UTF-8 source.
+Record-builder syntax combines independent decoders into a decoder for a
+record: <code>{ page: PageDecoder.page!, data: ... }.PageDecoder</code>.</p>
+        </div>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.page!">
+            <div class="entry-signature">
+                <a href="#PageDecoder.page!" class="entry-anchor" aria-label="Permalink to page!"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.page!" class="entry-name-link"><strong>page!</strong></a> : <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">page</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Decode the discovered page value.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.source!">
+            <div class="entry-signature">
+                <a href="#PageDecoder.source!" class="entry-anchor" aria-label="Permalink to source!"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.source!" class="entry-name-link"><strong>source!</strong></a> : <span class="type">Decoder</span>(<span class="type-var">page</span>, <a href="https://roc-lang.org/builtins/main/Str"><span class="type">Str</span></a>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Decode the unmodified UTF-8 source text.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.from_source">
+            <div class="entry-signature">
+                <a href="#PageDecoder.from_source" class="entry-anchor" aria-label="Permalink to from_source"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.from_source" class="entry-name-link"><strong>from_source</strong></a> : (<a href="https://roc-lang.org/builtins/main/Str"><span class="type">Str</span></a><span class="sig-arrow"> -&gt; </span><a href="https://roc-lang.org/builtins/main/Try"><span class="type">Try</span></a>(<span class="type-var">value</span>, <span class="type-var">err</span>))<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Lift a pure source parser into a page decoder.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.from_effect">
+            <div class="entry-signature">
+                <a href="#PageDecoder.from_effect" class="entry-anchor" aria-label="Permalink to from_effect"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.from_effect" class="entry-name-link"><strong>from_effect</strong></a> : (<span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><a href="https://roc-lang.org/builtins/main/Try"><span class="type">Try</span></a>(<span class="type-var">value</span>, <span class="type-var">err</span>))<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Use a custom effectful decoder with access to both the page and its source.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.map">
+            <div class="entry-signature">
+                <a href="#PageDecoder.map" class="entry-anchor" aria-label="Permalink to map"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.map" class="entry-name-link"><strong>map</strong></a> : <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">a</span>, <span class="type-var">err</span>), (<span class="type-var">a</span><span class="sig-arrow"> -&gt; </span><span class="type-var">b</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">b</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Transform a decoded value.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.map2">
+            <div class="entry-signature">
+                <a href="#PageDecoder.map2" class="entry-anchor" aria-label="Permalink to map2"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.map2" class="entry-name-link"><strong>map2</strong></a> : <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">a</span>, <span class="type-var">err</span>), <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">b</span>, <span class="type-var">err</span>), (<span class="type-var">a</span>, <span class="type-var">b</span><span class="sig-arrow"> -&gt; </span><span class="type-var">c</span>)<span class="sig-arrow"> -&gt; </span><span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">c</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Combine two independent decoders. Decoders run from left to right, and the
+second decoder is skipped if the first returns <code>Err</code>.</p>
+                <p>This is the applicative operation used by Roc&#39;s record-builder syntax.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-value" id="PageDecoder.run!">
+            <div class="entry-signature">
+                <a href="#PageDecoder.run!" class="entry-anchor" aria-label="Permalink to run!"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.run!" class="entry-name-link"><strong>run!</strong></a> : <span class="type">Decoder</span>(<span class="type-var">page</span>, <span class="type-var">value</span>, <span class="type-var">err</span>), <span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><a href="https://roc-lang.org/builtins/main/Try"><span class="type">Try</span></a>(<span class="type-var">value</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>Run a decoder with an already-loaded page input.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-type" id="PageDecoder.Input">
+            <div class="entry-signature">
+                <a href="#PageDecoder.Input" class="entry-anchor" aria-label="Permalink to Input"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.Input" class="entry-name-link"><strong>Input</strong></a> : {
+    page : <span class="type-var">page</span>,
+    source : <a href="https://roc-lang.org/builtins/main/Str"><span class="type">Str</span></a>,
+}</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>The input shared by every decoder for a page.</p>
+            </div>
+        </article>
+<!--!-->
+        <article class="entry entry-type" id="PageDecoder.Decoder">
+            <div class="entry-signature">
+                <a href="#PageDecoder.Decoder" class="entry-anchor" aria-label="Permalink to Decoder"><svg class="link-icon"><use href="#link-icon"/></svg></a>
+                <pre class="entry-signature-pre"><code class="entry-signature-code"><a href="#PageDecoder.Decoder" class="entry-name-link"><strong>Decoder</strong></a> : <span class="type">Input</span>(<span class="type-var">page</span>)<span class="sig-arrow"> =&gt; </span><a href="https://roc-lang.org/builtins/main/Try"><span class="type">Try</span></a>(<span class="type-var">value</span>, <span class="type-var">err</span>)</code></pre>
+            </div>
+            <div class="entry-doc">
+                <p>An effectful decoder that derives <code>value</code> from one page input.</p>
+            </div>
+        </article>
+<!--!-->
+<!--!-->
+        </div>
+        <footer><p>Made by people who like to make nice things.</p></footer>
+    </main>
+</body>
+</html>
