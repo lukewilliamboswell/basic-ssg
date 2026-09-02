@@ -319,6 +319,7 @@ jobs:
           cp -R www/. pages-site/
           python3 scripts/restore_release_docs.py pages-site
           ROC_DOCS_URL_ROOT=/basic-ssg/main roc docs --output=pages-site/main platform/main.roc
+          python3 scripts/enhance_docs_site.py pages-site
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

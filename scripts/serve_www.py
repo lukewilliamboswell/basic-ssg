@@ -77,6 +77,7 @@ def main() -> None:
     env = os.environ.copy()
     env["ROC_DOCS_URL_ROOT"] = "/main"
     run(roc, "docs", f"--output={output / 'main'}", ROOT / "platform" / "main.roc", env=env)
+    run("python3", ROOT / "scripts" / "enhance_docs_site.py", output)
     if args.no_serve:
         print(f"Generated Pages site: {output}")
         return
