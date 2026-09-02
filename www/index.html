@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="basic-ssg is a small, typed static-site-generation platform for Roc.">
   <title>basic-ssg · build static sites with Roc</title>
+  <link rel="preload" href="./fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="./site.css">
 </head>
 <body>
@@ -23,7 +25,7 @@
 
 import pf.SSG
 
-pages = SSG.pages!(input_dir)?
+pages = SSG.markdown_pages!(input_dir)?
 html = SSG.parse_markdown!(page.source_path)?</code></pre>
     </section>
     <section class="feature-grid" aria-label="Highlights">
@@ -35,7 +37,7 @@ html = SSG.parse_markdown!(page.source_path)?</code></pre>
       <div class="section-heading"><p class="eyebrow">Getting started</p><h2>From content folder to website</h2></div>
       <ol class="steps">
         <li><span>1</span><div><h3>Choose a release</h3><p>Copy the platform URL from the <a href="https://github.com/lukewilliamboswell/basic-ssg/releases/latest">latest GitHub release</a> into your Roc app header.</p></div></li>
-        <li><span>2</span><div><h3>Discover and render pages</h3><p>Use <code>SSG.pages!</code> for Markdown, <code>SSG.asciidoc_pages!</code> for AsciiDoc, or <code>SSG.pages_with!</code> for another extension.</p></div></li>
+        <li><span>2</span><div><h3>Discover and render pages</h3><p>Use <code>SSG.markdown_pages!</code> for Markdown, <code>SSG.asciidoc_pages!</code> for AsciiDoc, or <code>SSG.pages_with!</code> for another extension.</p></div></li>
         <li><span>3</span><div><h3>Compose typed HTML</h3><p>Build a document with <code>Html</code>, insert trusted rendered fragments where needed, and write it with <code>SSG.write_file!</code>.</p></div></li>
       </ol>
       <p class="callout">Start from the complete <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/orchard-guide">Orchard Guide</a>, then replace its navigation and content with your own.</p>

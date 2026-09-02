@@ -12,6 +12,22 @@ introduced runtime dependencies are `bytecount` (Apache-2.0 OR MIT),
 
 Source: https://github.com/asciidoc-rs/asciidoc-parser
 
+## Website fonts
+
+The GitHub Pages site vendors the Latin variable-font subsets of Space Grotesk
+and Plus Jakarta Sans from Google Fonts. Both families are licensed under the
+SIL Open Font License 1.1.
+
+Files: `www/fonts/*.woff2`
+
+Sources:
+
+- https://fonts.google.com/specimen/Space+Grotesk
+- https://fonts.google.com/specimen/Plus+Jakarta+Sans
+
+The complete license texts are included alongside the font files as
+`SPACE_GROTESK_LICENSE.txt` and `PLUS_JAKARTA_SANS_LICENSE.txt`.
+
 ## musl libc
 
 Files: `platform/targets/*/libc.a`, `platform/targets/*/crt1.o`

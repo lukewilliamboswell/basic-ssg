@@ -33,7 +33,7 @@ main! = |args|
 			input_dir = Path.from_os_str(input_dir_arg)
 			output_dir = Path.from_os_str(output_dir_arg)
 
-			pages = SSG.pages!(input_dir)?
+			pages = SSG.markdown_pages!(input_dir)?
 			render_pages!(pages, output_dir)
 		}
 
@@ -76,7 +76,7 @@ roc build site.roc --output=site.exe
 
 ## API
 
-`SSG.pages!` discovers Markdown files recursively and returns `List(SSG.Page)`.
+`SSG.markdown_pages!` discovers Markdown files recursively and returns `List(SSG.Page)`.
 Each page has:
 
 - `source_path : Path.Path`, the application-defined page source file.

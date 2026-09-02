@@ -15,7 +15,7 @@ main! = |args|
 			output_dir = Path.from_os_str(output_dir_arg)
 
 			# get the path and url of markdown pages in the content directory
-			pages = SSG.pages!(input_dir)?
+			pages = SSG.markdown_pages!(input_dir)?
 			asciidoc_pages = SSG.asciidoc_pages!(input_dir)?
 
 			process_all!(pages, output_dir)?

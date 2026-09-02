@@ -44,7 +44,7 @@ main! = |args|
 
 			# One site can contain whole-file data pages and Markdown pages with frontmatter.
 			json_pages = SSG.pages_with!({ input_dir, source_extension: "json" })?
-			frontmatter_pages = SSG.pages!(input_dir)?
+			frontmatter_pages = SSG.markdown_pages!(input_dir)?
 
 			process_json_pages!(json_pages, output_dir)?
 			process_frontmatter_pages!(frontmatter_pages, output_dir)

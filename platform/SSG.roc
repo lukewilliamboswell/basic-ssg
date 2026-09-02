@@ -18,8 +18,8 @@ SSG := [].{
 	}
 
 	## Find the markdown pages in the given directory, searched recursively.
-	pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
-	pages! = |input_dir| pages_with!({ input_dir, source_extension: "md" })
+	markdown_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
+	markdown_pages! = |input_dir| pages_with!({ input_dir, source_extension: "md" })
 
 	## Find AsciiDoc pages recursively.
 	asciidoc_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
