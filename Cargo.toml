@@ -15,6 +15,7 @@ name = "host"
 crate-type = ["staticlib"]
 
 [dependencies]
+asciidoc-parser = "=0.30.0"
 libc = "=0.2.180"
 html-escape = "=0.2.13"
 pulldown-cmark = { version = "=0.9.6", default-features = false }

@@ -360,6 +360,29 @@ fn is_roc_code_block(cbk: &pulldown_cmark::CodeBlockKind) -> bool {
     }
 }
 
+/// Highlight source consistently across supported content formats.
+pub(crate) fn highlight_code(code: &str, language: Option<&str>) -> Result<String, String> {
+    if language == Some("roc") {
+        return Ok(crate::roc_syntax::highlight_roc_code(code));
+    }
+    let syntax_set = SyntaxSet::load_defaults_newlines();
+    if let Some(syntax) = language.and_then(|token| syntax_set.find_syntax_by_token(token)) {
+        let mut generator =
+            ClassedHTMLGenerator::new_with_class_style(syntax, &syntax_set, ClassStyle::Spaced);
+        for line in LinesWithEndings::from(code) {
+            generator
+                .parse_html_for_line_which_includes_newline(line)
+                .map_err(|error| error.to_string())?;
+        }
+        Ok(format!("<pre><samp>{}</samp></pre>", generator.finalize()))
+    } else {
+        Ok(format!(
+            "<pre><samp>{}</samp></pre>",
+            html_escape::encode_text(code)
+        ))
+    }
+}
+
 fn read_replacement_file(replacement_file_name: &str, input_file: &Path) -> Result<String, String> {
     let replacement_path = Path::new(replacement_file_name);
     validate_relative_path(replacement_path, "replacement file")?;

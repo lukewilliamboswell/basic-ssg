@@ -86,6 +86,14 @@ Each page has:
 
 `SSG.parse_markdown!` renders a Markdown file to an HTML string.
 
+AsciiDoc is also first-class. `SSG.asciidoc_pages!` discovers `.adoc` files,
+`SSG.parse_asciidoc!` parses a file, and `SSG.parse_asciidoc_source!` parses a
+string into an `AsciiDoc.Document`. Applications may inspect its resolved block
+and inline semantics and warnings, customize rendering with
+`AsciiDoc.view_block`/`AsciiDoc.view_inlines`, or use the Asciidoctor-like
+default fragment from `AsciiDoc.render`. `SSG.render_asciidoc!` combines parsing
+and default rendering for source strings.
+
 `SSG.pages_with!` discovers another source extension, such as `json`, and maps
 each source path to an `.html` output path. `SSG.decode_page!` reads the source
 as UTF-8 and runs an application-supplied pure or effectful decoder.
@@ -130,8 +138,9 @@ type supplies Roc's `parser_for` constraint to `Json.parse`; a different parser
 can impose its own constraints without involving the platform.
 
 The bundled `Html` module escapes `Html.text` content and attribute values by
-default. Use `Html.raw` only for trusted markup, including
-`SSG.parse_markdown!` output only when the source Markdown is trusted. Render
+default. Use `Html.raw` only for trusted markup, including Markdown or AsciiDoc
+output only when the source is trusted. AsciiDoc secure mode prevents external
+resource loading but does not sanitize passthroughs or attribute-generated HTML. Render
 complete pages with `Html.render_document`, or markup fragments without a
 doctype using `Html.render_fragment`. HTML void elements such as `meta`, `img`,
 and `input` accept attributes but no children.
@@ -143,7 +152,7 @@ paths created by the application.
 
 ## Examples
 
-- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown site
+- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown and AsciiDoc site
   with nested pages, navigation, styling, syntax highlighting, and neighboring
   source inclusion.
 - [`examples/article-inspector`](examples/article-inspector) is a focused CLI

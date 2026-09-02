@@ -20,10 +20,10 @@ class RocVersionTests(unittest.TestCase):
         return path
 
     def test_reads_one_immutable_nightly_tag(self) -> None:
-        path = self.write_version("nightly-2026-08-06-61bbb59\n")
+        path = self.write_version("nightly-2026-09-01-db83307\n")
         self.assertEqual(
             pinned_roc(path),
-            ("nightly-2026-08-06-61bbb59", "61bbb59"),
+            ("nightly-2026-09-01-db83307", "db83307"),
         )
 
     def test_accepts_previous_month_name_tag_format(self) -> None:
@@ -65,12 +65,12 @@ class RocVersionTests(unittest.TestCase):
 
     @patch(
         "roc_version.active_roc_version",
-        return_value="Roc compiler version nightly-2026-08-06-61bbb59",
+        return_value="Roc compiler version nightly-2026-09-01-db83307",
     )
     def test_accepts_the_pinned_compiler(self, _active_version: object) -> None:
         self.assertEqual(
             require_pinned_roc("roc"),
-            "Roc compiler version nightly-2026-08-06-61bbb59",
+            "Roc compiler version nightly-2026-09-01-db83307",
         )
 
     @patch(
@@ -78,7 +78,7 @@ class RocVersionTests(unittest.TestCase):
         return_value="Roc compiler version release-fast-deadbeef",
     )
     def test_rejects_an_unpinned_compiler(self, _active_version: object) -> None:
-        with self.assertRaisesRegex(SystemExit, "61bbb59"):
+        with self.assertRaisesRegex(SystemExit, "db83307"):
             require_pinned_roc("roc")
 
 

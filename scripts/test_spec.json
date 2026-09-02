@@ -16,10 +16,11 @@
           "input": "examples/orchard-guide/content",
           "public": "examples/orchard-guide/public",
           "args": ["{input}", "{output}"],
-          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html", "style.css"],
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "fruit/pear.html", "index.html", "people/index.html", "style.css"],
           "file_contains": {
             "index.html": ["The Orchard Guide", "/fruit/apple.html"],
             "fruit/apple.html": ["Growing Apples", "start snippet view"],
+            "fruit/pear.html": ["Growing Pears", "<strong>pear tree</strong>", "class=\"str\""],
             "style.css": ["color-scheme"]
           }
         },
@@ -28,14 +29,14 @@
           "unicode_paths": true,
           "input": "examples/orchard-guide/content",
           "args": ["{input}", "{output}"],
-          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html"]
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "fruit/pear.html", "index.html", "people/index.html"]
         },
         {
           "name": "ignores non-Markdown source files",
           "input": "examples/orchard-guide/content",
           "input_files": [{"path": "fruit/notes.txt", "text": "not a page"}],
           "args": ["{input}", "{output}"],
-          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "index.html", "people/index.html"]
+          "files": ["fruit/apple.html", "fruit/banana.html", "fruit/cherry.html", "fruit/pear.html", "index.html", "people/index.html"]
         },
         {
           "name": "reports a missing content directory",

@@ -2,6 +2,16 @@
 
 This project bundles third-party libraries for static linking on Linux (musl) targets.
 
+## AsciiDoc parser
+
+The Rust host uses `asciidoc-parser` 0.30.0 under MIT OR Apache-2.0. Its newly
+introduced runtime dependencies are `bytecount` (Apache-2.0 OR MIT),
+`percent-encoding` (MIT OR Apache-2.0), `self_cell` (Apache-2.0 OR MIT), and
+`thiserror`/`syn` (MIT OR Apache-2.0). Full dependency versions are pinned in
+`Cargo.lock`.
+
+Source: https://github.com/asciidoc-rs/asciidoc-parser
+
 ## musl libc
 
 Files: `platform/targets/*/libc.a`, `platform/targets/*/crt1.o`

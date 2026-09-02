@@ -1,4 +1,5 @@
 import IOErr exposing [IOErr]
+import AsciiDoc
 
 Host := [].{
 
@@ -37,6 +38,8 @@ Host := [].{
 	ssg_read_source! : Raw => Try(Str, [ReadError(Str)])
 	ssg_parse_markdown! : Raw => Try(Str, [ParseError(Str)])
 	ssg_render_markdown! : Raw, Str => Try(Str, [ParseError(Str)])
+	ssg_parse_asciidoc! : Raw => Try(AsciiDoc.Document, [ParseError(Str)])
+	ssg_parse_asciidoc_source! : Raw, Str => Try(AsciiDoc.Document, [ParseError(Str)])
 	ssg_write_file! : Raw, Raw, Str => Try({}, [WriteError(Str)])
 
 	stdout_line! : Str => Try({}, [StdoutErr(IOErr)])

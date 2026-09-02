@@ -2,7 +2,7 @@ platform ""
 	requires {
 		main! : List([Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]) => Try({}, [Exit(I32), ..])
 	}
-	exposes [SSG, PageDecoder, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
+	exposes [SSG, AsciiDoc, PageDecoder, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
 	packages {
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
@@ -26,6 +26,8 @@ platform ""
 		"hosted_ssg_read_source": Host.ssg_read_source!,
 		"hosted_ssg_parse_markdown": Host.ssg_parse_markdown!,
 		"hosted_ssg_render_markdown": Host.ssg_render_markdown!,
+		"hosted_ssg_parse_asciidoc": Host.ssg_parse_asciidoc!,
+		"hosted_ssg_parse_asciidoc_source": Host.ssg_parse_asciidoc_source!,
 		"hosted_ssg_write_file": Host.ssg_write_file!,
 	}
 	targets: {
@@ -38,6 +40,7 @@ platform ""
 	}
 
 import SSG
+import AsciiDoc
 import PageDecoder
 import Path
 import OsStr
