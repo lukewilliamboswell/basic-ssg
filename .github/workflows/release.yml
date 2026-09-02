@@ -207,9 +207,49 @@ jobs:
           bundle_name: ${{ matrix.bundle_name }}
           release_version: ${{ needs.build.outputs.release_version }}
 
+  build-docs:
+    name: Build docs archive
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Roc
+        uses: ./.github/actions/setup-roc
+      - name: Create docs staging tree
+        run: mkdir -p docs-site
+      - name: Snapshot docs staging tree
+        uses: roc-lang/release-package/actions/docs-snapshot@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          docs_root: docs-site
+      - name: Generate and validate versioned docs
+        env:
+          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
+          ROC_DOCS_URL_ROOT: /basic-ssg/${{ needs.build.outputs.docs_version }}
+        run: |
+          set -euo pipefail
+          roc docs --output="docs-site/$DOCS_VERSION" platform/main.roc
+      - name: Validate docs
+        uses: roc-lang/release-package/actions/docs-validate@bb018c8c96b439b9545db6c792adc0549cf01ee1
+        with:
+          docs_root: docs-site
+          docs_version: ${{ needs.build.outputs.docs_version }}
+      - name: Archive versioned docs
+        env:
+          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
+        run: tar -czf docs.tar.gz -C docs-site "$DOCS_VERSION"
+      - name: Upload docs archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: platform-docs
+          path: docs.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
   publish-release:
     name: Publish GitHub release
-    needs: [build, test-bundles]
+    needs: [build, build-docs, test-bundles]
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:
@@ -232,6 +272,11 @@ jobs:
           name: release-metadata
           path: .release
 
+      - name: Download docs archive
+        uses: actions/download-artifact@v8
+        with:
+          name: platform-docs
+
       - name: Make release notes
         uses: roc-lang/release-package/actions/make-release-notes@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
@@ -243,6 +288,7 @@ jobs:
         uses: roc-lang/release-package/actions/publish-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ needs.build.outputs.release_version }}
+          additional_assets: docs.tar.gz
           github_token: ${{ github.token }}
 
   publish-docs:
@@ -251,8 +297,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
       pages: write
       id-token: write
     environment:
@@ -265,49 +310,15 @@ jobs:
       - name: Install Roc
         uses: ./.github/actions/setup-roc
 
-      # Do not restore the separately deployed legacy-compiler docs. The first
-      # release starts a new versioned tree; later follow-up PRs preserve it.
-      - name: Snapshot existing docs
-        uses: roc-lang/release-package/actions/docs-snapshot@bb018c8c96b439b9545db6c792adc0549cf01ee1
-        with:
-          docs_root: www
-
-      - name: Generate release docs
+      - name: Assemble Pages site
         env:
-          DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
-          DOCS_URL_ROOT: /basic-ssg/${{ needs.build.outputs.docs_version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          rm -rf "www/$DOCS_VERSION"
-          ROC_DOCS_URL_ROOT="$DOCS_URL_ROOT" roc docs \
-            --output="www/$DOCS_VERSION" \
-            platform/main.roc
-
-      - name: Update docs index
-        uses: roc-lang/release-package/actions/docs-index@bb018c8c96b439b9545db6c792adc0549cf01ee1
-        with:
-          docs_root: www
-          docs_version: ${{ needs.build.outputs.docs_version }}
-
-      - name: Validate docs
-        uses: roc-lang/release-package/actions/docs-validate@bb018c8c96b439b9545db6c792adc0549cf01ee1
-        with:
-          docs_root: www
-          docs_version: ${{ needs.build.outputs.docs_version }}
-
-      - name: Open release follow-up PR
-        uses: roc-lang/release-package/actions/create-followup-pr@bb018c8c96b439b9545db6c792adc0549cf01ee1
-        with:
-          release_version: ${{ needs.build.outputs.release_version }}
-          paths: www
-          branch_prefix: release-followup
-          base_branch: ${{ github.event.repository.default_branch }}
-          commit_message: Update docs for ${{ needs.build.outputs.release_version }}
-          pr_title: Update docs for ${{ needs.build.outputs.release_version }}
-          pr_body: |
-            Release follow-up for ${{ needs.build.outputs.release_version }}.
-
-            Adds the generated versioned documentation for this release.
-          github_token: ${{ github.token }}
+          set -euo pipefail
+          mkdir -p pages-site
+          cp -R www/. pages-site/
+          python3 scripts/restore_release_docs.py pages-site
+          ROC_DOCS_URL_ROOT=/basic-ssg/main roc docs --output=pages-site/main platform/main.roc
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
@@ -315,7 +326,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: www
+          path: pages-site
 
       - name: Deploy Pages
         id: deployment

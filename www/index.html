@@ -2,11 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/basic-ssg/0.10.0/">
-  <link rel="canonical" href="/basic-ssg/0.10.0/">
-  <title>Redirecting to 0.10.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="basic-ssg is a small, typed static-site-generation platform for Roc.">
+  <title>basic-ssg · build static sites with Roc</title>
+  <link rel="stylesheet" href="./site.css">
 </head>
 <body>
-  <p><a href="/basic-ssg/0.10.0/">Redirecting to 0.10.0</a></p>
+  <header class="site-header">
+    <a class="brand" href="/basic-ssg/">basic-ssg</a>
+    <nav aria-label="Primary navigation">
+      <a href="#getting-started">Getting started</a><a href="#guides">Guides</a><a href="#examples">Examples</a><a href="./main/">API docs</a><a href="https://github.com/lukewilliamboswell/basic-ssg">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">A static site generator platform for Roc</p>
+      <h1>Turn typed Roc programs into fast, straightforward websites.</h1>
+      <div><p class="lede">Discover content, decode your own formats, render Markdown or AsciiDoc, compose typed HTML, and write the finished site—with one small platform.</p><div class="actions"><a class="button primary" href="#getting-started">Build your first site</a><a class="button" href="./main/">Browse main API docs</a></div></div>
+      <pre class="terminal"><code><span>app</span> [main!] { pf: platform "…/basic-ssg.tar.zst" }
+
+import pf.SSG
+
+pages = SSG.pages!(input_dir)?
+html = SSG.parse_markdown!(page.source_path)?</code></pre>
+    </section>
+    <section class="feature-grid" aria-label="Highlights">
+      <article><h2>Typed by default</h2><p>Your Roc application owns the content model, templates, errors, and build pipeline.</p></article>
+      <article><h2>Bring your format</h2><p>Use Markdown, inspect semantic AsciiDoc, decode JSON frontmatter, or define a format of your own.</p></article>
+      <article><h2>Portable builds</h2><p>Release bundles include native hosts for macOS, Linux, and Windows.</p></article>
+    </section>
+    <section id="getting-started" class="section">
+      <div class="section-heading"><p class="eyebrow">Getting started</p><h2>From content folder to website</h2></div>
+      <ol class="steps">
+        <li><span>1</span><div><h3>Choose a release</h3><p>Copy the platform URL from the <a href="https://github.com/lukewilliamboswell/basic-ssg/releases/latest">latest GitHub release</a> into your Roc app header.</p></div></li>
+        <li><span>2</span><div><h3>Discover and render pages</h3><p>Use <code>SSG.pages!</code> for Markdown, <code>SSG.asciidoc_pages!</code> for AsciiDoc, or <code>SSG.pages_with!</code> for another extension.</p></div></li>
+        <li><span>3</span><div><h3>Compose typed HTML</h3><p>Build a document with <code>Html</code>, insert trusted rendered fragments where needed, and write it with <code>SSG.write_file!</code>.</p></div></li>
+      </ol>
+      <p class="callout">Start from the complete <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/orchard-guide">Orchard Guide</a>, then replace its navigation and content with your own.</p>
+    </section>
+    <section id="guides" class="section">
+      <div class="section-heading"><p class="eyebrow">Guides</p><h2>Pick the workflow that fits</h2></div>
+      <div class="card-grid">
+        <a class="card" href="https://github.com/lukewilliamboswell/basic-ssg#api"><h3>Pages and paths</h3><p>Discover nested sources and map them to stable URLs and output paths.</p><span>Read the guide →</span></a>
+        <a class="card" href="https://github.com/lukewilliamboswell/basic-ssg#pluggable-page-decoders"><h3>Custom content models</h3><p>Decode frontmatter and whole-file formats into types chosen by your application.</p><span>Read the guide →</span></a>
+        <a class="card" href="https://github.com/lukewilliamboswell/basic-ssg#api"><h3>HTML and safety</h3><p>Understand escaping, trusted markup, secure AsciiDoc parsing, and confined output.</p><span>Read the guide →</span></a>
+        <a class="card" href="./main/AsciiDoc/"><h3>Semantic AsciiDoc</h3><p>Inspect parsed documents and warnings, customize nodes, or use the default renderer.</p><span>Open API docs →</span></a>
+      </div>
+    </section>
+    <section id="examples" class="section">
+      <div class="section-heading"><p class="eyebrow">Examples</p><h2>Small programs, complete ideas</h2></div>
+      <div class="examples">
+        <article><h3>Orchard Guide</h3><p>A complete site with nested Markdown and AsciiDoc pages, navigation, styling, highlighting, and source inclusion.</p><a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/orchard-guide">View source →</a></article>
+        <article><h3>Travel Journal</h3><p>JSON and Markdown frontmatter living in one build, with application-defined decoders and typed metadata.</p><a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/travel-journal">View source →</a></article>
+        <article><h3>Article Inspector</h3><p>A focused command-line program that reads Markdown and reports the first article heading.</p><a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/article-inspector">View source →</a></article>
+      </div>
+    </section>
+    <section class="section docs-panel">
+      <div><p class="eyebrow">Reference</p><h2>API documentation</h2><p>The main reference is generated on every deployment. Future releases publish immutable documentation archives, restored at versioned URLs without committing generated files.</p></div>
+      <div class="docs-links"><a class="button primary" href="./main/">Main API docs</a><a class="button" href="https://github.com/lukewilliamboswell/basic-ssg/releases">Versioned releases</a></div>
+    </section>
+  </main>
+  <footer><p>basic-ssg is open source under the UPL-1.0 license.</p><a href="https://github.com/lukewilliamboswell/basic-ssg">Source on GitHub</a></footer>
 </body>
 </html>
