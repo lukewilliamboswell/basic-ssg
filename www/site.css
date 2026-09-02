@@ -1,0 +1,56 @@
+:root {
+  --accent: #2f6f49;
+  --accent-hover: #24583a;
+  --accent-text: #fff;
+  --accent-bg: #edf5ef;
+}
+
+body { grid-template-columns: 1fr min(52rem, 92%) 1fr; }
+
+/* Header */
+.site-header { padding-inline: max(2rem, calc((100% - 52rem) / 2 + 1rem)); display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem 2rem; padding-block: 1.5rem; }
+.brand { font-size: 1.25rem; font-weight: 700; text-decoration: none; }
+.site-header nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+.site-header nav a { margin: 0; padding: 0; border: 0; text-decoration: none; }
+.site-header nav a:hover { text-decoration: underline; }
+
+/* Sections: one hairline between them, nothing else */
+main section { padding-block: 3rem; border: 0; background: none; }
+main section + section { border-top: 1px solid var(--border); }
+main h2 { margin-top: 0; font-size: 1.6rem; }
+main h3 { font-size: 1.1rem; margin-bottom: .35rem; }
+
+/* Hero */
+.hero { padding-top: 1rem; }
+.hero h1 { font-size: 2.4rem; margin-bottom: .75rem; }
+.lede { font-size: 1.15rem; max-width: 40rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1.5rem; }
+.button { margin: 0; }
+.terminal { margin: 0 0 1.5rem; font-size: .82rem; overflow-x: auto; tab-size: 2; }
+.terminal:last-child { margin-bottom: 0; }
+.snippet-caption { margin-block: 0 .5rem; color: var(--text-light); font-size: .95rem; }
+/* Steps */
+.steps { margin: 0; padding-left: 1.25rem; }
+.steps li { margin-bottom: 1.25rem; }
+.steps li::marker { color: var(--accent); font-weight: 700; }
+.steps p { margin: 0; }
+.callout { margin-bottom: 0; padding: .9rem 1.1rem; border-left: .25rem solid var(--accent); background: var(--accent-bg); }
+
+/* Example cards */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.cards article { display: flex; flex-direction: column; margin: 0; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--standard-border-radius); }
+.cards p { margin-block: .5rem 1rem; }
+.cards article > a { margin-top: auto; }
+.cards a { font-weight: 600; }
+
+/* Reference list */
+.links { margin: 0; padding-left: 1.25rem; }
+.links li { margin-bottom: .5rem; }
+
+body > footer { text-align: left; padding-block: 1.5rem; }
+body > footer p { margin: 0; }
+
+@media (max-width: 700px) {
+  .hero h1 { font-size: 1.9rem; }
+  .cards { grid-template-columns: 1fr; }
+}

@@ -4,6 +4,7 @@ import pf.SSG
 import pf.Path
 import pf.OsStr exposing [OsStr]
 import pf.Html
+import pf.AsciiDoc
 import pf.HtmlAttributes exposing [class, http_equiv, href, rel, content, lang, title]
 
 main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
@@ -14,10 +15,11 @@ main! = |args|
 			output_dir = Path.from_os_str(output_dir_arg)
 
 			# get the path and url of markdown pages in the content directory
-			pages = SSG.pages!(input_dir)?
+			pages = SSG.markdown_pages!(input_dir)?
+			asciidoc_pages = SSG.asciidoc_pages!(input_dir)?
 
-			# process each markdown page into an HTML page
-			process_all!(pages, output_dir)
+			process_all!(pages, output_dir)?
+			process_all_asciidoc!(asciidoc_pages, output_dir)
 		}
 
 		_ => Err(Exit(1))
@@ -40,6 +42,18 @@ process_page! = |output_dir, page| {
 	SSG.write_file!({ output_dir, output_path: page.output_path, content: out_html })
 }
 
+process_all_asciidoc! : List(SSG.Page), Path.Path => Try({}, [ParseError(Str), WriteError(Str), ..])
+process_all_asciidoc! = |pages, output_dir|
+	match pages {
+		[] => Ok({})
+		[page, .. as rest] => {
+			document = SSG.parse_asciidoc!(page.source_path)?
+			out_html = transform_file_content(page.url, AsciiDoc.render(document))
+			SSG.write_file!({ output_dir, output_path: page.output_path, content: out_html })?
+			process_all_asciidoc!(rest, output_dir)
+		}
+	}
+
 NavLink : {
 	url : Str,
 	title : Str,
@@ -52,6 +66,7 @@ nav_links = [
 	{ url: "/fruit/apple.html", title: "Growing Apples", text: "Apples" },
 	{ url: "/fruit/banana.html", title: "Growing Bananas", text: "Bananas" },
 	{ url: "/fruit/cherry.html", title: "Growing Cherries", text: "Cherries" },
+	{ url: "/fruit/pear.html", title: "Growing Pears", text: "Pears" },
 	{ url: "/people/index.html", title: "Orchard Keepers", text: "People" },
 ]
 

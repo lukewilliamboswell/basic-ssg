@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
 
+mod asciidoc;
 mod roc_platform_abi;
 mod roc_syntax;
 mod ssg;
@@ -248,6 +249,113 @@ fn try_render_markdown_err(message: RocStr) -> HostSsgRenderMarkdownResult {
     }
 }
 
+fn try_parse_asciidoc_ok(document: HostSsgParseAsciidocOk) -> HostSsgParseAsciidocResult {
+    HostSsgParseAsciidocResult {
+        payload: HostSsgParseAsciidocResultPayload {
+            ok: ManuallyDrop::new(document),
+        },
+        tag: HostSsgParseAsciidocResultTag::Ok,
+    }
+}
+
+fn try_parse_asciidoc_err(message: RocStr) -> HostSsgParseAsciidocResult {
+    HostSsgParseAsciidocResult {
+        payload: HostSsgParseAsciidocResultPayload {
+            err: ManuallyDrop::new(message),
+        },
+        tag: HostSsgParseAsciidocResultTag::Err,
+    }
+}
+
+fn roc_strings(values: &[String], roc_host: &RocHost) -> RocList<RocStr> {
+    if values.is_empty() {
+        return RocList::empty();
+    }
+    let list = unsafe { RocList::<RocStr>::allocate(values.len(), roc_host) };
+    for (index, value) in values.iter().enumerate() {
+        unsafe {
+            list.elements
+                .add(index)
+                .write(RocStr::from_str(value, roc_host));
+        }
+    }
+    list
+}
+
+fn roc_raw_inline(value: &str, roc_host: &RocHost) -> AsciiDocInline {
+    AsciiDocInline {
+        payload: AsciiDocInlinePayload {
+            raw_html: ManuallyDrop::new(RocStr::from_str(value, roc_host)),
+        },
+        tag: AsciiDocInlineTag::RawHtml,
+    }
+}
+
+fn roc_asciidoc_document(
+    document: asciidoc::Document,
+    roc_host: &RocHost,
+) -> HostSsgParseAsciidocOk {
+    let blocks = if document.blocks.is_empty() {
+        RocList::empty()
+    } else {
+        let list = unsafe {
+            RocList::<HostSsgParseAsciidocOkBlocks>::allocate(document.blocks.len(), roc_host)
+        };
+        for (index, block) in document.blocks.iter().enumerate() {
+            let inlines = match &block.inline_html {
+                Some(html) => unsafe {
+                    RocList::<AsciiDocInline>::from_slice(
+                        &[roc_raw_inline(html, roc_host)],
+                        roc_host,
+                    )
+                },
+                None => RocList::empty(),
+            };
+            unsafe {
+                list.elements
+                    .add(index)
+                    .write(HostSsgParseAsciidocOkBlocks {
+                        level: block.level,
+                        html: RocStr::from_str(&block.html, roc_host),
+                        id: RocStr::from_str(&block.id, roc_host),
+                        inlines,
+                        kind: RocStr::from_str(&block.kind, roc_host),
+                        roles: roc_strings(&block.roles, roc_host),
+                        source: RocStr::from_str(&block.source, roc_host),
+                        title: RocStr::from_str(&block.title, roc_host),
+                    });
+            }
+        }
+        list
+    };
+    let warnings = if document.warnings.is_empty() {
+        RocList::empty()
+    } else {
+        let list = unsafe {
+            RocList::<HostSsgParseAsciidocOkWarnings>::allocate(document.warnings.len(), roc_host)
+        };
+        for (index, warning) in document.warnings.iter().enumerate() {
+            unsafe {
+                list.elements
+                    .add(index)
+                    .write(HostSsgParseAsciidocOkWarnings {
+                        column: warning.column,
+                        line: warning.line,
+                        message: RocStr::from_str(&warning.message, roc_host),
+                    });
+            }
+        }
+        list
+    };
+    HostSsgParseAsciidocOk {
+        blocks,
+        id: RocStr::from_str(&document.id, roc_host),
+        roles: roc_strings(&document.roles, roc_host),
+        title: RocStr::from_str(&document.title, roc_host),
+        warnings,
+    }
+}
+
 fn try_read_source_ok(source: RocStr) -> HostSsgReadSourceResult {
     HostSsgReadSourceResult {
         payload: HostSsgReadSourceResultPayload {
@@ -380,6 +488,42 @@ pub extern "C" fn hosted_ssg_render_markdown(
         Ok(html) => try_render_markdown_ok(RocStr::from_str(&html, roc_host)),
         Err(message) => try_render_markdown_err(RocStr::from_str(&message, roc_host)),
     }
+}
+
+#[no_mangle]
+pub extern "C" fn hosted_ssg_parse_asciidoc(
+    path: UnixBytesOrUtf8OrWindowsU16s,
+) -> HostSsgParseAsciidocResult {
+    let roc_host = roc_host();
+    let input_path = match pathbuf_from_roc_path(path, roc_host) {
+        Ok(path) => path,
+        Err(message) => return try_parse_asciidoc_err(RocStr::from_str(&message, roc_host)),
+    };
+    match ssg::read_source(&input_path) {
+        Ok(source) => {
+            try_parse_asciidoc_ok(roc_asciidoc_document(asciidoc::parse(&source), roc_host))
+        }
+        Err(message) => try_parse_asciidoc_err(RocStr::from_str(&message, roc_host)),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn hosted_ssg_parse_asciidoc_source(
+    source_path: UnixBytesOrUtf8OrWindowsU16s,
+    source: RocStr,
+) -> HostSsgParseAsciidocResult {
+    let roc_host = roc_host();
+    if let Err(message) = pathbuf_from_roc_path(source_path, roc_host) {
+        unsafe {
+            source.decref(roc_host);
+        }
+        return try_parse_asciidoc_err(RocStr::from_str(&message, roc_host));
+    }
+    let parsed = asciidoc::parse(source.as_str());
+    unsafe {
+        source.decref(roc_host);
+    }
+    try_parse_asciidoc_ok(roc_asciidoc_document(parsed, roc_host))
 }
 
 #[no_mangle]
@@ -542,7 +686,7 @@ fn try_stdout_unit_ok() -> HostStdoutLineResult {
     }
 }
 
-fn try_stdout_unit_err(error: IOErr) -> HostStdoutLineResult {
+fn try_stdout_unit_err(error: HostIOErr) -> HostStdoutLineResult {
     HostStdoutLineResult {
         payload: HostStdoutLineResultPayload {
             err: ManuallyDrop::new(error),
@@ -564,7 +708,7 @@ pub extern "C" fn hosted_stdout_line(message: RocStr) -> HostStdoutLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(public_io_err_from_std(error, roc_host)),
+        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
@@ -581,7 +725,7 @@ pub extern "C" fn hosted_stdout_write(message: RocStr) -> HostStdoutLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(public_io_err_from_std(error, roc_host)),
+        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
     }
 }
 
@@ -598,7 +742,7 @@ fn try_cmd_status_ok(code: i32) -> HostCmdStatusResult {
     }
 }
 
-fn try_cmd_status_err(error: HostIOErr) -> HostCmdStatusResult {
+fn try_cmd_status_err(error: IOErr) -> HostCmdStatusResult {
     HostCmdStatusResult {
         payload: HostCmdStatusResultPayload {
             err: ManuallyDrop::new(error),
@@ -648,7 +792,7 @@ pub extern "C" fn hosted_cmd_status(cmd: HostCmdStatusArgs) -> HostCmdStatusResu
 
     match result {
         Ok(status) => try_cmd_status_ok(status.code().unwrap_or(-1)),
-        Err(error) => try_cmd_status_err(io_err_from_std(error, roc_host)),
+        Err(error) => try_cmd_status_err(public_io_err_from_std(error, roc_host)),
     }
 }
 

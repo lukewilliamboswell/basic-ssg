@@ -33,7 +33,7 @@ main! = |args|
 			input_dir = Path.from_os_str(input_dir_arg)
 			output_dir = Path.from_os_str(output_dir_arg)
 
-			pages = SSG.pages!(input_dir)?
+			pages = SSG.markdown_pages!(input_dir)?
 			render_pages!(pages, output_dir)
 		}
 
@@ -76,7 +76,7 @@ roc build site.roc --output=site.exe
 
 ## API
 
-`SSG.pages!` discovers Markdown files recursively and returns `List(SSG.Page)`.
+`SSG.markdown_pages!` discovers Markdown files recursively and returns `List(SSG.Page)`.
 Each page has:
 
 - `source_path : Path.Path`, the application-defined page source file.
@@ -85,6 +85,14 @@ Each page has:
 - `url : Str`, the site-absolute URL for the generated page.
 
 `SSG.parse_markdown!` renders a Markdown file to an HTML string.
+
+AsciiDoc is also first-class. `SSG.asciidoc_pages!` discovers `.adoc` files,
+`SSG.parse_asciidoc!` parses a file, and `SSG.parse_asciidoc_source!` parses a
+string into an `AsciiDoc.Document`. Applications may inspect its resolved block
+and inline semantics and warnings, customize rendering with
+`AsciiDoc.view_block`/`AsciiDoc.view_inlines`, or use the Asciidoctor-like
+default fragment from `AsciiDoc.render`. `SSG.render_asciidoc!` combines parsing
+and default rendering for source strings.
 
 `SSG.pages_with!` discovers another source extension, such as `json`, and maps
 each source path to an `.html` output path. `SSG.decode_page!` reads the source
@@ -130,8 +138,9 @@ type supplies Roc's `parser_for` constraint to `Json.parse`; a different parser
 can impose its own constraints without involving the platform.
 
 The bundled `Html` module escapes `Html.text` content and attribute values by
-default. Use `Html.raw` only for trusted markup, including
-`SSG.parse_markdown!` output only when the source Markdown is trusted. Render
+default. Use `Html.raw` only for trusted markup, including Markdown or AsciiDoc
+output only when the source is trusted. AsciiDoc secure mode prevents external
+resource loading but does not sanitize passthroughs or attribute-generated HTML. Render
 complete pages with `Html.render_document`, or markup fragments without a
 doctype using `Html.render_fragment`. HTML void elements such as `meta`, `img`,
 and `input` accept attributes but no children.
@@ -143,7 +152,7 @@ paths created by the application.
 
 ## Examples
 
-- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown site
+- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown and AsciiDoc site
   with nested pages, navigation, styling, syntax highlighting, and neighboring
   source inclusion.
 - [`examples/article-inspector`](examples/article-inspector) is a focused CLI
@@ -152,6 +161,19 @@ paths created by the application.
 - [`examples/travel-journal`](examples/travel-journal) builds whole-file JSON
   pages alongside Markdown pages with JSON frontmatter, deriving typed parsers
   and combining pure and effectful decoders with record-builder syntax.
+
+## Previewing the documentation site
+
+Generate the landing page and fresh main-branch API docs, then serve them
+locally:
+
+```sh
+python3 scripts/serve_www.py
+```
+
+The preview defaults to `http://127.0.0.1:8000/`. Pass `--no-open` to avoid
+opening a browser, `--no-serve` to only generate `target/www-preview`, or
+`--with-releases` to also download versioned docs from GitHub release assets.
 
 ## Supported Targets
 

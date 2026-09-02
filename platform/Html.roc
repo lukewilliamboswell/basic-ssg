@@ -4,6 +4,7 @@ Html := [].{
 	Node :: [
 		Text(Str),
 		Raw(Str),
+		Fragment(U64, List(Node)),
 		Element(Str, U64, List(Attribute), List(Node)),
 		VoidElement(Str, U64, List(Attribute)),
 	]
@@ -27,6 +28,10 @@ Html := [].{
 	## the source Markdown is trusted.
 	raw : Str -> Node
 	raw = |s| Raw(s)
+
+	## Group sibling nodes without adding a wrapper element.
+	fragment : List(Node) -> Node
+	fragment = |children| Fragment(children.fold(0, |size, child| size + node_size(child)), children)
 
 	## Define a non-standard HTML Element
 	##
@@ -79,6 +84,8 @@ Html := [].{
 			Text(content) | Raw(content) =>
 				content.count_utf8_bytes()
 
+			Fragment(size, _) => size
+
 			Element(_, size, _, _) =>
 				size
 
@@ -113,6 +120,8 @@ Html := [].{
 
 			Raw(content) =>
 				buffer.concat(content)
+
+			Fragment(_, children) => render_children(buffer, children)
 
 			Element(tag_name, _, attrs, children) => {
 				with_tag_name = "${buffer}<${tag_name}"

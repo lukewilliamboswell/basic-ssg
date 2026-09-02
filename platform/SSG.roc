@@ -1,5 +1,6 @@
 import Path
 import Host
+import AsciiDoc
 
 ## Static site generation effects: discover page sources, run application-defined
 ## decoders, optionally render Markdown, and write generated files to disk.
@@ -17,8 +18,12 @@ SSG := [].{
 	}
 
 	## Find the markdown pages in the given directory, searched recursively.
-	pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
-	pages! = |input_dir| pages_with!({ input_dir, source_extension: "md" })
+	markdown_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
+	markdown_pages! = |input_dir| pages_with!({ input_dir, source_extension: "md" })
+
+	## Find AsciiDoc pages recursively.
+	asciidoc_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
+	asciidoc_pages! = |input_dir| pages_with!({ input_dir, source_extension: "adoc" })
 
 	## Find pages with `source_extension` in the given directory, searched recursively.
 	## The extension must not include a leading dot. Output paths always use `.html`.
@@ -58,6 +63,30 @@ SSG := [].{
 	render_markdown! = |{ source_path, markdown }|
 		match Host.ssg_render_markdown!(Path.to_raw(source_path), markdown) {
 			Ok(html) => Ok(html)
+			Err(ParseError(msg)) => Err(ParseError(msg))
+		}
+
+	## Parse an AsciiDoc file into a resolved semantic document.
+	parse_asciidoc! : Path.Path => Try(AsciiDoc.Document, [ParseError(Str), ..])
+	parse_asciidoc! = |source_path|
+		match Host.ssg_parse_asciidoc!(Path.to_raw(source_path)) {
+			Ok(document) => Ok(document)
+			Err(ParseError(msg)) => Err(ParseError(msg))
+		}
+
+	## Parse AsciiDoc source. Secure mode is used and no resource handlers are installed.
+	parse_asciidoc_source! : { source_path : Path.Path, asciidoc : Str } => Try(AsciiDoc.Document, [ParseError(Str), ..])
+	parse_asciidoc_source! = |{ source_path, asciidoc }|
+		match Host.ssg_parse_asciidoc_source!(Path.to_raw(source_path), asciidoc) {
+			Ok(document) => Ok(document)
+			Err(ParseError(msg)) => Err(ParseError(msg))
+		}
+
+	## Parse and render AsciiDoc source to an Asciidoctor-like HTML fragment.
+	render_asciidoc! : { source_path : Path.Path, asciidoc : Str } => Try(Str, [ParseError(Str), ..])
+	render_asciidoc! = |input|
+		match parse_asciidoc_source!(input) {
+			Ok(document) => Ok(AsciiDoc.render(document))
 			Err(ParseError(msg)) => Err(ParseError(msg))
 		}
 

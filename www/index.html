@@ -2,11 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/basic-ssg/0.10.0/">
-  <link rel="canonical" href="/basic-ssg/0.10.0/">
-  <title>Redirecting to 0.10.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="basic-ssg is a small, typed static-site-generation platform for Roc.">
+  <title>basic-ssg · build static sites with Roc</title>
+  <link rel="stylesheet" href="./vendor/simple-css/simple.min.css">
+  <link rel="stylesheet" href="./site.css">
 </head>
 <body>
-  <p><a href="/basic-ssg/0.10.0/">Redirecting to 0.10.0</a></p>
+  <header class="site-header">
+    <a class="brand" href="/basic-ssg/">basic-ssg</a>
+    <nav aria-label="Primary navigation">
+      <a href="#get-started">Get started</a>
+      <a href="#examples">Examples</a>
+      <a href="./main/">API docs</a>
+      <a href="https://github.com/lukewilliamboswell/basic-ssg">GitHub</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Build static sites with Roc.</h1>
+      <p class="lede">Discover content, render Markdown or AsciiDoc, compose typed HTML, and write the finished site — with one small platform.</p>
+      <p class="actions">
+        <a class="button primary" href="#get-started">Get started</a>
+        <a class="button" href="./main/">API docs</a>
+      </p>
+      <p class="snippet-caption">A complete site generator — renders every Markdown file in a content directory:</p>
+      <pre class="terminal"><code class="language-roc"><span class="kw">app</span> [main!] { pf: platform "&lt;basic-ssg release URL&gt;" }
+
+import pf.Path
+import pf.OsStr exposing [OsStr]
+import pf.SSG
+
+main! : List(OsStr) =&gt; Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
+main! = |args|
+	match args.drop_first(1) {
+		[input_dir_arg, output_dir_arg] =&gt; {
+			input_dir = Path.from_os_str(input_dir_arg)
+			output_dir = Path.from_os_str(output_dir_arg)
+
+			pages = SSG.markdown_pages!(input_dir)?
+			render_pages!(pages, output_dir)
+		}
+
+		_ =&gt; Err(Exit(1))
+	}
+
+render_pages! : List(SSG.Page), Path.Path =&gt; Try({}, [ParseError(Str), WriteError(Str), ..])
+render_pages! = |pages, output_dir|
+	match pages {
+		[] =&gt; Ok({})
+		[page, .. as rest] =&gt; {
+			markdown_html = SSG.parse_markdown!(page.source_path)?
+			page_html = "&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;${markdown_html}&lt;/body&gt;&lt;/html&gt;"
+
+			SSG.write_file!({
+				output_dir,
+				output_path: page.output_path,
+				content: page_html,
+			})?
+
+			render_pages!(rest, output_dir)
+		}
+	}</code></pre>
+      <p class="snippet-caption">Build it and point it at your content:</p>
+      <pre class="terminal"><code>roc build site.roc --output=site
+./site content/ www/</code></pre>
+    </section>
+
+    <section id="get-started">
+      <h2>Get started</h2>
+      <ol class="steps">
+        <li>
+          <h3>Point at a release</h3>
+          <p>Copy the platform URL from the <a href="https://github.com/lukewilliamboswell/basic-ssg/releases/latest">latest release</a> into your app header. Releases ship native hosts for macOS, Linux, and Windows.</p>
+        </li>
+        <li>
+          <h3>Discover and render pages</h3>
+          <p>Use <code>SSG.markdown_pages!</code> for Markdown, <code>SSG.asciidoc_pages!</code> for AsciiDoc, or <code>SSG.pages_with!</code> for any other extension.</p>
+        </li>
+        <li>
+          <h3>Write typed HTML</h3>
+          <p>Build a document with <code>Html</code>, insert rendered fragments where you need them, and write it out with <code>SSG.write_file!</code>.</p>
+        </li>
+      </ol>
+      <p class="callout">The quickest start is to copy the <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/orchard-guide">Orchard Guide</a> example and replace its content with your own.</p>
+    </section>
+
+    <section id="examples">
+      <h2>Examples</h2>
+      <div class="cards">
+        <article>
+          <h3>Orchard Guide</h3>
+          <p>A complete site: nested Markdown and AsciiDoc pages, navigation, styling, and source inclusion.</p>
+          <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/orchard-guide">View source →</a>
+        </article>
+        <article>
+          <h3>Travel Journal</h3>
+          <p>JSON and Markdown frontmatter in one build, with decoders and metadata types you define.</p>
+          <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/travel-journal">View source →</a>
+        </article>
+        <article>
+          <h3>Article Inspector</h3>
+          <p>A small command-line program that reads Markdown and reports the first article heading.</p>
+          <a href="https://github.com/lukewilliamboswell/basic-ssg/tree/main/examples/article-inspector">View source →</a>
+        </article>
+      </div>
+    </section>
+
+    <section id="reference">
+      <h2>Reference</h2>
+      <ul class="links">
+        <li><a href="./main/">API documentation</a> — generated from the platform on every deployment.</li>
+        <li><a href="./main/AsciiDoc/">AsciiDoc module</a> — inspect parsed documents and warnings, or use the default renderer.</li>
+        <li><a href="https://github.com/lukewilliamboswell/basic-ssg#api">README guide</a> — pages and paths, custom decoders, HTML escaping and safety.</li>
+        <li><a href="https://github.com/lukewilliamboswell/basic-ssg/releases">Releases</a> — versioned builds and their documentation archives.</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p>basic-ssg is open source under the UPL-1.0 license. <a href="https://github.com/lukewilliamboswell/basic-ssg">Source on GitHub</a></p>
+  </footer>
 </body>
 </html>
