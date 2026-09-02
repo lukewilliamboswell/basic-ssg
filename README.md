@@ -162,6 +162,19 @@ paths created by the application.
   pages alongside Markdown pages with JSON frontmatter, deriving typed parsers
   and combining pure and effectful decoders with record-builder syntax.
 
+## Previewing the documentation site
+
+Generate the landing page and fresh main-branch API docs, then serve them
+locally:
+
+```sh
+python3 scripts/serve_www.py
+```
+
+The preview defaults to `http://127.0.0.1:8000/`. Pass `--no-open` to avoid
+opening a browser, `--no-serve` to only generate `target/www-preview`, or
+`--with-releases` to also download versioned docs from GitHub release assets.
+
 ## Supported Targets
 
 Published releases include these targets:
