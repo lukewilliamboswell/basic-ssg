@@ -12,21 +12,15 @@ introduced runtime dependencies are `bytecount` (Apache-2.0 OR MIT),
 
 Source: https://github.com/asciidoc-rs/asciidoc-parser
 
-## Website fonts
+## Simple.css
 
-The GitHub Pages site vendors the Latin variable-font subsets of Space Grotesk
-and Plus Jakarta Sans from Google Fonts. Both families are licensed under the
-SIL Open Font License 1.1.
+The GitHub Pages landing site vendors Simple.css 2.3.7 under the MIT License.
 
-Files: `www/fonts/*.woff2`
+Files: `www/vendor/simple-css/`
 
-Sources:
+Source: https://github.com/kevquirk/simple.css/releases/tag/v2.3.7
 
-- https://fonts.google.com/specimen/Space+Grotesk
-- https://fonts.google.com/specimen/Plus+Jakarta+Sans
-
-The complete license texts are included alongside the font files as
-`SPACE_GROTESK_LICENSE.txt` and `PLUS_JAKARTA_SANS_LICENSE.txt`.
+The complete license text is included alongside the stylesheet.
 
 ## musl libc
 
