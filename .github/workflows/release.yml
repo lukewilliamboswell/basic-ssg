@@ -3,17 +3,22 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
+      nightly_validation:
+        description: "Validate a nightly candidate without publishing or deploying"
+        type: boolean
+        required: false
+        default: false
       release_version:
         description: "Release version, for example 1.0.0 or 1.0.0-rc1"
-        required: true
+        required: false
         type: string
   pull_request:
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && format('release-{0}', github.repository) || format('release-validate-{0}-{1}', github.repository, github.ref) }}
-  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+  group: ${{ (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation) && format('release-{0}', github.repository) || format('release-validate-{0}-{1}', github.repository, github.ref) }}
+  cancel-in-progress: ${{ (github.event_name != 'workflow_dispatch' || inputs.nightly_validation) }}
 
 jobs:
   rust-version:
@@ -24,7 +29,14 @@ jobs:
     outputs:
       version: ${{ steps.read.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
+      - name: Require a version for publication
+        if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: test -n "$RELEASE_VERSION" || { echo "A release version is required for publication" >&2; exit 1; }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: read
         run: |
           version=$(sed -n 's/^channel = "\(.*\)".*/\1/p' rust-toolchain.toml)
@@ -38,7 +50,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Rust
         run: |
@@ -49,7 +61,7 @@ jobs:
         run: python scripts/build.py
 
       - name: Upload Windows host
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: windows-x64-host
           path: platform/targets/x64win/*.lib
@@ -68,7 +80,7 @@ jobs:
       test_matrix: ${{ steps.bundles.outputs.test_matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -91,7 +103,7 @@ jobs:
           rustup default "${{ needs.rust-version.outputs.version }}"
 
       - name: Download Windows host
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: windows-x64-host
           path: platform/targets/x64win
@@ -100,12 +112,12 @@ jobs:
         id: validate
         uses: roc-lang/release-package/actions/validate-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
-          release_version: ${{ github.event_name == 'workflow_dispatch' && inputs.release_version || '' }}
-          dry_run: ${{ github.event_name != 'workflow_dispatch' }}
+          release_version: ${{ (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation) && inputs.release_version || '' }}
+          dry_run: ${{ (github.event_name != 'workflow_dispatch' || inputs.nightly_validation) }}
           github_token: ${{ github.token }}
 
       - name: Validate release branch
-        if: github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
@@ -121,7 +133,7 @@ jobs:
         run: python3 scripts/test.py --no-build
 
       - name: Resolve previous release
-        if: github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
         id: previous
         uses: roc-lang/release-package/actions/resolve-previous-release@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
@@ -131,7 +143,7 @@ jobs:
         uses: roc-lang/release-package/actions/run-bump-check@bb018c8c96b439b9545db6c792adc0549cf01ee1
         with:
           release_version: ${{ steps.validate.outputs.release_version }}
-          dry_run: ${{ github.event_name != 'workflow_dispatch' }}
+          dry_run: ${{ (github.event_name != 'workflow_dispatch' || inputs.nightly_validation) }}
           bump_check: warn
           bump_entrypoint: platform/main.roc
           previous_url: ${{ steps.previous.outputs.previous_url }}
@@ -147,7 +159,7 @@ jobs:
           test_os_json: '["macos-26","macos-26-intel","ubuntu-24.04","ubuntu-24.04-arm","windows-2025"]'
 
       - name: Upload release bundles
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-bundles
           path: .release/bundles/*
@@ -155,7 +167,7 @@ jobs:
           retention-days: 7
 
       - name: Upload release metadata
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-metadata
           path: |
@@ -178,13 +190,13 @@ jobs:
         include: ${{ fromJson(needs.build.outputs.test_matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
 
       - name: Download release bundles
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-bundles
           path: .release/test-bundles
@@ -214,7 +226,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install Roc
         uses: ./.github/actions/setup-roc
       - name: Create docs staging tree
@@ -240,7 +252,7 @@ jobs:
           DOCS_VERSION: ${{ needs.build.outputs.docs_version }}
         run: tar -czf docs.tar.gz -C docs-site "$DOCS_VERSION"
       - name: Upload docs archive
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: platform-docs
           path: docs.tar.gz
@@ -250,30 +262,30 @@ jobs:
   publish-release:
     name: Publish GitHub release
     needs: [build, build-docs, test-bundles]
-    if: github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
       - name: Download release bundles
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-bundles
           path: .release/bundles
 
       - name: Download release metadata
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-metadata
           path: .release
 
       - name: Download docs archive
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: platform-docs
 
@@ -294,7 +306,7 @@ jobs:
   publish-docs:
     name: Publish versioned docs
     needs: [build, publish-release]
-    if: github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -305,7 +317,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
@@ -322,13 +334,13 @@ jobs:
           python3 scripts/enhance_docs_site.py pages-site
 
       - name: Setup Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: pages-site
 
       - name: Deploy Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
