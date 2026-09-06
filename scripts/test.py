@@ -92,9 +92,18 @@ def load_spec() -> dict[str, Any]:
     return spec
 
 
-def create_bundle(roc: str) -> Path:
+def create_bundle(roc: str, target: str, *, allow_unpinned_roc: bool = False) -> Path:
+    version_args = ["--allow-unpinned-roc"] if allow_unpinned_roc else []
     result = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "bundle.py"), "--roc", roc],
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "bundle.py"),
+            "--roc",
+            roc,
+            "--target",
+            target,
+            *version_args,
+        ],
         cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True,
     )
     print(result.stdout, end="")
@@ -490,7 +499,9 @@ def main() -> None:
         else:
             bundle = args.bundle_path
             if bundle is None:
-                generated_bundle = bundle = create_bundle(roc)
+                generated_bundle = bundle = create_bundle(
+                    roc, target, allow_unpinned_roc=args.allow_unpinned_roc
+                )
             bundle = bundle if bundle.is_absolute() else ROOT / bundle
             if not bundle.is_file():
                 raise SystemExit(f"Bundle does not exist: {bundle}")

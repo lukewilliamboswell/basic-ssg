@@ -88,11 +88,13 @@ def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
     )
     for source in roc_sources:
         command(roc, "fmt", "--check", source, env=env)
-    for source in (
-        "platform/Html.roc",
-        "platform/PageDecoder.roc",
-        "platform/main.roc",
-    ):
+    checked_sources = [
+        ROOT / "platform" / "Html.roc",
+        ROOT / "platform" / "PageDecoder.roc",
+        ROOT / "platform" / "main.roc",
+        *sorted((ROOT / "examples").glob("*/main.roc")),
+    ]
+    for source in checked_sources:
         command(roc, "check", source, *roc_extra_args(), env=env)
 
 
@@ -144,9 +146,11 @@ def validate_examples(
         ROOT / "scripts" / "test.py",
         "--roc",
         roc,
-        "--platform-url",
-        "../../platform/main.roc",
-        "--no-build",
+        *(
+            ["--platform-url", "../../platform/main.roc", "--no-build"]
+            if valgrind
+            else []
+        ),
         *(["--allow-unpinned-roc"] if allow_unpinned_roc else []),
         *(["--valgrind"] if valgrind else []),
         env=env,

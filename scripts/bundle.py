@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 from build import ROC_TARGETS, WINDOWS_SYSTEM_LIBRARIES
-from roc_version import require_pinned_roc
+from roc_version import active_roc_version, require_pinned_roc
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,7 +45,7 @@ def relative_platform_path(path: Path) -> str:
     return path.relative_to(PLATFORM_DIR).as_posix()
 
 
-def target_files() -> list[Path]:
+def target_files(target: str | None = None) -> list[Path]:
     if set(TARGET_INPUTS) != set(ROC_TARGETS):
         raise SystemExit(
             f"Bundle/build target mismatch: bundle={tuple(TARGET_INPUTS)}, "
@@ -53,9 +53,11 @@ def target_files() -> list[Path]:
         )
     files: list[Path] = []
     missing: list[str] = []
-    for target, names in TARGET_INPUTS.items():
+    selected_targets = (target,) if target is not None else tuple(TARGET_INPUTS)
+    for selected_target in selected_targets:
+        names = TARGET_INPUTS[selected_target]
         for name in names:
-            path = PLATFORM_DIR / "targets" / target / name
+            path = PLATFORM_DIR / "targets" / selected_target / name
             if path.is_file():
                 files.append(path)
             else:
@@ -72,9 +74,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Bundle the basic-ssg platform")
     parser.add_argument("--output-dir", type=Path, default=ROOT)
     parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
+    parser.add_argument(
+        "--target",
+        choices=ROC_TARGETS,
+        help="include only one target's host inputs for local testing",
+    )
+    parser.add_argument(
+        "--allow-unpinned-roc",
+        action="store_true",
+        help="allow compatibility checks with a compiler newer than .roc-version",
+    )
     args, roc_args = parser.parse_known_args()
     roc = executable(args.roc)
-    require_pinned_roc(roc)
+    if args.allow_unpinned_roc:
+        active_roc_version(roc)
+    else:
+        require_pinned_roc(roc)
 
     output_dir = args.output_dir
     if not output_dir.is_absolute():
@@ -83,7 +98,7 @@ def main() -> None:
     output_dir = output_dir.resolve()
 
     roc_files = sorted(PLATFORM_DIR.glob("*.roc"))
-    library_files = target_files()
+    library_files = target_files(args.target)
     license_sources = [ROOT / name for name in LICENSE_NAMES]
     missing_licenses = [path.name for path in license_sources if not path.is_file()]
     if missing_licenses:

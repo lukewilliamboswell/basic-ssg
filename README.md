@@ -10,9 +10,10 @@ files, decodes application-defined page formats, renders Markdown when wanted,
 and writes generated files to an output directory. Markdown remains the
 zero-configuration default.
 
-Application authors normally use a published platform release by putting the
-release URL in the app header. The examples in this repository use a relative
-platform path only because they exercise the local checkout.
+Application authors use a published platform release by putting the release URL
+in the app header. The examples in this repository pin the latest release; local
+development scripts temporarily replace that URL with a served bundle of the
+current checkout.
 
 ## Getting Started
 
