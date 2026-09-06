@@ -49,7 +49,12 @@ Run one or more sections while iterating:
 python scripts/all_tests.py --section host --section examples
 ```
 
-The example section is driven by `scripts/test_spec.json`. Each
+The Roc source section checks the examples against their pinned release, so a
+compiler update exposes when that release is no longer compatible. The example
+section builds the native host, bundles and serves the current platform, and
+temporarily rewrites each app to use that local bundle. It restores the pinned
+release URLs before exiting, including after a failure. The section is driven by
+`scripts/test_spec.json`. Each
 `examples/<name>/` directory is a user-facing project; behavior-only fixtures
 are created in temporary directories by `scripts/test.py`. Add happy-path and
 failure cases to the spec rather than adding artificial files to an example.
@@ -57,10 +62,10 @@ The runner also requires every `examples/*/main.roc` app to appear in the spec.
 Pure platform behavior should normally be covered by documented top-level Roc
 `expect`s; the Python cases cover executable, effect, and filesystem behavior.
 
-Run the example specification directly while iterating:
+Run the local-bundle example specification directly while iterating:
 
 ```sh
-python scripts/test.py --platform-url ../../platform/main.roc --no-build
+python scripts/test.py
 ```
 
 On x86-64 Linux, run the same behavior cases under Valgrind Memcheck and fail
@@ -83,13 +88,14 @@ Build and serve the Markdown example using only Python's standard library:
 python scripts/serve_example.py
 ```
 
-Examples in this repo use a path relative to their own directory:
+Examples in this repo pin the latest published release:
 
 ```roc
-app [main!] { pf: platform "../../platform/main.roc" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
 ```
 
-Application docs should use a published release URL instead.
+`scripts/serve_example.py` builds and serves a local platform bundle and
+temporarily points the example at it, so development exercises the checkout.
 
 ## Architecture
 
@@ -165,16 +171,15 @@ Create a Roc platform bundle for upload:
 python scripts/bundle.py
 ```
 
-Bundling requires every supported target library plus `LICENSE` and
-`THIRD_PARTY_LICENSES.md`. Run `python scripts/test.py` to validate source
-behavior and the served bundle. Use `--platform-url ../../platform/main.roc`
-while iterating when a complete five-target bundle has not been assembled
-locally; the URL is resolved from each app under `examples/<name>/`.
+Release bundling requires every supported target library plus `LICENSE` and
+`THIRD_PARTY_LICENSES.md`. Run `python scripts/test.py` to build a native-only
+development bundle, serve it locally, and validate source behavior through its
+URL.
 
 The release workflow performs the same build and bundle validation on pull
 requests, including native Windows build and runtime coverage. Checked-in
-examples continue to use the local platform path so regular CI always tests the
-current checkout; user-facing examples should use a published release URL.
+examples pin the latest published release. The test runner replaces that pin
+with its served bundle so regular CI still tests the current checkout.
 
 Release validation, bundle metadata and testing, publication, versioned docs,
 and the docs follow-up pull request use the official

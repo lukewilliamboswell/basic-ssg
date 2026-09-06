@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import shutil
 import subprocess
@@ -12,6 +13,11 @@ import webbrowser
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Iterator
+
+from build import detect_native_target
+from test import create_bundle, served_bundle
+from update_app_platform_urls import update_apps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +58,23 @@ def native_binary(path: Path) -> Path:
 
 def roc_extra_args() -> tuple[str, ...]:
     return ("--no-cache",) if os.name == "nt" else ()
+
+
+@contextlib.contextmanager
+def local_platform(source: Path, roc: str) -> Iterator[None]:
+    original = source.read_bytes()
+    bundle: Path | None = None
+    try:
+        target = detect_native_target()
+        command(sys.executable, ROOT / "scripts" / "build.py", "--target", target)
+        bundle = create_bundle(roc, target)
+        with served_bundle(bundle) as platform_url:
+            update_apps([source], platform_url)
+            yield
+    finally:
+        source.write_bytes(original)
+        if bundle is not None:
+            bundle.unlink(missing_ok=True)
 
 
 def parse_args() -> argparse.Namespace:
@@ -102,41 +125,45 @@ def main() -> None:
     if public_dir.is_dir():
         shutil.copytree(public_dir, output, dirs_exist_ok=True)
 
-    if not args.skip_check:
-        command(roc, "check", source, *roc_extra_args())
-    if not args.skip_build:
-        binary.parent.mkdir(parents=True, exist_ok=True)
-        command(roc, "build", source, f"--output={binary}", *roc_extra_args())
-    if not binary.is_file():
-        raise SystemExit(f"Example binary not found: {binary}")
+    platform_context = (
+        contextlib.nullcontext() if args.skip_build else local_platform(source, roc)
+    )
+    with platform_context:
+        if not args.skip_check:
+            command(roc, "check", source, *roc_extra_args())
+        if not args.skip_build:
+            binary.parent.mkdir(parents=True, exist_ok=True)
+            command(roc, "build", source, f"--output={binary}", *roc_extra_args())
+        if not binary.is_file():
+            raise SystemExit(f"Example binary not found: {binary}")
 
-    command(binary, content, output)
-    if args.no_serve:
-        print(f"Generated site: {output}")
-        return
+        command(binary, content, output)
+        if args.no_serve:
+            print(f"Generated site: {output}")
+            return
 
-    handler = partial(QuietHandler, directory=str(output))
-    try:
-        server = ThreadingHTTPServer((args.host, args.port), handler)
-    except OSError as error:
-        raise SystemExit(
-            f"Could not listen on {args.host}:{args.port}: {error}"
-        ) from None
-    server.daemon_threads = True
-    host, port = server.server_address[:2]
-    display_host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
-    if ":" in display_host:
-        display_host = f"[{display_host}]"
-    url = f"http://{display_host}:{port}/"
-    print(f"Serving {output} at {url}")
-    if not args.no_open and not webbrowser.open(url):
-        print("Could not open a browser automatically; open the URL above.")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nStopping server.")
-    finally:
-        server.server_close()
+        handler = partial(QuietHandler, directory=str(output))
+        try:
+            server = ThreadingHTTPServer((args.host, args.port), handler)
+        except OSError as error:
+            raise SystemExit(
+                f"Could not listen on {args.host}:{args.port}: {error}"
+            ) from None
+        server.daemon_threads = True
+        host, port = server.server_address[:2]
+        display_host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
+        if ":" in display_host:
+            display_host = f"[{display_host}]"
+        url = f"http://{display_host}:{port}/"
+        print(f"Serving {output} at {url}")
+        if not args.no_open and not webbrowser.open(url):
+            print("Could not open a browser automatically; open the URL above.")
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nStopping server.")
+        finally:
+            server.server_close()
 
 
 if __name__ == "__main__":

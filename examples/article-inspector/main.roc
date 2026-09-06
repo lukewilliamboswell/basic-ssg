@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../../platform/main.roc" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
 
 import pf.IOErr exposing [IOErr]
 import pf.OsStr exposing [OsStr]
