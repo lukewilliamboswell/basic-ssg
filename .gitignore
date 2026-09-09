@@ -16,6 +16,7 @@ dist/
 # The musl toolchain inputs (crt1.o/libc.a/libunwind.a) ARE committed.
 platform/targets/*/libhost.a
 platform/targets/x64win/*.lib
+platform/COPYING.MinGW-w64-runtime.txt
 
 # examples
 examples/*/output/

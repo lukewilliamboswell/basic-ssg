@@ -17,9 +17,36 @@ concurrency:
 
 permissions: {}
 
+env:
+  ROC_CACHE_DIR: ${{ github.workspace }}/.roc-cache
+
 jobs:
-  build-and-test:
-    name: test (${{ matrix.os }})
+  published-examples:
+    name: Published examples (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-26
+          - macos-26-intel
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - windows-2025
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Roc
+        uses: ./.github/actions/setup-roc
+
+      - name: Check, test, build, and run published examples
+        run: ${{ runner.os == 'Windows' && 'python scripts/test.py --published --no-build' || 'python3 scripts/test.py --published --no-build' }}
+
+  current-source:
+    name: Current source (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -85,3 +112,18 @@ jobs:
           --section host
           --section examples
           --section docs
+
+  ci-required:
+    name: CI required
+    if: always()
+    needs: [published-examples, current-source]
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Require every CI validation lane
+        env:
+          PUBLISHED_RESULT: ${{ needs.published-examples.result }}
+          SOURCE_RESULT: ${{ needs.current-source.result }}
+        run: |
+          test "$PUBLISHED_RESULT" = success
+          test "$SOURCE_RESULT" = success

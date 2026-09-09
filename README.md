@@ -21,7 +21,7 @@ Install the [Roc CLI](https://www.roc-lang.org/install), then copy a platform
 URL from the [basic-ssg releases][releases] page into your app header.
 
 ```roc
-app [main!] { pf: platform "<basic-ssg release URL>" }
+app [main!] { roc: "<compiler version documented by the release>", pf: platform "<basic-ssg release URL>" }
 
 import pf.Path
 import pf.OsStr exposing [OsStr]

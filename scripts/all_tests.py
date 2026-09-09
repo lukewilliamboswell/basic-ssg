@@ -175,7 +175,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--allow-unpinned-roc",
         action="store_true",
-        help="allow compatibility checks with a compiler newer than .roc-version",
+        help="allow compatibility checks with a compiler different from the header pin",
     )
     parser.add_argument(
         "--section",

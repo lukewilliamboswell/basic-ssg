@@ -6,11 +6,36 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import test as test_runner
 
 
 class ValgrindTests(unittest.TestCase):
+    @patch.object(test_runner, "validate_apps")
+    @patch.object(test_runner, "update_apps")
+    @patch.object(
+        test_runner,
+        "load_spec",
+        return_value={
+            "stages": {stage: stage == "check" for stage in test_runner.STAGES},
+            "apps": [{"path": "examples/article-inspector/main.roc", "cases": []}],
+        },
+    )
+    def test_source_validation_rewrites_only_a_temporary_copy(
+        self, _spec: object, update: object, validate: object
+    ) -> None:
+        committed = test_runner.ROOT / "examples/article-inspector/main.roc"
+        before = committed.read_bytes()
+
+        test_runner.run_suite("roc", "https://example.invalid/platform.tar.zst", "x64musl", "validate", valgrind=False)
+
+        self.assertEqual(committed.read_bytes(), before)
+        temporary_source = update.call_args.args[0][0]
+        self.assertNotEqual(temporary_source, committed)
+        self.assertFalse(temporary_source.resolve().is_relative_to(test_runner.ROOT.resolve()))
+        self.assertNotEqual(validate.call_args.args[2], test_runner.ROOT)
+
     def test_command_keeps_valgrind_output_separate(self) -> None:
         with tempfile.TemporaryDirectory() as raw_directory:
             temporary = Path(raw_directory)

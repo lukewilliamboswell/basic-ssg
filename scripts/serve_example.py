@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import webbrowser
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -61,18 +62,20 @@ def roc_extra_args() -> tuple[str, ...]:
 
 
 @contextlib.contextmanager
-def local_platform(source: Path, roc: str) -> Iterator[None]:
-    original = source.read_bytes()
+def local_platform(source: Path, roc: str) -> Iterator[Path]:
     bundle: Path | None = None
     try:
         target = detect_native_target()
         command(sys.executable, ROOT / "scripts" / "build.py", "--target", target)
         bundle = create_bundle(roc, target)
         with served_bundle(bundle) as platform_url:
-            update_apps([source], platform_url)
-            yield
+            with tempfile.TemporaryDirectory(prefix="basic-ssg-preview-") as temporary:
+                copied_dir = Path(temporary) / source.parent.name
+                shutil.copytree(source.parent, copied_dir)
+                copied_source = copied_dir / source.name
+                update_apps([copied_source], platform_url)
+                yield copied_source
     finally:
-        source.write_bytes(original)
         if bundle is not None:
             bundle.unlink(missing_ok=True)
 
@@ -125,15 +128,15 @@ def main() -> None:
     if public_dir.is_dir():
         shutil.copytree(public_dir, output, dirs_exist_ok=True)
 
-    platform_context = (
-        contextlib.nullcontext() if args.skip_build else local_platform(source, roc)
+    platform_context: contextlib.AbstractContextManager[Path] = (
+        contextlib.nullcontext(source) if args.skip_build else local_platform(source, roc)
     )
-    with platform_context:
+    with platform_context as build_source:
         if not args.skip_check:
-            command(roc, "check", source, *roc_extra_args())
+            command(roc, "check", build_source, *roc_extra_args())
         if not args.skip_build:
             binary.parent.mkdir(parents=True, exist_ok=True)
-            command(roc, "build", source, f"--output={binary}", *roc_extra_args())
+            command(roc, "build", build_source, f"--output={binary}", *roc_extra_args())
         if not binary.is_file():
             raise SystemExit(f"Example binary not found: {binary}")
 

@@ -3,7 +3,7 @@ description: Install the exact new-compiler nightly selected by this repository
 
 inputs:
   use-latest:
-    description: Install the latest nightly instead of the version in .roc-version
+    description: Install the latest nightly instead of the agreed Roc header pin
     required: false
     default: "false"
 
@@ -29,17 +29,8 @@ runs:
             echo "Installing the latest Roc nightly"
             ;;
           false)
-            version_file="$GITHUB_WORKSPACE/.roc-version"
-            if [[ ! -f "$version_file" ]]; then
-              echo "Missing Roc version file: $version_file" >&2
-              exit 1
-            fi
-            nightly_tag="$(sed 's/\r$//' "$version_file")"
-            if [[ ! "$nightly_tag" =~ ^nightly-[0-9]{4}-([0-9]{2}|[A-Za-z]+)-[0-9]{2}-[0-9a-f]{7}$ ]]; then
-              echo "Invalid Roc nightly tag in $version_file: $nightly_tag" >&2
-              exit 1
-            fi
-            echo "Installing Roc $nightly_tag from .roc-version"
+            nightly_tag="$(python "$GITHUB_WORKSPACE/scripts/roc_version.py" --print-tag)"
+            echo "Installing Roc $nightly_tag from the selected Roc headers"
             ;;
           *)
             echo "use-latest must be true or false, got: $USE_LATEST" >&2
