@@ -147,7 +147,11 @@ def validate_examples(
         "--roc",
         roc,
         *(
-            ["--platform-url", "../../platform/main.roc", "--no-build"]
+            [
+                "--platform-url",
+                str((ROOT / "platform" / "main.roc").resolve()),
+                "--no-build",
+            ]
             if valgrind
             else []
         ),
