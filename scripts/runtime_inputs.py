@@ -30,6 +30,7 @@ MUSL_TARGETS = {
     "arm64musl": "aarch64-linux-musl",
 }
 MUSL_FILES = ("crt1.o", "libc.a", "libunwind.a")
+ZIG_MUSL_ARCHIVES = ("libc.a", "libzigc.a", "libcompiler_rt.a")
 WINDOWS_FILES = (
     "advapi32.lib", "bcrypt.lib", "crypt32.lib", "dbghelp.lib",
     "iphlpapi.lib", "kernel32.lib", "ncrypt.lib", "ntdll.lib", "ole32.lib",
@@ -58,39 +59,49 @@ def require_zig() -> None:
         raise SystemExit(f"Zig {ZIG_VERSION} is required; found {version}")
 
 
-def canonicalize_archive(path: Path) -> None:
-    """Rebuild an ar archive with deterministic, path-independent member names."""
-    data = path.read_bytes()
-    if not data.startswith(b"!<arch>\n"):
-        raise SystemExit(f"Unsupported archive format: {path}")
-    offset = 8
-    long_names = b""
+def canonicalize_archives(
+    sources: tuple[Path, ...],
+    destination: Path,
+    *,
+    replacements: tuple[tuple[bytes, bytes], ...] = (),
+) -> None:
+    """Combine ar archives with deterministic, path-independent member names."""
     members: list[tuple[str, bytes]] = []
-    while offset < len(data):
-        header = data[offset : offset + 60]
-        if len(header) != 60 or header[58:60] != b"`\n":
-            raise SystemExit(f"Malformed archive member in {path}")
-        raw_name = header[:16].decode("ascii").strip()
-        try:
-            size = int(header[48:58].decode("ascii").strip())
-        except ValueError as error:
-            raise SystemExit(f"Malformed archive size in {path}") from error
-        content = data[offset + 60 : offset + 60 + size]
-        offset += 60 + size + (size % 2)
-        if raw_name == "//":
-            long_names = content
-            continue
-        if raw_name in {"/", "/SYM64/"}:
-            continue
-        if raw_name.startswith("/") and raw_name[1:].isdigit():
-            start = int(raw_name[1:])
-            end = long_names.find(b"/\n", start)
-            if end < 0:
-                raise SystemExit(f"Malformed long archive name in {path}")
-            name = long_names[start:end].decode("utf-8")
-        else:
-            name = raw_name.removesuffix("/")
-        members.append((name, content))
+    for source in sources:
+        data = source.read_bytes()
+        if not data.startswith(b"!<arch>\n"):
+            raise SystemExit(f"Unsupported archive format: {source}")
+        offset = 8
+        long_names = b""
+        while offset < len(data):
+            header = data[offset : offset + 60]
+            if len(header) != 60 or header[58:60] != b"`\n":
+                raise SystemExit(f"Malformed archive member in {source}")
+            raw_name = header[:16].decode("ascii").strip()
+            try:
+                size = int(header[48:58].decode("ascii").strip())
+            except ValueError as error:
+                raise SystemExit(f"Malformed archive size in {source}") from error
+            content = data[offset + 60 : offset + 60 + size]
+            offset += 60 + size + (size % 2)
+            if raw_name == "//":
+                long_names = content
+                continue
+            if raw_name in {"/", "/SYM64/"}:
+                continue
+            if raw_name.startswith("/") and raw_name[1:].isdigit():
+                start = int(raw_name[1:])
+                end = long_names.find(b"/\n", start)
+                if end < 0:
+                    raise SystemExit(f"Malformed long archive name in {source}")
+                name = long_names[start:end].decode("utf-8")
+            else:
+                name = raw_name.removesuffix("/")
+            for old, new in replacements:
+                if len(old) != len(new):
+                    raise SystemExit("Archive path replacements must preserve byte length")
+                content = content.replace(old, new)
+            members.append((name, content))
     with tempfile.TemporaryDirectory(prefix="basic-ssg-ar-") as raw_directory:
         directory = Path(raw_directory)
         canonical_members = []
@@ -98,15 +109,30 @@ def canonicalize_archive(path: Path) -> None:
             member_path = directory / f"{index:05d}-{Path(name).name}"
             member_path.write_bytes(content)
             canonical_members.append(member_path)
-        rebuilt = directory / path.name
+        rebuilt = directory / destination.name
         subprocess.run(
             ["zig", "ar", "rcsD", str(rebuilt), *(str(member) for member in canonical_members)],
             check=True,
         )
-        shutil.copyfile(rebuilt, path)
+        shutil.copyfile(rebuilt, destination)
 
 
-def locate_artifacts(trace: str, wanted: tuple[str, ...]) -> dict[str, Path]:
+def copy_canonical_object(
+    source: Path,
+    destination: Path,
+    replacements: tuple[tuple[bytes, bytes], ...],
+) -> None:
+    content = source.read_bytes()
+    for old, new in replacements:
+        if len(old) != len(new):
+            raise SystemExit("Object path replacements must preserve byte length")
+        content = content.replace(old, new)
+    destination.write_bytes(content)
+
+
+def locate_artifacts(
+    trace: str, wanted: tuple[str, ...], *, relative_to: Path
+) -> dict[str, Path]:
     found: dict[str, Path] = {}
     for line in trace.splitlines():
         try:
@@ -115,6 +141,8 @@ def locate_artifacts(trace: str, wanted: tuple[str, ...]) -> dict[str, Path]:
             continue
         for token in tokens:
             candidate = Path(token.strip('"'))
+            if not candidate.is_absolute():
+                candidate = relative_to / candidate
             for name in wanted:
                 if candidate.name.lower() == name.lower() and candidate.is_file():
                     found[name] = candidate
@@ -132,22 +160,22 @@ def zig_link(
         encoding="utf-8",
     )
     env = os.environ.copy()
-    env["ZIG_GLOBAL_CACHE_DIR"] = str(target_work / "global-cache")
-    env["ZIG_LOCAL_CACHE_DIR"] = str(target_work / "local-cache")
+    env["ZIG_GLOBAL_CACHE_DIR"] = "global-cache"
+    env["ZIG_LOCAL_CACHE_DIR"] = "local-cache"
     libraries = [f"-l{Path(name).stem}" for name in wanted] if windows else []
     command = [
         "zig", "c++", "-target", target, "-O2", "-g0", "-fno-sanitize=all",
-        "-static", "-v", str(source), *libraries, "-o", str(target_work / "probe.exe"),
+        "-static", "-v", source.name, *libraries, "-o", "probe.exe",
     ]
     result = subprocess.run(
-        command, env=env, text=True, stdout=subprocess.DEVNULL,
+        command, cwd=target_work, env=env, text=True, stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE, check=False,
     )
     trace = target_work / "zig-link.trace"
     trace.write_text(result.stderr, encoding="utf-8")
     if result.returncode != 0:
         raise SystemExit(f"Zig link failed for {target}; inspect {trace}")
-    found = locate_artifacts(result.stderr, wanted)
+    found = locate_artifacts(result.stderr, wanted, relative_to=target_work)
     missing = sorted(set(wanted) - set(found))
     if missing:
         raise SystemExit(f"Zig did not expose {', '.join(missing)} for {target}; inspect {trace}")
@@ -157,16 +185,30 @@ def zig_link(
 def build(output: Path) -> None:
     require_zig()
     output.mkdir(parents=True, exist_ok=False)
-    with tempfile.TemporaryDirectory(prefix="basic-ssg-runtime-build-") as raw_work:
+    with tempfile.TemporaryDirectory(
+        prefix="basic-ssg-runtime-build-", dir="/tmp"
+    ) as raw_work:
         work = Path(raw_work)
+        canonical_work = Path("/tmp/basic-ssg-runtime-build-00000000")
+        path_replacements = ((os.fsencode(work), os.fsencode(canonical_work)),)
         for roc_target, zig_target in MUSL_TARGETS.items():
-            found = zig_link(zig_target, work, MUSL_FILES)
+            wanted = (*MUSL_FILES, *ZIG_MUSL_ARCHIVES[1:])
+            found = zig_link(zig_target, work, wanted)
             destination = output / "targets" / roc_target
             destination.mkdir(parents=True)
-            for name in MUSL_FILES:
-                shutil.copyfile(found[name], destination / name)
-                if name.endswith(".a"):
-                    canonicalize_archive(destination / name)
+            copy_canonical_object(
+                found["crt1.o"], destination / "crt1.o", path_replacements
+            )
+            canonicalize_archives(
+                tuple(found[name] for name in ZIG_MUSL_ARCHIVES),
+                destination / "libc.a",
+                replacements=path_replacements,
+            )
+            canonicalize_archives(
+                (found["libunwind.a"],),
+                destination / "libunwind.a",
+                replacements=path_replacements,
+            )
         found = zig_link("x86_64-windows-gnu", work, WINDOWS_FILES, windows=True)
         destination = output / "targets" / "x64win"
         destination.mkdir(parents=True)
