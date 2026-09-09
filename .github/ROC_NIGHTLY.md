@@ -1,29 +1,34 @@
 # Roc nightly updates
 
-This repository checks once daily at 13:25 UTC, about four hours
-after the upstream 09:00 UTC build. Late publication can wait until the next day.
+This repository checks once daily at 13:25 UTC, about four hours after the
+upstream build. Exact compiler authority lives in the `roc` fields of the roots
+listed by `.github/roc-nightly.json`; there is no `.roc-version`.
 
-`.roc-version` is the compiler pin. `.github/roc-nightly.json` selects this
-repository's validation workflows, including their validation-only release paths.
-The controller, its tests, and job permissions are maintained in
-[roc-automation](https://github.com/lukewilliamboswell/roc-automation).
-The caller workflows pin shared code to `c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2`.
-Dependabot proposes reviewed updates to Actions/workflow references.
+The caller and configuration workflows pin `roc-automation` to
+`5c1f09b7190118f43eb901eaed0110cd53029199`. Candidate validation dispatches
+`tests.yaml` and `release.yml` with `nightly_validation: true`. These paths test
+published examples, current source, and release bundles without publishing or
+deploying anything.
 
-Follow the shared [integration and permissions guide](https://github.com/lukewilliamboswell/roc-automation/blob/c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2/docs/integration.md)
-for the PR-creation setting, action allowlists, required checks, and first live
-GITHUB_TOKEN run. Keep default token permissions read-only. The updater never
-approves or merges PRs and receives no protection bypass.
+Automatic merging is enabled with `auto_merge: true`. The active `main` ruleset:
 
-`automation/roc-nightly` is reserved for the bot's pin-only commits. Put manual
-compatibility changes on a separate branch. Candidate failures require diagnosis;
-do not weaken tests or mechanically replace baselines to accept a compiler.
+- requires pull requests;
+- requires the `CI required` and `Bundle required` GitHub Actions contexts;
+- uses strict, up-to-date required checks;
+- requires zero approvals and gives the Actions bot no bypass; and
+- blocks force pushes and branch deletion and retains signature protection.
 
-The PR configuration check validates the local pin and selected workflow files.
-The shared repository owns the controller regression suite. Project tests remain
-in this repository and run on the exact candidate commit. Scheduled bot-token
-acceptance must be verified after merge; file changes alone cannot prove it.
+The controller immediately squash-merges only a verified, single-commit,
+pin-literal-only bot PR after both dispatched workflows pass. It never approves
+itself, queues a later
+merge, merges source changes, or needs the repository-wide GitHub auto-merge
+setting. Disable the caller workflow for an emergency stop.
 
-Use the shared [OpenSSF rollout checklist](https://github.com/lukewilliamboswell/roc-automation/blob/c6711b0f46ee57beda8e1db4f3eafcbcd9cddae2/docs/openssf.md)
-to record project-specific evidence. This integration does not establish badge
-compliance or change repository settings.
+Before relying on unattended updates, inspect the effective rules with
+`gh api repos/lukewilliamboswell/basic-ssg/rules/branches/main`, manually dispatch
+one successful update, confirm the signed candidate and exact run SHAs, exercise
+a no-op, and retain evidence that a failed candidate stays open. The reserved
+branch `automation/roc-nightly` must contain no human work.
+
+Follow the shared [package maintainer guide](https://github.com/lukewilliamboswell/roc-automation/blob/5c1f09b7190118f43eb901eaed0110cd53029199/docs/package-maintainer-guide.md)
+and [integration guide](https://github.com/lukewilliamboswell/roc-automation/blob/5c1f09b7190118f43eb901eaed0110cd53029199/docs/integration.md).

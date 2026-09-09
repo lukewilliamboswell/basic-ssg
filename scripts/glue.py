@@ -43,7 +43,7 @@ def find_executable(command: str) -> str:
 
 
 def find_glue_spec() -> str:
-    """Return an explicit spec or the immutable spec matching .roc-version."""
+    """Return an explicit spec or the immutable spec matching the header pin."""
     for key in ("ROC_GLUE_SPEC", "ROC_RUST_GLUE"):
         if value := os.environ.get(key):
             return value

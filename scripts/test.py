@@ -153,21 +153,27 @@ def served_bundle(path: Path) -> Iterator[str]:
         yield url
 
 
-def validate_apps(roc: str, spec: dict[str, Any]) -> None:
+def validate_apps(roc: str, spec: dict[str, Any], source_root: Path = ROOT) -> None:
     for stage in ("fmt", "check", "test"):
         if not spec["stages"][stage]:
             continue
         print(f"\n=== Example {stage} ===")
         for app in spec["apps"]:
             args = ("--check",) if stage == "fmt" else roc_extra_args()
-            command(roc, stage, ROOT / app["path"], *args)
+            command(roc, stage, source_root / app["path"], *args)
 
 
-def build_apps(roc: str, target: str, output: Path, spec: dict[str, Any]) -> dict[str, Path]:
+def build_apps(
+    roc: str,
+    target: str,
+    output: Path,
+    spec: dict[str, Any],
+    source_root: Path = ROOT,
+) -> dict[str, Path]:
     print(f"\n=== Building examples for {target} ===")
     binaries: dict[str, Path] = {}
     for app in spec["apps"]:
-        source = ROOT / app["path"]
+        source = source_root / app["path"]
         suffix = ".exe" if target == "x64win" else ""
         binary = output / f"{source.parent.name}{suffix}"
         command(roc, "build", source, f"--target={target}", f"--output={binary}", *roc_extra_args())
@@ -188,7 +194,7 @@ def compiler_runtime_input(name: str) -> Path:
 
 
 def build_valgrind_apps(
-    roc: str, output: Path, spec: dict[str, Any]
+    roc: str, output: Path, spec: dict[str, Any], source_root: Path = ROOT
 ) -> dict[str, Path]:
     print("\n=== Building examples for Valgrind (x64glibc) ===")
     command("cargo", "build", "--locked", "--lib", "--profile", "memcheck")
@@ -234,7 +240,7 @@ def build_valgrind_apps(
 
     binaries: dict[str, Path] = {}
     for app in spec["apps"]:
-        source = ROOT / app["path"]
+        source = source_root / app["path"]
         copied_source = app_dir / source.parent.name / source.name
         copied_source.parent.mkdir()
         app_source = source.read_text(encoding="utf-8")
@@ -415,30 +421,29 @@ def run_cases(
 
 def run_suite(
     roc: str,
-    platform_url: str,
+    platform_url: str | None,
     target: str,
     operation: str,
     *,
     valgrind: bool,
 ) -> None:
     spec = load_spec()
-    sources = [ROOT / app["path"] for app in spec["apps"]]
-    backups = {path: path.read_bytes() for path in sources}
-    try:
-        update_apps(sources, platform_url)
-        validate_apps(roc, spec)
+    with tempfile.TemporaryDirectory(prefix="basic-ssg-examples-") as temporary:
+        source_root = Path(temporary)
+        shutil.copytree(EXAMPLES_DIR, source_root / "examples")
+        sources = [source_root / app["path"] for app in spec["apps"]]
+        if platform_url is not None:
+            update_apps(sources, platform_url)
+        validate_apps(roc, spec, source_root)
         if operation == "all" and spec["stages"]["build"]:
-            with tempfile.TemporaryDirectory(prefix="basic-ssg-binaries-") as temporary:
+            with tempfile.TemporaryDirectory(prefix="basic-ssg-binaries-") as binary_temp:
                 binaries = (
-                    build_valgrind_apps(roc, Path(temporary), spec)
+                    build_valgrind_apps(roc, Path(binary_temp), spec, source_root)
                     if valgrind
-                    else build_apps(roc, target, Path(temporary), spec)
+                    else build_apps(roc, target, Path(binary_temp), spec, source_root)
                 )
                 if spec["stages"]["run"]:
                     run_cases(binaries, spec, valgrind=valgrind)
-    finally:
-        for path, contents in backups.items():
-            path.write_bytes(contents)
 
 
 def main() -> None:
@@ -448,11 +453,16 @@ def main() -> None:
     parser.add_argument("--bundle-path", type=Path)
     parser.add_argument("--bundle-url", default=os.environ.get("BUNDLE_URL"))
     parser.add_argument("--platform-url", help="use platform source directly instead of a bundle")
+    parser.add_argument(
+        "--published",
+        action="store_true",
+        help="test committed example compiler and release URLs without rewriting them",
+    )
     parser.add_argument("--no-build", action="store_true", help="do not rebuild the platform host")
     parser.add_argument(
         "--allow-unpinned-roc",
         action="store_true",
-        help="allow the scheduled compatibility lane to test a newer Roc nightly",
+        help="allow compatibility checks with a compiler different from the header pin",
     )
     parser.add_argument("--operation", choices=("all", "validate"), default="all")
     parser.add_argument("--target", choices=declared_targets())
@@ -462,8 +472,8 @@ def main() -> None:
         help="run native x64 Linux example cases under Valgrind Memcheck",
     )
     args = parser.parse_args()
-    if sum(value is not None for value in (args.bundle_path, args.bundle_url, args.platform_url)) > 1:
-        parser.error("--bundle-path, --bundle-url, and --platform-url are mutually exclusive")
+    if sum((args.bundle_path is not None, args.bundle_url is not None, args.platform_url is not None, args.published)) > 1:
+        parser.error("--bundle-path, --bundle-url, --platform-url, and --published are mutually exclusive")
     roc = executable(args.roc)
     target = args.target or detect_native_target()
     if args.valgrind and args.operation != "all":
@@ -484,11 +494,13 @@ def main() -> None:
         raise SystemExit(f"Cannot run {target} artifacts on native target {detect_native_target()}")
     version = active_roc_version(roc) if args.allow_unpinned_roc else require_pinned_roc(roc)
     print(f"Using roc version: {version}")
-    if not args.no_build and not any((args.bundle_path, args.bundle_url, args.platform_url)):
+    if not args.no_build and not any((args.bundle_path, args.bundle_url, args.platform_url, args.published)):
         command(sys.executable, ROOT / "scripts" / "build.py", "--target", target)
     generated_bundle: Path | None = None
     try:
-        if args.platform_url:
+        if args.published:
+            run_suite(roc, None, target, args.operation, valgrind=args.valgrind)
+        elif args.platform_url:
             run_suite(
                 roc, args.platform_url, target, args.operation, valgrind=args.valgrind
             )

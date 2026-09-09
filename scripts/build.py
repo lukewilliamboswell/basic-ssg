@@ -35,10 +35,25 @@ WINDOWS_SYSTEM_LIBRARIES = (
     "userenv.lib",
     "ws2_32.lib",
 )
+RUNTIME_INPUT_CONFIG = ROOT / ".github" / "runtime-inputs.json"
 
 
 def run(*args: str, env: dict[str, str] | None = None) -> None:
     subprocess.run(args, cwd=ROOT, env=env, check=True)
+
+
+def hydrate_runtime_inputs() -> bool:
+    if not RUNTIME_INPUT_CONFIG.is_file():
+        return False
+    arguments = [
+        os.environ.get("PYTHON", "python" if os.name == "nt" else "python3"),
+        str(ROOT / "scripts" / "runtime_inputs.py"),
+        "hydrate", "--config", str(RUNTIME_INPUT_CONFIG),
+    ]
+    if os.environ.get("CI") == "true":
+        arguments.append("--verify-attestation")
+    run(*arguments)
+    return True
 
 
 def rust_host_target() -> str:
@@ -212,14 +227,18 @@ def build_windows() -> None:
     )
     print(f"  -> {host_destination.relative_to(ROOT)}")
 
-    sdk_lib_dir = find_windows_sdk_lib_dir()
-    for name in WINDOWS_SYSTEM_LIBRARIES:
-        source = sdk_lib_dir / name
-        if not source.is_file():
-            raise SystemExit(f"Could not find required Windows SDK library: {source}")
-        destination = output_dir / name
-        shutil.copy2(source, destination)
-        print(f"  -> {destination.relative_to(ROOT)}")
+    runtime_ready = os.environ.get("RUNTIME_INPUTS_READY") == "true"
+    if not runtime_ready and not hydrate_runtime_inputs():
+        # Transitional fallback until the first independently attested runtime
+        # package is published and .github/runtime-inputs.json is committed.
+        sdk_lib_dir = find_windows_sdk_lib_dir()
+        for name in WINDOWS_SYSTEM_LIBRARIES:
+            source = sdk_lib_dir / name
+            if not source.is_file():
+                raise SystemExit(f"Could not find required Windows SDK library: {source}")
+            destination = output_dir / name
+            shutil.copy2(source, destination)
+            print(f"  -> {destination.relative_to(ROOT)}")
 
 
 def main() -> None:
@@ -235,6 +254,9 @@ def main() -> None:
         help="build host inputs for one Roc platform target",
     )
     args = parser.parse_args()
+
+    if platform.system() != "Windows":
+        hydrate_runtime_inputs()
 
     if args.all and args.target:
         parser.error("--all and --target are mutually exclusive")

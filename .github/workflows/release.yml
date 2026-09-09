@@ -16,6 +16,9 @@ on:
 
 permissions: {}
 
+env:
+  ROC_CACHE_DIR: ${{ github.workspace }}/.roc-cache
+
 concurrency:
   group: ${{ (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation) && format('release-{0}', github.repository) || format('release-validate-{0}-{1}', github.repository, github.ref) }}
   cancel-in-progress: ${{ (github.event_name != 'workflow_dispatch' || inputs.nightly_validation) }}
@@ -86,6 +89,15 @@ jobs:
 
       - name: Require immutable release dependencies
         run: python3 scripts/check_release_ready.py
+
+      - name: Enforce exact-nightly bootstrap release policy
+        if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
+        uses: lukewilliamboswell/roc-automation/actions/check-release@5c1f09b7190118f43eb901eaed0110cd53029199
+        with:
+          version: ${{ inputs.release_version }}
+          allow-default-branch: "true"
+          allow-nightly-bootstrap: "true"
+          compiler-root: platform/main.roc
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
@@ -259,9 +271,26 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  bundle-required:
+    name: Bundle required
+    if: always()
+    needs: [build, test-bundles, build-docs]
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Require release-candidate bundle validation
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          BUNDLES_RESULT: ${{ needs.test-bundles.result }}
+          DOCS_RESULT: ${{ needs.build-docs.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$BUNDLES_RESULT" = success
+          test "$DOCS_RESULT" = success
+
   publish-release:
     name: Publish GitHub release
-    needs: [build, build-docs, test-bundles]
+    needs: [build, build-docs, test-bundles, bundle-required]
     if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
     runs-on: ubuntu-24.04
     permissions:
@@ -304,12 +333,15 @@ jobs:
           github_token: ${{ github.token }}
 
   publish-docs:
-    name: Publish versioned docs
+    name: Publish docs and prepare release follow-up
     needs: [build, publish-release]
     if: (github.event_name == 'workflow_dispatch' && !inputs.nightly_validation)
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
+      actions: write
+      statuses: write
       pages: write
       id-token: write
     environment:
@@ -321,6 +353,31 @@ jobs:
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
+
+      - name: Download release metadata
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: release-metadata
+          path: .release
+
+      - name: Update public examples to the published bundle
+        env:
+          RELEASE_VERSION: ${{ needs.build.outputs.release_version }}
+        run: >-
+          python3 scripts/update_app_platform_urls.py
+          --release-manifest .release/release-bundles.json
+          examples/article-inspector/main.roc
+          examples/orchard-guide/main.roc
+          examples/travel-journal/main.roc
+
+      - name: Validate updated public examples
+        run: python3 scripts/test.py --published --no-build --operation validate
+
+      - name: Open and validate signed release follow-up PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 scripts/create_release_followup.py --version "${{ needs.build.outputs.release_version }}"
 
       - name: Assemble Pages site
         env:

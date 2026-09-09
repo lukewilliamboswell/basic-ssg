@@ -1,0 +1,191 @@
+name: Runtime inputs
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/runtime-inputs.yml
+      - scripts/runtime_inputs.py
+      - scripts/test_runtime_inputs.py
+      - THIRD_PARTY_LICENSES.md
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Independent runtime-input version, for example 1.0.0"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: runtime-inputs-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Reproducible runtime inputs
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Require the trusted default branch and a new semantic version
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version || '1.0.0' }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            test "$GITHUB_REF_TYPE" = branch
+            test "$GITHUB_REF_NAME" = "$DEFAULT_BRANCH"
+            ! gh release view "runtime-inputs-v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1
+            refs="$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/runtime-inputs-v$VERSION")"
+            test "$(jq --arg ref "refs/tags/runtime-inputs-v$VERSION" '[.[] | select(.ref == $ref)] | length' <<< "$refs")" -eq 0
+          fi
+
+      - name: Checkout the exact producer commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install pinned Zig
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+
+      - name: Build twice from isolated toolchain caches
+        run: |
+          python3 scripts/runtime_inputs.py build --output "$RUNNER_TEMP/runtime-one"
+          python3 scripts/runtime_inputs.py build --output "$RUNNER_TEMP/runtime-two"
+          python3 scripts/runtime_inputs.py compare "$RUNNER_TEMP/runtime-one" "$RUNNER_TEMP/runtime-two"
+
+      - name: Package and verify deterministic release bytes
+        env:
+          VERSION: ${{ inputs.version || '1.0.0' }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release"
+          archive="$RUNNER_TEMP/release/basic-ssg-runtime-inputs-v$VERSION.zip"
+          python3 scripts/runtime_inputs.py package --input "$RUNNER_TEMP/runtime-one" --output "$archive" --version "$VERSION"
+          python3 scripts/runtime_inputs.py verify "$archive"
+
+      - name: Upload tested runtime inputs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: runtime-inputs-release
+          path: ${{ runner.temp }}/release/*
+          if-no-files-found: error
+          retention-days: 7
+
+  test:
+    name: Test runtime inputs (${{ matrix.target }})
+    needs: build
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x64musl
+            python: python3
+          - os: ubuntu-24.04-arm
+            target: arm64musl
+            python: python3
+          - os: windows-2025
+            target: x64win
+            python: python
+    steps:
+      - name: Checkout the exact producer commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install pinned Roc
+        uses: ./.github/actions/setup-roc
+
+      - name: Install pinned Zig
+        if: runner.os != 'Windows'
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.16.0
+
+      - name: Download tested runtime inputs
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: runtime-inputs-release
+          path: ${{ runner.temp }}/runtime
+
+      - name: Verify and install candidate runtime inputs
+        env:
+          VERSION: ${{ inputs.version || '1.0.0' }}
+        run: >-
+          ${{ matrix.python }} scripts/runtime_inputs.py extract
+          "${{ runner.temp }}/runtime/basic-ssg-runtime-inputs-v${{ inputs.version || '1.0.0' }}.zip"
+          --destination platform
+
+      - name: Build a fresh host around the candidate runtime
+        env:
+          RUNTIME_INPUTS_READY: "true"
+        run: ${{ matrix.python }} scripts/build.py --target ${{ matrix.target }}
+
+      - name: Bundle and test candidate runtime (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          python3 scripts/bundle.py --target ${{ matrix.target }} --output-dir "$RUNNER_TEMP/bundle"
+          python3 scripts/test.py --bundle-path "$RUNNER_TEMP"/bundle/*.tar.zst --no-build
+
+      - name: Bundle and test candidate runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python scripts/bundle.py --target x64win --output-dir "$env:RUNNER_TEMP/bundle"
+          $bundle = (Get-ChildItem "$env:RUNNER_TEMP/bundle/*.tar.zst").FullName
+          if ($bundle.Count -ne 1) { throw "Expected exactly one bundle" }
+          python scripts/test.py --bundle-path $bundle --no-build
+
+  publish:
+    name: Attest and publish runtime inputs
+    needs: [build, test]
+    if: github.event_name == 'workflow_dispatch' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Download exactly the tested bytes
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: runtime-inputs-release
+          path: ${{ runner.temp }}/release
+
+      - name: Attest signed build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ runner.temp }}/release/*.zip
+
+      - name: Attest the SPDX SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ runner.temp }}/release/*.zip
+          sbom-path: ${{ runner.temp }}/release/basic-ssg-runtime-inputs-v${{ inputs.version }}.spdx.json
+
+      - name: Publish immutable runtime-input release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "runtime-inputs-v$VERSION" "$RUNNER_TEMP"/release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --latest=false \
+            --title "Runtime inputs v$VERSION" \
+            --notes "Reproducible musl runtime objects and generated MinGW import stubs. Verify with: gh attestation verify basic-ssg-runtime-inputs-v$VERSION.zip --repo $GITHUB_REPOSITORY"

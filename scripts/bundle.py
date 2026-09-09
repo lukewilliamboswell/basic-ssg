@@ -23,6 +23,7 @@ TARGET_INPUTS = {
     "x64win": ("host.lib", *WINDOWS_SYSTEM_LIBRARIES),
 }
 LICENSE_NAMES = ("LICENSE", "THIRD_PARTY_LICENSES.md")
+RUNTIME_NOTICE = PLATFORM_DIR / "COPYING.MinGW-w64-runtime.txt"
 
 
 def executable(command: str) -> str:
@@ -82,7 +83,7 @@ def main() -> None:
     parser.add_argument(
         "--allow-unpinned-roc",
         action="store_true",
-        help="allow compatibility checks with a compiler newer than .roc-version",
+        help="allow compatibility checks with a compiler different from the header pin",
     )
     args, roc_args = parser.parse_known_args()
     roc = executable(args.roc)
@@ -104,7 +105,8 @@ def main() -> None:
     if missing_licenses:
         raise SystemExit(f"Missing required license files: {missing_licenses}")
 
-    source_files = [*roc_files, *library_files, *license_sources]
+    runtime_notices = [RUNTIME_NOTICE] if RUNTIME_NOTICE.is_file() else []
+    source_files = [*roc_files, *library_files, *license_sources, *runtime_notices]
     unpacked_size = sum(path.stat().st_size for path in source_files)
     if unpacked_size > MAX_PLATFORM_BYTES:
         raise SystemExit(
@@ -116,10 +118,11 @@ def main() -> None:
         *(relative_platform_path(path) for path in roc_files),
         *(relative_platform_path(path) for path in library_files),
         *(path.name for path in license_sources),
+        *(relative_platform_path(path) for path in runtime_notices),
     ]
     print(
         f"Bundling {len(roc_files)} Roc files, {len(library_files)} target inputs, "
-        f"and {len(license_sources)} license files."
+        f"and {len(license_sources) + len(runtime_notices)} license files."
     )
     print(f"Unpacked platform inputs: {unpacked_size} bytes\n")
     print("Files to bundle:")

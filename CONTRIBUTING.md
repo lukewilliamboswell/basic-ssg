@@ -6,7 +6,7 @@ release-bundling scripts, and examples.
 ## Prerequisites
 
 - The exact new Zig-based [Roc compiler](https://www.roc-lang.org/install)
-  nightly named in [`.roc-version`](.roc-version)
+  nightly declared by the `roc` fields in the selected Roc root headers
 - [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
 - Python 3.10 or newer for the build, bundle, and release validation scripts
 - Zig for reproducible cross-compilation of the Linux musl targets
@@ -17,10 +17,10 @@ release-bundling scripts, and examples.
 Commands below use `python` as the Python 3.10+ launcher. If that command is not
 available, substitute `python3` on macOS or Linux, or `py -3.10` on Windows.
 
-Pinned CI and release jobs install `.roc-version` through the validating local
-setup action in `.github/actions/setup-roc`. A separate daily workflow exercises
-Roc sources, examples, and docs with the latest nightly so compiler changes are
-visible before the release pin moves.
+Pinned CI and release jobs resolve the agreeing header pins through the validating
+local setup action in `.github/actions/setup-roc`. The daily updater proposes a
+pin-only commit and exercises both published examples and current source before
+the selected pins move together.
 
 ## Local Development
 
@@ -36,7 +36,7 @@ Run the full local validation script:
 python scripts/all_tests.py
 ```
 
-The script verifies that `roc` matches `.roc-version`, format-checks the Roc and
+The script verifies that `roc` matches the selected header pins, format-checks the Roc and
 Rust sources, checks and tests the supported entry points and Rust host, runs
 Clippy with warnings denied, builds the host and examples, runs all examples,
 checks generated Rust glue, and builds platform docs. A missing or mismatched
@@ -52,8 +52,8 @@ python scripts/all_tests.py --section host --section examples
 The Roc source section checks the examples against their pinned release, so a
 compiler update exposes when that release is no longer compatible. The example
 section builds the native host, bundles and serves the current platform, and
-temporarily rewrites each app to use that local bundle. It restores the pinned
-release URLs before exiting, including after a failure. The section is driven by
+rewrites temporary copies of each app to use that local bundle. Committed examples
+are never modified. The section is driven by
 `scripts/test_spec.json`. Each
 `examples/<name>/` directory is a user-facing project; behavior-only fixtures
 are created in temporary directories by `scripts/test.py`. Add happy-path and
@@ -91,11 +91,12 @@ python scripts/serve_example.py
 Examples in this repo pin the latest published release:
 
 ```roc
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
+app [main!] { roc: "nightly-2026-09-01-db83307", pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
 ```
 
-`scripts/serve_example.py` builds and serves a local platform bundle and
-temporarily points the example at it, so development exercises the checkout.
+`scripts/serve_example.py` builds and serves a local platform bundle and points
+a temporary example copy at it, so development exercises the checkout without
+editing the committed application.
 
 ## Architecture
 
@@ -139,7 +140,7 @@ python scripts/glue.py --check
 ```
 
 By default, the glue script uses the immutable `RustGlue.roc` from the Roc
-commit named in `.roc-version`. `ROC_RUST_GLUE` and `ROC_GLUE_SPEC` can override
+commit named by the platform header's compiler pin. `ROC_RUST_GLUE` and `ROC_GLUE_SPEC` can override
 that URL with a local path, bundle URL, or installed shorthand;
 `ROC_GLUE_DIR` and `ROC_SRC` can select an explicit matching compiler checkout.
 Glue specs are compiled as cached host dynamic libraries. The script defaults
@@ -155,15 +156,26 @@ python scripts/build.py --all
 ```
 
 The `x64win` host must be built natively on x86-64 Windows because it uses the
-MSVC toolchain and Windows SDK:
+MSVC toolchain:
 
 ```sh
 python scripts/build.py --target x64win
 ```
 
-This produces `host.lib` and copies the required SDK import libraries into
-`platform/targets/x64win/`. Release CI builds that target on `windows-2025`,
-then combines its artifact with the four Unix hosts before bundling.
+This produces `host.lib`. Compiler runtime inputs are released independently by
+the `Runtime inputs` workflow: real musl startup/libc/libunwind archives and
+MinGW-generated Windows COFF import stubs. Once `.github/runtime-inputs.json` is
+present, builds download the immutable archive, verify its SHA-256 and (in CI)
+its GitHub attestation, and hydrate `platform/targets/`. Until the first runtime
+release is adopted, the checked-in musl files and Windows SDK fallback remain.
+
+To reproduce a runtime-input candidate locally with Zig 0.16.0:
+
+```sh
+python scripts/runtime_inputs.py build --output target/runtime-one
+python scripts/runtime_inputs.py build --output target/runtime-two
+python scripts/runtime_inputs.py compare target/runtime-one target/runtime-two
+```
 
 Create a Roc platform bundle for upload:
 
