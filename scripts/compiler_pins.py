@@ -1,7 +1,7 @@
 """Source-preserving reader for compiler pins in Roc root headers.
 
 Vendored from roc-automation commit
-5c1f09b7190118f43eb901eaed0110cd53029199.
+19c8c1a3f780d648b85678bd31cf735d3584eb01.
 """
 
 import re
