@@ -1,4 +1,4 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-09-01-db83307" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-09-09-7dadc35" }
 
 import pf.SSG
 import pf.Path

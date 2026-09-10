@@ -9,6 +9,5 @@
     "examples/orchard-guide/main.roc",
     "examples/travel-journal/main.roc",
     "examples/orchard-guide/content/fruit/template-example.roc"
-  ],
-  "auto_merge": true
+  ]
 }
