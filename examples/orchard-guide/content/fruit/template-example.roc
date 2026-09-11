@@ -1,6 +1,6 @@
 ## A small template included by the orchard guide documentation.
 # This is a comment
-app [transform_file_content] { pf: platform "platform/main.roc", roc: "nightly-2026-09-10-a670e34" }
+app [transform_file_content] { pf: platform "platform/main.roc", roc: "nightly-2026-09-11-793f9d8" }
 
 import pf.Html
 import pf.HtmlAttributes exposing [http_equiv, content, href, rel, lang, class, title]
