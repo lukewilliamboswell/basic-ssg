@@ -1,4 +1,4 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-09-10-a670e34" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-09-11-793f9d8" }
 
 import pf.IOErr exposing [IOErr]
 import pf.OsStr exposing [OsStr]
