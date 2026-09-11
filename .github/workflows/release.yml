@@ -92,7 +92,7 @@ jobs:
 
       - name: Enforce exact-nightly bootstrap release policy
         if: github.event_name == 'workflow_dispatch' && !inputs.nightly_validation
-        uses: lukewilliamboswell/roc-automation/actions/check-release@19c8c1a3f780d648b85678bd31cf735d3584eb01
+        uses: lukewilliamboswell/roc-automation/actions/check-release@355f762079f676df4d0ae86416edf34216b488e0
         with:
           version: ${{ inputs.release_version }}
           allow-default-branch: "true"
