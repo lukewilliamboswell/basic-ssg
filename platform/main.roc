@@ -4,7 +4,7 @@ platform ""
 	}
 	exposes [SSG, AsciiDoc, PageDecoder, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
 	packages {
-		roc: "nightly-2026-09-11-793f9d8",
+		roc: "nightly-2026-09-12-220fd47",
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
 		path: "https://github.com/roc-lang/path/releases/download/4.0.0/7YfABZPwJAXtLBY2vm8FqMyGAtNxncCJ65HdNKHFGNnE.tar.zst",
