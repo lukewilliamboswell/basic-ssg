@@ -35,7 +35,7 @@ FrontmatterDecodedPage : {
 	generated_at : U128,
 }
 
-main! : List(OsStr) => Try({}, [Exit(I32), InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), PagesError(Str), ParseError(Str), ReadError(Str), WriteError(Str), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), PagesError(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
 main! = |args|
 	match args.drop_first(1) {
 		[input_dir_arg, output_dir_arg] => {
@@ -85,7 +85,7 @@ frontmatter = |parse_metadata|
 		},
 	)
 
-split_frontmatter : Str -> Try({ metadata : Str, body : Str }, [InvalidFrontmatter(Str), ..])
+split_frontmatter : Str -> Try({ metadata : Str, body : Str }, [InvalidFrontmatter(Str)])
 split_frontmatter = |source| {
 	normalized = Str.join_with(source.split_on("\r\n"), "\n")
 
@@ -102,7 +102,7 @@ split_frontmatter = |source| {
 	}
 }
 
-process_json_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str), WriteError(Str), ..])
+process_json_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str), WriteError(Str)])
 process_json_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
@@ -114,7 +114,7 @@ process_json_pages! = |pages, output_dir|
 		}
 	}
 
-process_frontmatter_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str), WriteError(Str), ..])
+process_frontmatter_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
 process_frontmatter_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})

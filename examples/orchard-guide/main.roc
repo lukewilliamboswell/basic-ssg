@@ -7,7 +7,7 @@ import pf.Html
 import pf.AsciiDoc
 import pf.HtmlAttributes exposing [class, http_equiv, href, rel, content, lang, title]
 
-main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str)])
 main! = |args|
 	match args.drop_first(1) {
 		[input_dir_arg, output_dir_arg] => {
@@ -25,7 +25,7 @@ main! = |args|
 		_ => Err(Exit(1))
 	}
 
-process_all! : List(SSG.Page), Path.Path => Try({}, [ParseError(Str), WriteError(Str), ..])
+process_all! : List(SSG.Page), Path.Path => Try({}, [ParseError(Str), WriteError(Str)])
 process_all! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
@@ -35,14 +35,14 @@ process_all! = |pages, output_dir|
 		}
 	}
 
-process_page! : Path.Path, SSG.Page => Try({}, [ParseError(Str), WriteError(Str), ..])
+process_page! : Path.Path, SSG.Page => Try({}, [ParseError(Str), WriteError(Str)])
 process_page! = |output_dir, page| {
 	in_html = SSG.parse_markdown!(page.source_path)?
 	out_html = transform_file_content(page.url, in_html)
 	SSG.write_file!({ output_dir, output_path: page.output_path, content: out_html })
 }
 
-process_all_asciidoc! : List(SSG.Page), Path.Path => Try({}, [ParseError(Str), WriteError(Str), ..])
+process_all_asciidoc! : List(SSG.Page), Path.Path => Try({}, [ParseError(Str), WriteError(Str)])
 process_all_asciidoc! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
