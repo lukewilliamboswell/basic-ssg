@@ -1,9 +1,9 @@
 ## A small template included by the orchard guide documentation.
 # This is a comment
-app [transform_file_content] { pf: platform "platform/main.roc", roc: "nightly-2026-09-19-d025939" }
+app [transform_file_content] { pf: platform "platform/main.roc", roc: "nightly-2026-10-02-bba1acc" }
 
 import pf.Html
-import pf.HtmlAttributes exposing [http_equiv, content, href, rel, lang, class, title]
+import pf.HtmlAttributes exposing [class, content, href, http_equiv, lang, rel, title]
 
 NavLink : {
 	# this is another comment

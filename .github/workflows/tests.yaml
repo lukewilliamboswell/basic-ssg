@@ -43,6 +43,8 @@ jobs:
         uses: ./.github/actions/setup-roc
 
       - name: Check, test, build, and run published examples
+        # Paused until the first release the examples can use is published.
+        if: hashFiles('.github/published-examples-pending') == ''
         run: ${{ runner.os == 'Windows' && 'python scripts/test.py --published --no-build' || 'python3 scripts/test.py --published --no-build' }}
 
   current-source:

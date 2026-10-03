@@ -18,16 +18,16 @@ SSG := [].{
 	}
 
 	## Find the markdown pages in the given directory, searched recursively.
-	markdown_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
+	markdown_pages! : Path.Path => Try(List(Page), [PagesError(Str)])
 	markdown_pages! = |input_dir| pages_with!({ input_dir, source_extension: "md" })
 
 	## Find AsciiDoc pages recursively.
-	asciidoc_pages! : Path.Path => Try(List(Page), [PagesError(Str), ..])
+	asciidoc_pages! : Path.Path => Try(List(Page), [PagesError(Str)])
 	asciidoc_pages! = |input_dir| pages_with!({ input_dir, source_extension: "adoc" })
 
 	## Find pages with `source_extension` in the given directory, searched recursively.
 	## The extension must not include a leading dot. Output paths always use `.html`.
-	pages_with! : { input_dir : Path.Path, source_extension : Str } => Try(List(Page), [PagesError(Str), ..])
+	pages_with! : { input_dir : Path.Path, source_extension : Str } => Try(List(Page), [PagesError(Str)])
 	pages_with! = |{ input_dir, source_extension }|
 		match Host.ssg_find_pages!(Path.to_raw(input_dir), source_extension) {
 			Ok(host_pages) => Ok(host_pages.map(from_host_page))
@@ -35,7 +35,7 @@ SSG := [].{
 		}
 
 	## Read a page source as UTF-8 text.
-	read_source! : Page => Try(Str, [ReadError(Str), ..])
+	read_source! : Page => Try(Str, [ReadError(Str)])
 	read_source! = |page|
 		match Host.ssg_read_source!(Path.to_raw(page.source_path)) {
 			Ok(source) => Ok(source)
@@ -50,7 +50,7 @@ SSG := [].{
 	}
 
 	## Render a markdown file to an HTML string.
-	parse_markdown! : Path.Path => Try(Str, [ParseError(Str), ..])
+	parse_markdown! : Path.Path => Try(Str, [ParseError(Str)])
 	parse_markdown! = |source_path|
 		match Host.ssg_parse_markdown!(Path.to_raw(source_path)) {
 			Ok(html) => Ok(html)
@@ -59,7 +59,7 @@ SSG := [].{
 
 	## Render Markdown source to HTML. Replacement directives are resolved relative
 	## to `source_path`, which normally identifies the page being decoded.
-	render_markdown! : { source_path : Path.Path, markdown : Str } => Try(Str, [ParseError(Str), ..])
+	render_markdown! : { source_path : Path.Path, markdown : Str } => Try(Str, [ParseError(Str)])
 	render_markdown! = |{ source_path, markdown }|
 		match Host.ssg_render_markdown!(Path.to_raw(source_path), markdown) {
 			Ok(html) => Ok(html)
@@ -67,7 +67,7 @@ SSG := [].{
 		}
 
 	## Parse an AsciiDoc file into a resolved semantic document.
-	parse_asciidoc! : Path.Path => Try(AsciiDoc.Document, [ParseError(Str), ..])
+	parse_asciidoc! : Path.Path => Try(AsciiDoc.Document, [ParseError(Str)])
 	parse_asciidoc! = |source_path|
 		match Host.ssg_parse_asciidoc!(Path.to_raw(source_path)) {
 			Ok(document) => Ok(document)
@@ -75,7 +75,7 @@ SSG := [].{
 		}
 
 	## Parse AsciiDoc source. Secure mode is used and no resource handlers are installed.
-	parse_asciidoc_source! : { source_path : Path.Path, asciidoc : Str } => Try(AsciiDoc.Document, [ParseError(Str), ..])
+	parse_asciidoc_source! : { source_path : Path.Path, asciidoc : Str } => Try(AsciiDoc.Document, [ParseError(Str)])
 	parse_asciidoc_source! = |{ source_path, asciidoc }|
 		match Host.ssg_parse_asciidoc_source!(Path.to_raw(source_path), asciidoc) {
 			Ok(document) => Ok(document)
@@ -83,7 +83,7 @@ SSG := [].{
 		}
 
 	## Parse and render AsciiDoc source to an Asciidoctor-like HTML fragment.
-	render_asciidoc! : { source_path : Path.Path, asciidoc : Str } => Try(Str, [ParseError(Str), ..])
+	render_asciidoc! : { source_path : Path.Path, asciidoc : Str } => Try(Str, [ParseError(Str)])
 	render_asciidoc! = |input|
 		match parse_asciidoc_source!(input) {
 			Ok(document) => Ok(AsciiDoc.render(document))
@@ -91,7 +91,7 @@ SSG := [].{
 		}
 
 	## Write `content` to `output_path` underneath `output_dir`, creating parent directories as needed.
-	write_file! : { output_dir : Path.Path, output_path : Path.Path, content : Str } => Try({}, [WriteError(Str), ..])
+	write_file! : { output_dir : Path.Path, output_path : Path.Path, content : Str } => Try({}, [WriteError(Str)])
 	write_file! = |{ output_dir, output_path, content }|
 		match Host.ssg_write_file!(Path.to_raw(output_dir), Path.to_raw(output_path), content) {
 			Ok({}) => Ok({})

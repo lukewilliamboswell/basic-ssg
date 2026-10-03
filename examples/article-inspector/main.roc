@@ -1,12 +1,12 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-09-19-d025939" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-10-02-bba1acc" }
 
-import pf.IOErr exposing [IOErr]
-import pf.OsStr exposing [OsStr]
+import pf.IOErr
+import pf.OsStr
 import pf.Path
 import pf.SSG
 import pf.Stdout
 
-main! : List(OsStr) => Try({}, [Exit(I32), InspectError(Str), StdoutErr(IOErr), ..])
+main! : List(OsStr) => Try({}, [Exit(I32), InspectError(Str), StdoutErr(IOErr)])
 main! = |args|
 	match args.drop_first(1) {
 		[source_path_arg] => print_title!(Path.from_os_str(source_path_arg))
@@ -14,7 +14,7 @@ main! = |args|
 		_ => Err(Exit(1))
 	}
 
-print_title! : Path.Path => Try({}, [InspectError(Str), StdoutErr(IOErr), ..])
+print_title! : Path.Path => Try({}, [InspectError(Str), StdoutErr(IOErr)])
 print_title! = |source_path| {
 	html = SSG.parse_markdown!(source_path) ? |ParseError(msg)| InspectError("could not inspect article: ${msg}")
 	title = first_h1(html) ?? "Untitled"
