@@ -1,11 +1,11 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-10-01-a932c65" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-10-02-bba1acc" }
 
 import pf.SSG
 import pf.Path
-import pf.OsStr exposing [OsStr]
+import pf.OsStr
 import pf.Html
 import pf.AsciiDoc
-import pf.HtmlAttributes exposing [class, http_equiv, href, rel, content, lang, title]
+import pf.HtmlAttributes exposing [class, content, href, http_equiv, lang, rel, title]
 
 main! : List(OsStr) => Try({}, [Exit(I32), PagesError(Str), ParseError(Str), WriteError(Str)])
 main! = |args|
