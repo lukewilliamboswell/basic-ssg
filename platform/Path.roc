@@ -1,5 +1,5 @@
 import path.Path as PathPkg
-import OsStr exposing [OsStr]
+import OsStr
 
 ## Filesystem paths backed by the shared roc-lang/path package.
 Path := [].{

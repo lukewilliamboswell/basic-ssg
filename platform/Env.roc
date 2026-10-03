@@ -14,7 +14,7 @@ Env := [].{
 	## [Unicode replacement character](https://unicode.org/glossary/#replacement_character).
 	##
 	## Returns `Err(VarNotFound(name))` if the variable is not set.
-	var! : Str => Try(Str, [VarNotFound(Str), ..])
+	var! : Str => Try(Str, [VarNotFound(Str)])
 	var! = |name|
 		match Host.env_var!(name) {
 			Ok(value) => Ok(value)

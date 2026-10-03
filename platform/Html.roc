@@ -91,7 +91,7 @@ Html := [].{
 
 			VoidElement(_, size, _) =>
 				size
-			}
+		}
 
 	## Render a complete HTML document, including the `<!DOCTYPE html>` prefix.
 	##
@@ -145,7 +145,7 @@ Html := [].{
 					folded = attrs.fold("${buffer}<${tag_name}", render_attr)
 					folded.concat(">")
 				}
-			}
+		}
 
 	# internal helper: render each child node in order, threading the buffer.
 	render_children : Str, List(Node) -> Str
