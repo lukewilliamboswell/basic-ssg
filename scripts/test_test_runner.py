@@ -36,6 +36,14 @@ class ValgrindTests(unittest.TestCase):
         self.assertFalse(temporary_source.resolve().is_relative_to(test_runner.ROOT.resolve()))
         self.assertNotEqual(validate.call_args.args[2], test_runner.ROOT)
 
+    def test_local_platform_is_referenced_relatively(self) -> None:
+        reference = test_runner.platform_reference("/repo/platform/main.roc", Path("/tmp/x/examples/app"))
+        self.assertEqual(reference, "../../../../repo/platform/main.roc")
+        self.assertEqual(
+            test_runner.platform_reference("https://example.invalid/p.tar.zst", Path("/tmp")),
+            "https://example.invalid/p.tar.zst",
+        )
+
     def test_command_keeps_valgrind_output_separate(self) -> None:
         with tempfile.TemporaryDirectory() as raw_directory:
             temporary = Path(raw_directory)

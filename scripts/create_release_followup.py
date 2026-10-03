@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ("tests.yaml", "release.yml")
 REQUIRED_JOBS = ("CI required", "Bundle required")
+PENDING_MARKER = ".github/published-examples-pending"
 
 
 def run(args: list[str], *, data: str | None = None) -> str:
@@ -47,20 +48,21 @@ def publish_status(sha: str, context: str, state: str, target_url: str) -> None:
     )
 
 
-def changed_examples() -> list[str]:
+def changed_examples() -> tuple[list[str], list[str]]:
     changed = run(["git", "diff", "--name-only", "--diff-filter=M", "--", "examples"]).splitlines()
+    deleted = run(["git", "diff", "--name-only", "--diff-filter=D"]).splitlines()
     all_changed = run(["git", "diff", "--name-only"]).splitlines()
-    if not changed or changed != all_changed:
+    if not changed or deleted not in ([], [PENDING_MARKER]) or sorted(changed + deleted) != sorted(all_changed):
         raise ValueError(f"Release follow-up must modify only existing example files: {all_changed}")
     if any(
         not re.fullmatch(r"examples/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.roc", path)
         for path in changed
     ):
         raise ValueError(f"Release follow-up contains an unexpected path: {changed}")
-    return changed
+    return changed, deleted
 
 
-def create_signed_commit(version: str, paths: list[str]) -> tuple[str, str]:
+def create_signed_commit(version: str, paths: list[str], deletions: list[str]) -> tuple[str, str]:
     repository = os.environ["GITHUB_REPOSITORY"]
     base = os.environ["GITHUB_SHA"]
     default = os.environ["DEFAULT_BRANCH"]
@@ -87,7 +89,7 @@ def create_signed_commit(version: str, paths: list[str]) -> tuple[str, str]:
             "branch": {"repositoryNameWithOwner": repository, "branchName": branch},
             "expectedHeadOid": base,
             "message": {"headline": f"Update examples for {version}"},
-            "fileChanges": {"additions": additions},
+            "fileChanges": {"additions": additions, "deletions": [{"path": path} for path in deletions]},
         }},
     }
     response = api("graphql", request, "POST")
@@ -170,8 +172,9 @@ def main() -> None:
     if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.version) is None:
         raise SystemExit(f"Invalid release version: {args.version!r}")
     try:
-        paths = changed_examples()
-        branch, sha = create_signed_commit(args.version, paths)
+        (ROOT / PENDING_MARKER).unlink(missing_ok=True)
+        paths, deletions = changed_examples()
+        branch, sha = create_signed_commit(args.version, paths, deletions)
         validate(branch, sha)
         print(f"Created and validated signed release follow-up {sha}")
     except (KeyError, OSError, ValueError, TimeoutError, subprocess.CalledProcessError) as error:

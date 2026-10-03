@@ -419,6 +419,13 @@ def run_cases(
             run_case(binaries[app["path"]], app, case, valgrind=valgrind)
 
 
+def platform_reference(platform_url: str, directory: Path) -> str:
+    """The compiler rejects absolute platform paths, so make local ones relative."""
+    if "://" in platform_url:
+        return platform_url
+    return Path(os.path.relpath(platform_url, directory)).as_posix()
+
+
 def run_suite(
     roc: str,
     platform_url: str | None,
@@ -433,7 +440,8 @@ def run_suite(
         shutil.copytree(EXAMPLES_DIR, source_root / "examples")
         sources = [source_root / app["path"] for app in spec["apps"]]
         if platform_url is not None:
-            update_apps(sources, platform_url)
+            for source in sources:
+                update_apps([source], platform_reference(platform_url, source.parent))
         validate_apps(roc, spec, source_root)
         if operation == "all" and spec["stages"]["build"]:
             with tempfile.TemporaryDirectory(prefix="basic-ssg-binaries-") as binary_temp:
