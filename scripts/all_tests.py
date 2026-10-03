@@ -92,8 +92,7 @@ def validate_roc_sources(roc: str, env: dict[str, str]) -> None:
         ROOT / "platform" / "Html.roc",
         ROOT / "platform" / "PageDecoder.roc",
         ROOT / "platform" / "main.roc",
-        *sorted((ROOT / "examples").glob("*/main.roc")),
-    ]
+    ]  # examples are checked against the local bundle by scripts/test.py
     for source in checked_sources:
         command(roc, "check", source, *roc_extra_args(), env=env)
 
