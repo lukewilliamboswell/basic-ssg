@@ -1,4 +1,4 @@
-import IOErr exposing [IOErr]
+import IOErr
 import Host
 
 ## Execute programs in child processes.
@@ -52,7 +52,7 @@ Cmd := [].{
 
 	## Execute the command, inheriting stdin/stdout/stderr from the parent, and
 	## return its exit code.
-	status! : Command => Try(I32, [CmdError(IOErr), ..])
+	status! : Command => Try(I32, [CmdError(IOErr)])
 	status! = |cmd|
 		match Host.cmd_status!(to_host_command(cmd)) {
 			Ok(code) => Ok(code)
@@ -66,7 +66,7 @@ Cmd := [].{
 	## Execute a program with arguments, inheriting stdin/stdout/stderr.
 	## Returns `Err(CmdError(...))` on failure, or `Err(NonZeroExit(code))` if the
 	## program exits non-zero.
-	exec! : Str, List(Str) => Try({}, [CmdError(IOErr), NonZeroExit(I32), ..])
+	exec! : Str, List(Str) => Try({}, [CmdError(IOErr), NonZeroExit(I32)])
 	exec! = |program, arguments| {
 		code = Cmd.status!(Cmd.args(Cmd.new(program), arguments))?
 		if code == 0 {

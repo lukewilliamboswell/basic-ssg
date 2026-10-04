@@ -686,7 +686,7 @@ fn try_stdout_unit_ok() -> HostStdoutLineResult {
     }
 }
 
-fn try_stdout_unit_err(error: HostIOErr) -> HostStdoutLineResult {
+fn try_stdout_unit_err(error: IOErr) -> HostStdoutLineResult {
     HostStdoutLineResult {
         payload: HostStdoutLineResultPayload {
             err: ManuallyDrop::new(error),
@@ -708,7 +708,7 @@ pub extern "C" fn hosted_stdout_line(message: RocStr) -> HostStdoutLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
+        Err(error) => try_stdout_unit_err(public_io_err_from_std(error, roc_host)),
     }
 }
 
@@ -725,7 +725,7 @@ pub extern "C" fn hosted_stdout_write(message: RocStr) -> HostStdoutLineResult {
 
     match result {
         Ok(()) => try_stdout_unit_ok(),
-        Err(error) => try_stdout_unit_err(io_err_from_std(error, roc_host)),
+        Err(error) => try_stdout_unit_err(public_io_err_from_std(error, roc_host)),
     }
 }
 
@@ -742,7 +742,7 @@ fn try_cmd_status_ok(code: i32) -> HostCmdStatusResult {
     }
 }
 
-fn try_cmd_status_err(error: IOErr) -> HostCmdStatusResult {
+fn try_cmd_status_err(error: HostIOErr) -> HostCmdStatusResult {
     HostCmdStatusResult {
         payload: HostCmdStatusResultPayload {
             err: ManuallyDrop::new(error),
@@ -792,7 +792,7 @@ pub extern "C" fn hosted_cmd_status(cmd: HostCmdStatusArgs) -> HostCmdStatusResu
 
     match result {
         Ok(status) => try_cmd_status_ok(status.code().unwrap_or(-1)),
-        Err(error) => try_cmd_status_err(public_io_err_from_std(error, roc_host)),
+        Err(error) => try_cmd_status_err(io_err_from_std(error, roc_host)),
     }
 }
 
@@ -984,7 +984,7 @@ pub extern "C" fn hosted_utc_now() -> HostUtcNowResult {
 
 #[no_mangle]
 pub extern "C" fn roc_alloc(length: usize, alignment: usize) -> *mut c_void {
-    DefaultAllocators::roc_alloc(roc_host_ptr(), length, alignment)
+    DefaultAllocators::roc_alloc(roc_host_ptr(), length, alignment).as_ptr()
 }
 
 #[no_mangle]
@@ -998,7 +998,7 @@ pub extern "C" fn roc_realloc(
     new_length: usize,
     alignment: usize,
 ) -> *mut c_void {
-    DefaultAllocators::roc_realloc(roc_host_ptr(), ptr, new_length, alignment)
+    DefaultAllocators::roc_realloc(roc_host_ptr(), ptr, new_length, alignment).as_ptr()
 }
 
 #[no_mangle]

@@ -2,34 +2,34 @@ platform ""
 	requires {
 		main! : List([Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]) => Try({}, [Exit(I32), ..])
 	}
-	exposes [SSG, AsciiDoc, PageDecoder, Path, OsStr, Html, HtmlAttributes, IOErr, Stdout, Stderr, Cmd, Env, Locale, Utc]
+	exposes [AsciiDoc, Cmd, Env, Html, HtmlAttributes, IOErr, Locale, OsStr, PageDecoder, Path, SSG, Stderr, Stdout, Utc]
 	packages {
-		roc: "nightly-2026-09-19-d025939",
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
 		path: "https://github.com/roc-lang/path/releases/download/4.0.0/7YfABZPwJAXtLBY2vm8FqMyGAtNxncCJ65HdNKHFGNnE.tar.zst",
+		roc: "nightly-2026-10-02-bba1acc",
 	}
 	provides { "roc_main": main_for_host! }
 	hosted {
-		"hosted_stdout_line": Host.stdout_line!,
-		"hosted_stdout_write": Host.stdout_write!,
-		"hosted_stderr_line": Host.stderr_line!,
-		"hosted_stderr_write": Host.stderr_write!,
-		"hosted_cmd_status": Host.cmd_status!,
 		"hosted_cmd_output": Host.cmd_output!,
-		"hosted_env_var": Host.env_var!,
-		"hosted_env_dict": Host.env_dict!,
+		"hosted_cmd_status": Host.cmd_status!,
 		"hosted_env_arch_os": Host.env_arch_os!,
-		"hosted_locale_get": Host.locale_get!,
+		"hosted_env_dict": Host.env_dict!,
+		"hosted_env_var": Host.env_var!,
 		"hosted_locale_all": Host.locale_all!,
-		"hosted_utc_now": Host.utc_now!,
+		"hosted_locale_get": Host.locale_get!,
 		"hosted_ssg_find_pages": Host.ssg_find_pages!,
-		"hosted_ssg_read_source": Host.ssg_read_source!,
-		"hosted_ssg_parse_markdown": Host.ssg_parse_markdown!,
-		"hosted_ssg_render_markdown": Host.ssg_render_markdown!,
 		"hosted_ssg_parse_asciidoc": Host.ssg_parse_asciidoc!,
 		"hosted_ssg_parse_asciidoc_source": Host.ssg_parse_asciidoc_source!,
+		"hosted_ssg_parse_markdown": Host.ssg_parse_markdown!,
+		"hosted_ssg_read_source": Host.ssg_read_source!,
+		"hosted_ssg_render_markdown": Host.ssg_render_markdown!,
 		"hosted_ssg_write_file": Host.ssg_write_file!,
+		"hosted_stderr_line": Host.stderr_line!,
+		"hosted_stderr_write": Host.stderr_write!,
+		"hosted_stdout_line": Host.stdout_line!,
+		"hosted_stdout_write": Host.stdout_write!,
+		"hosted_utc_now": Host.utc_now!,
 	}
 	targets: {
 		inputs_dir: "targets/",
