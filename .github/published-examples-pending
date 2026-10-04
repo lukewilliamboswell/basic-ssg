@@ -1,3 +1,0 @@
-Examples still reference a platform release that the pinned compiler rejects.
-While this file exists, CI skips the published-examples check.
-The release follow-up PR deletes it.
