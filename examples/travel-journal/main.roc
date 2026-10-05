@@ -1,4 +1,4 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst", roc: "nightly-2026-10-04-130536d" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.12.0/2C2pqQg55Sm4Y12imgSpdQi9bRiUeCbDGxF7puKrLqup.tar.zst", roc: "nightly-2026-10-04-130536d" }
 
 import pf.Html
 import pf.HtmlAttributes exposing [lang]
