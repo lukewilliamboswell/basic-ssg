@@ -118,13 +118,13 @@ Independent decoders compose with Roc's applicative record-builder syntax:
 ```roc
 JsonPage : { title : Str, body : Str }
 
-page_decoder! = {
+page_decoder! = |{}| {
 	content: PageDecoder.from_source(Json.parse),
 	generated_at: PageDecoder.from_effect(|_| Ok(Utc.now!())),
 	page: PageDecoder.page!,
 }.PageDecoder
 
-decoded = SSG.decode_page!(page, page_decoder!)?
+decoded = SSG.decode_page!(page, page_decoder!({}))?
 ```
 
 A frontmatter decoder uses the same interface. It splits the source into a
