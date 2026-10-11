@@ -10,5 +10,7 @@ cross-platform helper:
 python scripts/serve_example.py
 ```
 
-Pass `--no-open` to keep the browser closed or `--no-serve` to generate the
-site and exit.
+This serves the `examples-dev` copy against a local bundle of the checkout. Pass
+`--release` to serve the `examples-release` copy with its published platform and
+pinned compiler instead. Pass `--no-open` to keep the browser closed or
+`--no-serve` to generate the site and exit.

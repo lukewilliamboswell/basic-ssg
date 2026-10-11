@@ -17,12 +17,13 @@ from pathlib import Path
 from typing import Iterator
 
 from build import detect_native_target
-from test import create_bundle, served_bundle
+from roc_version import require_pinned_roc
+from test import DEV_EXAMPLES, RELEASE_EXAMPLES, create_bundle, served_bundle
 from update_app_platform_urls import update_apps
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXAMPLE_DIR = ROOT / "examples-dev" / "orchard-guide"
+EXAMPLE = "orchard-guide"
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -85,14 +86,18 @@ def parse_args() -> argparse.Namespace:
         description="Build and serve the Orchard Guide example site."
     )
     parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="serve examples-release as committed, with its own compiler and release URL, "
+        "instead of examples-dev against a local bundle of this checkout",
+    )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--source", type=Path, default=EXAMPLE_DIR / "main.roc")
-    parser.add_argument("--content", type=Path, default=EXAMPLE_DIR / "content")
-    parser.add_argument("--output", type=Path, default=EXAMPLE_DIR / "output")
-    parser.add_argument(
-        "--binary", type=Path, default=ROOT / "target" / "examples" / "orchard-guide"
-    )
+    parser.add_argument("--source", type=Path, help="default: <examples>/orchard-guide/main.roc")
+    parser.add_argument("--content", type=Path, help="default: <examples>/orchard-guide/content")
+    parser.add_argument("--output", type=Path, help="default: <examples>/orchard-guide/output")
+    parser.add_argument("--binary", type=Path, help="default: target/<examples>/orchard-guide")
     parser.add_argument("--skip-check", action="store_true")
     parser.add_argument("--skip-build", action="store_true")
     parser.add_argument(
@@ -103,7 +108,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="generate the site and exit without starting the HTTP server",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    examples = RELEASE_EXAMPLES if args.release else DEV_EXAMPLES
+    args.source = args.source or examples / EXAMPLE / "main.roc"
+    args.content = args.content or examples / EXAMPLE / "content"
+    args.output = args.output or examples / EXAMPLE / "output"
+    args.binary = args.binary or ROOT / "target" / examples.name / EXAMPLE
+    return args
 
 
 def main() -> None:
@@ -112,6 +123,7 @@ def main() -> None:
         raise SystemExit("--port must be between 0 and 65535")
 
     roc = executable(args.roc)
+    print(f"Using roc version: {require_pinned_roc(roc, release_examples=args.release)}")
     source = args.source.resolve()
     content = args.content.resolve()
     output = args.output.resolve()
@@ -129,7 +141,9 @@ def main() -> None:
         shutil.copytree(public_dir, output, dirs_exist_ok=True)
 
     platform_context: contextlib.AbstractContextManager[Path] = (
-        contextlib.nullcontext(source) if args.skip_build else local_platform(source, roc)
+        contextlib.nullcontext(source)
+        if args.skip_build or args.release
+        else local_platform(source, roc)
     )
     with platform_context as build_source:
         if not args.skip_check:

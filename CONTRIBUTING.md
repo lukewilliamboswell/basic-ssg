@@ -104,15 +104,11 @@ Build and serve the Markdown example using only Python's standard library:
 python scripts/serve_example.py
 ```
 
-Examples in this repo pin the latest published release:
-
-```roc
-app [main!] { roc: "nightly-2026-09-01-db83307", pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
-```
-
-`scripts/serve_example.py` builds and serves a local platform bundle and points
-a temporary example copy at it, so development exercises the checkout without
-editing the committed application.
+This serves `examples-dev`: it builds and serves a local platform bundle and
+points a temporary copy of the example at it, so development exercises the
+checkout without editing the committed application. Pass `--release` to build
+`examples-release` as committed instead, against its published bundle and with
+the compiler it pins.
 
 ## Architecture
 
