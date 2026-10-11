@@ -13,6 +13,7 @@ import create_release_followup as followup
 
 EXAMPLE = "examples-release/app/main.roc"
 CONTENT = "examples-release/app/content/index.md"
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def git(root: Path, *args: str) -> None:
@@ -63,6 +64,15 @@ class ChangedExamplesTests(unittest.TestCase):
                     followup.changed_examples()
                 git(self.root, "reset", "-q", "--hard")
                 git(self.root, "clean", "-qfd")
+
+    def test_ci_roc_install_and_cache_are_ignored(self) -> None:
+        (self.root / ".gitignore").write_text((REPO_ROOT / ".gitignore").read_text())
+        git(self.root, "add", ".gitignore")
+        git(self.root, "commit", "-q", "-m", "ignore")
+        self.write(EXAMPLE, "new\n")
+        self.write(".roc-cache/nightly-2026-10-09-258ab27/mod/07/abc", "cache\n")
+        self.write("roc_nightly-linux_x86_64-2026-10-09-258ab27/roc", "bin\n")
+        self.assertEqual(followup.changed_examples(), ([EXAMPLE], []))
 
 
 if __name__ == "__main__":
