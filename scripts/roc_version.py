@@ -14,6 +14,7 @@ import compiler_pins
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_EXAMPLES = "examples-release"
 NIGHTLY_TAG_PATTERN = re.compile(
     r"nightly-[0-9]{4}-[0-9]{2}-[0-9]{2}-(?P<revision>[0-9a-f]{7,40})"
 )
@@ -30,9 +31,25 @@ def pinned_roc(root: Path = ROOT, config_file: Path | None = None) -> tuple[str,
         tag = compiler_pins.version(compiler_pins.discover(sources))
     except (FileNotFoundError, KeyError, json.JSONDecodeError, ValueError) as error:
         raise SystemExit(f"Could not resolve Roc compiler header pins: {error}") from error
+    return nightly_revision(tag)
+
+
+def release_pinned_roc(root: Path = ROOT) -> tuple[str, str]:
+    """The compiler pinned by the release examples, which the nightly updater does not move."""
+    paths = sorted(
+        path.relative_to(root).as_posix() for path in (root / RELEASE_EXAMPLES).rglob("*.roc")
+    )
+    try:
+        tag = compiler_pins.version(compiler_pins.discover(compiler_pins.local_sources(root, paths)))
+    except (FileNotFoundError, ValueError) as error:
+        raise SystemExit(f"Could not resolve {RELEASE_EXAMPLES} compiler pins: {error}") from error
+    return nightly_revision(tag)
+
+
+def nightly_revision(tag: str) -> tuple[str, str]:
     match = NIGHTLY_TAG_PATTERN.fullmatch(tag)
     if match is None:
-        raise SystemExit(f"Development compiler must be an exact Roc nightly: {tag!r}")
+        raise SystemExit(f"Compiler pin must be an exact Roc nightly: {tag!r}")
     return tag, match.group("revision")
 
 
@@ -48,8 +65,10 @@ def active_roc_version(roc: str, *, env: dict[str, str] | None = None) -> str:
         raise SystemExit(f"Roc executable not found: {roc}") from error
 
 
-def require_pinned_roc(roc: str, *, env: dict[str, str] | None = None) -> str:
-    tag, revision = pinned_roc()
+def require_pinned_roc(
+    roc: str, *, env: dict[str, str] | None = None, release_examples: bool = False
+) -> str:
+    tag, revision = release_pinned_roc() if release_examples else pinned_roc()
     version = active_roc_version(roc, env=env)
     if not version_matches_revision(version, revision):
         raise SystemExit(f"Roc nightly {tag} is required; found {version!r}")
@@ -63,12 +82,16 @@ def main() -> None:
         "--print-tag", action="store_true",
         help="print only the agreed immutable header pin without running Roc",
     )
+    parser.add_argument(
+        "--release-examples", action="store_true",
+        help=f"use the pin shared by {RELEASE_EXAMPLES} instead of the development pin",
+    )
     args = parser.parse_args()
-    tag, _revision = pinned_roc()
+    tag, _revision = release_pinned_roc() if args.release_examples else pinned_roc()
     if args.print_tag:
         print(tag)
         return
-    version = require_pinned_roc(args.roc)
+    version = require_pinned_roc(args.roc, release_examples=args.release_examples)
     print(f"Pinned Roc nightly: {tag}")
     print(f"Active compiler: {version}")
 

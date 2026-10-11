@@ -7,7 +7,7 @@ platform ""
 		# Pure filesystem path operations come from roc-lang/path. The SSG
 		# module uses this shared type at the platform boundary.
 		path: "https://github.com/roc-lang/path/releases/download/4.0.0/7YfABZPwJAXtLBY2vm8FqMyGAtNxncCJ65HdNKHFGNnE.tar.zst",
-		roc: "nightly-2026-10-04-130536d",
+		roc: "nightly-2026-10-09-258ab27",
 	}
 	provides { "roc_main": main_for_host! }
 	hosted {

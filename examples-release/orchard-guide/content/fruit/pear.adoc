@@ -1,0 +1,10 @@
+= Growing Pears
+
+== Planting
+
+Choose a sunny, well-drained site and give each *pear tree* room to grow.
+
+[source,roc]
+----
+trees = ["Bartlett", "Bosc"]
+----

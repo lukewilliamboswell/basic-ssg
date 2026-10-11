@@ -21,8 +21,8 @@ env:
   ROC_CACHE_DIR: ${{ github.workspace }}/.roc-cache
 
 jobs:
-  published-examples:
-    name: Published examples (${{ matrix.os }})
+  release-examples:
+    name: Release examples (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -39,13 +39,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Install Roc
+      - name: Install the Roc pinned by the release examples
         uses: ./.github/actions/setup-roc
+        with:
+          release-examples: "true"
 
-      - name: Check, test, build, and run published examples
-        # Paused until the first release the examples can use is published.
-        if: hashFiles('.github/published-examples-pending') == ''
-        run: ${{ runner.os == 'Windows' && 'python scripts/test.py --published --no-build' || 'python3 scripts/test.py --published --no-build' }}
+      - name: Check, test, build, and run release examples
+        run: ${{ runner.os == 'Windows' && 'python scripts/test.py --release --no-build' || 'python3 scripts/test.py --release --no-build' }}
 
   current-source:
     name: Current source (${{ matrix.os }})
@@ -118,14 +118,14 @@ jobs:
   ci-required:
     name: CI required
     if: always()
-    needs: [published-examples, current-source]
+    needs: [release-examples, current-source]
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
       - name: Require every CI validation lane
         env:
-          PUBLISHED_RESULT: ${{ needs.published-examples.result }}
+          RELEASE_RESULT: ${{ needs.release-examples.result }}
           SOURCE_RESULT: ${{ needs.current-source.result }}
         run: |
-          test "$PUBLISHED_RESULT" = success
+          test "$RELEASE_RESULT" = success
           test "$SOURCE_RESULT" = success
