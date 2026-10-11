@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from roc_version import pinned_roc, require_pinned_roc, version_matches_revision
+from roc_version import pinned_roc, release_pinned_roc, require_pinned_roc, version_matches_revision
 
 
 PIN = "nightly-2026-09-01-db83307"
@@ -54,6 +54,20 @@ class RocVersionTests(unittest.TestCase):
                 root = self.repository({"examples/hello/main.roc": source})
                 with self.assertRaises(SystemExit):
                     pinned_roc(root)
+
+    def test_release_examples_have_their_own_pin(self) -> None:
+        release_pin = "nightly-2026-09-08-39a3f89"
+        root = self.repository({
+            "platform/main.roc": f'platform "" packages {{ roc: "{PIN}" }}',
+            "examples-release/hello/main.roc": f'app [main!] {{ roc: "{release_pin}" }}',
+        })
+        (root / "examples-release/hello/content/snippet.roc").parent.mkdir()
+        (root / "examples-release/hello/content/snippet.roc").write_text(f'app [f] {{ roc: "{release_pin}" }}')
+        self.assertEqual(release_pinned_roc(root), (release_pin, "39a3f89"))
+
+        (root / "examples-release/hello/content/snippet.roc").write_text(f'app [f] {{ roc: "{PIN}" }}')
+        with self.assertRaisesRegex(SystemExit, "disagree"):
+            release_pinned_roc(root)
 
     def test_rejects_legacy_version_file(self) -> None:
         root = self.repository(

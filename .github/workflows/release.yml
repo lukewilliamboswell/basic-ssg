@@ -360,18 +360,13 @@ jobs:
           name: release-metadata
           path: .release
 
-      - name: Update public examples to the published bundle
+      - name: Refresh release examples from examples-dev for the published bundle
         env:
           RELEASE_VERSION: ${{ needs.build.outputs.release_version }}
-        run: >-
-          python3 scripts/update_app_platform_urls.py
-          --release-manifest .release/release-bundles.json
-          examples/article-inspector/main.roc
-          examples/orchard-guide/main.roc
-          examples/travel-journal/main.roc
+        run: python3 scripts/sync_release_examples.py --release-manifest .release/release-bundles.json
 
-      - name: Validate updated public examples
-        run: python3 scripts/test.py --published --no-build --operation validate
+      - name: Validate refreshed release examples
+        run: python3 scripts/test.py --release --no-build --operation validate
 
       - name: Open and validate signed release follow-up PR
         env:

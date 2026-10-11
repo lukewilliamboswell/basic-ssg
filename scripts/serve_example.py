@@ -22,7 +22,7 @@ from update_app_platform_urls import update_apps
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXAMPLE_DIR = ROOT / "examples" / "orchard-guide"
+EXAMPLE_DIR = ROOT / "examples-dev" / "orchard-guide"
 
 
 class QuietHandler(SimpleHTTPRequestHandler):

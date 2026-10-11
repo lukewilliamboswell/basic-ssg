@@ -11,7 +11,8 @@ from unittest.mock import patch
 
 import create_release_followup as followup
 
-EXAMPLE = "examples/app/main.roc"
+EXAMPLE = "examples-release/app/main.roc"
+CONTENT = "examples-release/app/content/index.md"
 
 
 def git(root: Path, *args: str) -> None:
@@ -23,9 +24,8 @@ class ChangedExamplesTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        for path in (EXAMPLE, followup.PENDING_MARKER, "platform/main.roc"):
-            (self.root / path).parent.mkdir(parents=True, exist_ok=True)
-            (self.root / path).write_text("old\n")
+        for path in (EXAMPLE, CONTENT, "examples-dev/app/main.roc", "platform/main.roc"):
+            self.write(path, "old\n")
         git(self.root, "init", "-q")
         git(self.root, "add", ".")
         git(self.root, "commit", "-q", "-m", "init")
@@ -33,26 +33,36 @@ class ChangedExamplesTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_marker_deletion_is_allowed_with_example_changes(self) -> None:
-        (self.root / EXAMPLE).write_text("new\n")
-        (self.root / followup.PENDING_MARKER).unlink()
-        self.assertEqual(followup.changed_examples(), ([EXAMPLE], [followup.PENDING_MARKER]))
+    def write(self, path: str, text: str) -> None:
+        (self.root / path).parent.mkdir(parents=True, exist_ok=True)
+        (self.root / path).write_text(text)
 
-    def test_example_changes_without_marker_are_allowed(self) -> None:
-        (self.root / EXAMPLE).write_text("new\n")
-        self.assertEqual(followup.changed_examples(), ([EXAMPLE], []))
+    def test_release_example_additions_modifications_and_deletions_are_allowed(self) -> None:
+        added = "examples-release/new/main.roc"
+        self.write(EXAMPLE, "new\n")
+        self.write(added, "new\n")
+        (self.root / CONTENT).unlink()
+        self.assertEqual(followup.changed_examples(), ([EXAMPLE, added], [CONTENT]))
+
+    def test_no_changes_are_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "only examples-release files"):
+            followup.changed_examples()
 
     def test_other_deletions_are_rejected(self) -> None:
-        (self.root / EXAMPLE).write_text("new\n")
+        self.write(EXAMPLE, "new\n")
         (self.root / "platform/main.roc").unlink()
-        with self.assertRaisesRegex(ValueError, "only existing example files"):
+        with self.assertRaisesRegex(ValueError, "only examples-release files"):
             followup.changed_examples()
 
-    def test_non_example_modifications_are_rejected(self) -> None:
-        (self.root / EXAMPLE).write_text("new\n")
-        (self.root / "platform/main.roc").write_text("new\n")
-        with self.assertRaisesRegex(ValueError, "only existing example files"):
-            followup.changed_examples()
+    def test_dev_example_and_untracked_changes_are_rejected(self) -> None:
+        for path in ("examples-dev/app/main.roc", "untracked.txt"):
+            with self.subTest(path=path):
+                self.write(EXAMPLE, f"new {path}\n")
+                self.write(path, "new\n")
+                with self.assertRaisesRegex(ValueError, "only examples-release files"):
+                    followup.changed_examples()
+                git(self.root, "reset", "-q", "--hard")
+                git(self.root, "clean", "-qfd")
 
 
 if __name__ == "__main__":

@@ -11,9 +11,10 @@ and writes generated files to an output directory. Markdown remains the
 zero-configuration default.
 
 Application authors use a published platform release by putting the release URL
-in the app header. The examples in this repository pin the latest release; local
-development scripts temporarily replace that URL with a served bundle of the
-current checkout.
+in the app header. [`examples-release`](examples-release) pins the latest release
+together with the Roc compiler it was built with, so those apps can be copied as
+they are. [`examples-dev`](examples-dev) tracks the platform source in this
+checkout and the development compiler.
 
 ## Getting Started
 
@@ -153,13 +154,13 @@ paths created by the application.
 
 ## Examples
 
-- [`examples/orchard-guide`](examples/orchard-guide) is a complete Markdown and AsciiDoc site
+- [`orchard-guide`](examples-release/orchard-guide) is a complete Markdown and AsciiDoc site
   with nested pages, navigation, styling, syntax highlighting, and neighboring
   source inclusion.
-- [`examples/article-inspector`](examples/article-inspector) is a focused CLI
+- [`article-inspector`](examples-release/article-inspector) is a focused CLI
   utility that maps platform failures into an application error and prints a
   Markdown article's first heading.
-- [`examples/travel-journal`](examples/travel-journal) builds whole-file JSON
+- [`travel-journal`](examples-release/travel-journal) builds whole-file JSON
   pages alongside Markdown pages with JSON frontmatter, deriving typed parsers
   and combining pure and effectful decoders with record-builder syntax.
 
