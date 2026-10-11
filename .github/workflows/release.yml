@@ -115,7 +115,7 @@ jobs:
           rustup default "${{ needs.rust-version.outputs.version }}"
 
       - name: Download Windows host
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: windows-x64-host
           path: platform/targets/x64win
@@ -208,7 +208,7 @@ jobs:
         uses: ./.github/actions/setup-roc
 
       - name: Download release bundles
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-bundles
           path: .release/test-bundles
@@ -302,19 +302,19 @@ jobs:
           fetch-depth: 0
 
       - name: Download release bundles
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-bundles
           path: .release/bundles
 
       - name: Download release metadata
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-metadata
           path: .release
 
       - name: Download docs archive
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: platform-docs
 
@@ -355,7 +355,7 @@ jobs:
         uses: ./.github/actions/setup-roc
 
       - name: Download release metadata
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: release-metadata
           path: .release
