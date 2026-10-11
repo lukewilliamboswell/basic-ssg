@@ -19,8 +19,9 @@ available, substitute `python3` on macOS or Linux, or `py -3.10` on Windows.
 
 Pinned CI and release jobs resolve the agreeing header pins through the validating
 local setup action in `.github/actions/setup-roc`. The daily updater proposes a
-pin-only commit and exercises both published examples and current source before
-the selected pins move together.
+pin-only commit and exercises both release examples and current source before
+the selected pins move together. The pins in `examples-release` are not selected:
+they stay on the compiler the latest release was built with.
 
 ## Local Development
 
@@ -49,16 +50,31 @@ Run one or more sections while iterating:
 python scripts/all_tests.py --section host --section examples
 ```
 
-The Roc source section checks the examples against their pinned release, so a
-compiler update exposes when that release is no longer compatible. The example
-section builds the native host, bundles and serves the current platform, and
-rewrites temporary copies of each app to use that local bundle. Committed examples
-are never modified. The section is driven by
-`scripts/test_spec.json`. Each
-`examples/<name>/` directory is a user-facing project; behavior-only fixtures
-are created in temporary directories by `scripts/test.py`. Add happy-path and
-failure cases to the spec rather than adding artificial files to an example.
-The runner also requires every `examples/*/main.roc` app to appear in the spec.
+The examples live in two directories with the same layout:
+
+- `examples-dev/` uses `platform/main.roc` from this checkout and the development
+  compiler pin. Change examples here alongside platform changes.
+- `examples-release/` is a copy of `examples-dev/` taken at the latest release. It
+  pins that release's bundle URL and the compiler the release was built with, so
+  it keeps working as the development pin moves. Do not edit it by hand; the
+  release workflow regenerates it with `scripts/sync_release_examples.py` and
+  opens a follow-up pull request.
+
+The example section builds the native host, bundles and serves the current
+platform, and rewrites temporary copies of each `examples-dev` app to use that
+local bundle. Committed examples are never modified. Each examples directory has
+its own `test_spec.json`, with paths relative to that directory, so a new case
+for an unreleased feature does not break `examples-release`. Each `<name>/`
+directory is a user-facing project; behavior-only fixtures are created in
+temporary directories by `scripts/test.py`. Add happy-path and failure cases to
+the spec rather than adding artificial files to an example. The runner also
+requires every `*/main.roc` app to appear in the spec.
+
+Test the release examples as committed, using the compiler they pin:
+
+```sh
+python scripts/test.py --release --no-build
+```
 Pure platform behavior should normally be covered by documented top-level Roc
 `expect`s; the Python cases cover executable, effect, and filesystem behavior.
 
@@ -77,7 +93,7 @@ python scripts/all_tests.py --valgrind
 
 The existing x86-64 Linux CI matrix entry enables this mode; it is not a
 separate lane. Valgrind writes to a dedicated log so its diagnostics do not
-change the stdout and stderr assertions in `scripts/test_spec.json`. All leak
+change the stdout and stderr assertions in `examples-dev/test_spec.json`. All leak
 kinds remain visible in that log; only `possibly lost` and `still reachable`
 allocations are non-fatal because libraries can retain or use interior pointers
 without losing ownership.
@@ -88,15 +104,11 @@ Build and serve the Markdown example using only Python's standard library:
 python scripts/serve_example.py
 ```
 
-Examples in this repo pin the latest published release:
-
-```roc
-app [main!] { roc: "nightly-2026-09-01-db83307", pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.11.0/3vqgmE9dzxoPRNgCbUYrfJhcsyV1DKpi8Q8qKAsSt1Br.tar.zst" }
-```
-
-`scripts/serve_example.py` builds and serves a local platform bundle and points
-a temporary example copy at it, so development exercises the checkout without
-editing the committed application.
+This serves `examples-dev`: it builds and serves a local platform bundle and
+points a temporary copy of the example at it, so development exercises the
+checkout without editing the committed application. Pass `--release` to build
+`examples-release` as committed instead, against its published bundle and with
+the compiler it pins.
 
 ## Architecture
 
@@ -189,9 +201,9 @@ development bundle, serve it locally, and validate source behavior through its
 URL.
 
 The release workflow performs the same build and bundle validation on pull
-requests, including native Windows build and runtime coverage. Checked-in
-examples pin the latest published release. The test runner replaces that pin
-with its served bundle so regular CI still tests the current checkout.
+requests, including native Windows build and runtime coverage. The test runner
+points temporary copies of `examples-dev` at its served bundle so regular CI
+tests the current checkout, while `examples-release` is tested as committed.
 
 Release validation, bundle metadata and testing, publication, versioned docs,
 and the docs follow-up pull request use the official

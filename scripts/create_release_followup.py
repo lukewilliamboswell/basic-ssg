@@ -16,7 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ("tests.yaml", "release.yml")
 REQUIRED_JOBS = ("CI required", "Bundle required")
-PENDING_MARKER = ".github/published-examples-pending"
+RELEASE_EXAMPLES = "examples-release"
+RELEASE_EXAMPLE_PATH = re.compile(rf"{RELEASE_EXAMPLES}/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*")
 
 
 def run(args: list[str], *, data: str | None = None) -> str:
@@ -49,17 +50,17 @@ def publish_status(sha: str, context: str, state: str, target_url: str) -> None:
 
 
 def changed_examples() -> tuple[list[str], list[str]]:
-    changed = run(["git", "diff", "--name-only", "--diff-filter=M", "--", "examples"]).splitlines()
-    deleted = run(["git", "diff", "--name-only", "--diff-filter=D"]).splitlines()
-    all_changed = run(["git", "diff", "--name-only"]).splitlines()
-    if not changed or deleted not in ([], [PENDING_MARKER]) or sorted(changed + deleted) != sorted(all_changed):
-        raise ValueError(f"Release follow-up must modify only existing example files: {all_changed}")
-    if any(
-        not re.fullmatch(r"examples/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*\.roc", path)
-        for path in changed
-    ):
-        raise ValueError(f"Release follow-up contains an unexpected path: {changed}")
-    return changed, deleted
+    """Return the (added or modified, deleted) paths, which must all be release examples."""
+    run(["git", "add", "--all"])
+    entries = run(["git", "diff", "--cached", "--name-status", "--no-renames"]).splitlines()
+    changes = [entry.split("\t", 1) for entry in entries]
+    paths = [path for _status, path in changes]
+    if not paths or any(RELEASE_EXAMPLE_PATH.fullmatch(path) is None for path in paths):
+        raise ValueError(f"Release follow-up must change only {RELEASE_EXAMPLES} files: {paths}")
+    return (
+        [path for status, path in changes if status != "D"],
+        [path for status, path in changes if status == "D"],
+    )
 
 
 def create_signed_commit(version: str, paths: list[str], deletions: list[str]) -> tuple[str, str]:
@@ -88,7 +89,7 @@ def create_signed_commit(version: str, paths: list[str], deletions: list[str]) -
         "variables": {"input": {
             "branch": {"repositoryNameWithOwner": repository, "branchName": branch},
             "expectedHeadOid": base,
-            "message": {"headline": f"Update examples for {version}"},
+            "message": {"headline": f"Update release examples for {version}"},
             "fileChanges": {"additions": additions, "deletions": [{"path": path} for path in deletions]},
         }},
     }
@@ -100,12 +101,13 @@ def create_signed_commit(version: str, paths: list[str], deletions: list[str]) -
     api(
         f"repos/{repository}/pulls",
         {
-            "title": f"Update examples for {version}",
+            "title": f"Update release examples for {version}",
             "head": branch,
             "base": default,
             "body": (
                 f"Release follow-up for {version}.\n\n"
-                "Updates public examples to the exact published platform bundle. "
+                f"Refreshes {RELEASE_EXAMPLES} from examples-dev and points it at the exact "
+                "published platform bundle. "
                 "The commit is GitHub-signed and validation is dispatched explicitly."
             ),
         },
@@ -172,7 +174,6 @@ def main() -> None:
     if re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", args.version) is None:
         raise SystemExit(f"Invalid release version: {args.version!r}")
     try:
-        (ROOT / PENDING_MARKER).unlink(missing_ok=True)
         paths, deletions = changed_examples()
         branch, sha = create_signed_commit(args.version, paths, deletions)
         validate(branch, sha)
