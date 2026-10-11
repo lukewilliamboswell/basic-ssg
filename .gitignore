@@ -12,6 +12,9 @@ platform/*.tar.gz
 *.tar.zst
 dist/
 .release/
+# Roc compiler cache (ROC_CACHE_DIR in CI) and nightly extracted by setup-roc.
+.roc-cache/
+roc_nightly-*/
 # Built per-target host libraries (produced by scripts/build.py and bundled for release).
 # The musl toolchain inputs (crt1.o/libc.a/libunwind.a) ARE committed.
 platform/targets/*/libhost.a
