@@ -19,22 +19,29 @@ class ValgrindTests(unittest.TestCase):
         "load_spec",
         return_value={
             "stages": {stage: stage == "check" for stage in test_runner.STAGES},
-            "apps": [{"path": "examples/article-inspector/main.roc", "cases": []}],
+            "apps": [{"path": "article-inspector/main.roc", "cases": []}],
         },
     )
     def test_source_validation_rewrites_only_a_temporary_copy(
         self, _spec: object, update: object, validate: object
     ) -> None:
-        committed = test_runner.ROOT / "examples/article-inspector/main.roc"
+        committed = test_runner.DEV_EXAMPLES / "article-inspector/main.roc"
         before = committed.read_bytes()
 
-        test_runner.run_suite("roc", "https://example.invalid/platform.tar.zst", "x64musl", "validate", valgrind=False)
+        test_runner.run_suite(
+            "roc",
+            test_runner.DEV_EXAMPLES,
+            "https://example.invalid/platform.tar.zst",
+            "x64musl",
+            "validate",
+            valgrind=False,
+        )
 
         self.assertEqual(committed.read_bytes(), before)
         temporary_source = update.call_args.args[0][0]
         self.assertNotEqual(temporary_source, committed)
         self.assertFalse(temporary_source.resolve().is_relative_to(test_runner.ROOT.resolve()))
-        self.assertNotEqual(validate.call_args.args[2], test_runner.ROOT)
+        self.assertFalse(validate.call_args.args[2].resolve().is_relative_to(test_runner.ROOT.resolve()))
 
     def test_local_platform_is_referenced_relatively(self) -> None:
         reference = test_runner.platform_reference("/repo/platform/main.roc", Path("/tmp/x/examples/app"))

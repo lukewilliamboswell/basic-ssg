@@ -26,8 +26,9 @@ from update_app_platform_urls import update_apps
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXAMPLES_DIR = ROOT / "examples"
-SPEC_PATH = ROOT / "scripts" / "test_spec.json"
+DEV_EXAMPLES = ROOT / "examples-dev"
+RELEASE_EXAMPLES = ROOT / "examples-release"
+SPEC_NAME = "test_spec.json"
 STAGES = ("fmt", "check", "test", "build", "run")
 
 
@@ -71,17 +72,19 @@ def declared_targets() -> tuple[str, ...]:
     return targets
 
 
-def load_spec() -> dict[str, Any]:
-    spec = json.loads(SPEC_PATH.read_text(encoding="utf-8"))
+def load_spec(examples_dir: Path) -> dict[str, Any]:
+    """Each examples directory carries its own spec; paths in it are relative to that directory."""
+    spec_path = examples_dir / SPEC_NAME
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
     if set(spec.get("stages", {})) != set(STAGES):
-        raise SystemExit(f"{SPEC_PATH}: stages must be exactly {', '.join(STAGES)}")
+        raise SystemExit(f"{spec_path}: stages must be exactly {', '.join(STAGES)}")
     apps = spec.get("apps")
     if not isinstance(apps, list) or not apps:
-        raise SystemExit(f"{SPEC_PATH}: apps must be a non-empty list")
+        raise SystemExit(f"{spec_path}: apps must be a non-empty list")
     declared = [str(app.get("path", "")) for app in apps]
     if len(declared) != len(set(declared)):
-        raise SystemExit(f"{SPEC_PATH}: each app path must be unique")
-    discovered = sorted(path.relative_to(ROOT).as_posix() for path in EXAMPLES_DIR.glob("*/main.roc"))
+        raise SystemExit(f"{spec_path}: each app path must be unique")
+    discovered = sorted(path.relative_to(examples_dir).as_posix() for path in examples_dir.glob("*/main.roc"))
     if sorted(declared) != discovered:
         raise SystemExit(f"Example/spec mismatch; declared={sorted(declared)}, discovered={discovered}")
     for app in apps:
@@ -153,7 +156,7 @@ def served_bundle(path: Path) -> Iterator[str]:
         yield url
 
 
-def validate_apps(roc: str, spec: dict[str, Any], source_root: Path = ROOT) -> None:
+def validate_apps(roc: str, spec: dict[str, Any], source_root: Path) -> None:
     for stage in ("fmt", "check", "test"):
         if not spec["stages"][stage]:
             continue
@@ -168,7 +171,7 @@ def build_apps(
     target: str,
     output: Path,
     spec: dict[str, Any],
-    source_root: Path = ROOT,
+    source_root: Path,
 ) -> dict[str, Path]:
     print(f"\n=== Building examples for {target} ===")
     binaries: dict[str, Path] = {}
@@ -194,7 +197,7 @@ def compiler_runtime_input(name: str) -> Path:
 
 
 def build_valgrind_apps(
-    roc: str, output: Path, spec: dict[str, Any], source_root: Path = ROOT
+    roc: str, output: Path, spec: dict[str, Any], source_root: Path
 ) -> dict[str, Path]:
     print("\n=== Building examples for Valgrind (x64glibc) ===")
     command("cargo", "build", "--locked", "--lib", "--profile", "memcheck")
@@ -346,6 +349,7 @@ def run_case(
     binary: Path,
     app: dict[str, Any],
     case: dict[str, Any],
+    source_root: Path,
     *,
     valgrind: bool,
 ) -> None:
@@ -357,11 +361,11 @@ def run_case(
         input_dir, output_dir = root / "input", root / "output"
         root.mkdir(parents=True)
         if source := case.get("input"):
-            shutil.copytree(ROOT / source, input_dir)
+            shutil.copytree(source_root / source, input_dir)
         else:
             input_dir.mkdir()
         if public := case.get("public"):
-            shutil.copytree(ROOT / public, output_dir)
+            shutil.copytree(source_root / public, output_dir)
         else:
             output_dir.mkdir()
         for item in case.get("input_files", []):
@@ -410,13 +414,13 @@ def run_case(
 
 
 def run_cases(
-    binaries: dict[str, Path], spec: dict[str, Any], *, valgrind: bool
+    binaries: dict[str, Path], spec: dict[str, Any], source_root: Path, *, valgrind: bool
 ) -> None:
     suffix = " under Valgrind" if valgrind else ""
     print(f"\n=== Running example behavior specs{suffix} ===")
     for app in spec["apps"]:
         for case in app["cases"]:
-            run_case(binaries[app["path"]], app, case, valgrind=valgrind)
+            run_case(binaries[app["path"]], app, case, source_root, valgrind=valgrind)
 
 
 def platform_reference(platform_url: str, directory: Path) -> str:
@@ -428,16 +432,17 @@ def platform_reference(platform_url: str, directory: Path) -> str:
 
 def run_suite(
     roc: str,
+    examples_dir: Path,
     platform_url: str | None,
     target: str,
     operation: str,
     *,
     valgrind: bool,
 ) -> None:
-    spec = load_spec()
+    spec = load_spec(examples_dir)
     with tempfile.TemporaryDirectory(prefix="basic-ssg-examples-") as temporary:
-        source_root = Path(temporary)
-        shutil.copytree(EXAMPLES_DIR, source_root / "examples")
+        source_root = Path(temporary) / examples_dir.name
+        shutil.copytree(examples_dir, source_root, ignore=shutil.ignore_patterns("output"))
         sources = [source_root / app["path"] for app in spec["apps"]]
         if platform_url is not None:
             for source in sources:
@@ -451,20 +456,22 @@ def run_suite(
                     else build_apps(roc, target, Path(binary_temp), spec, source_root)
                 )
                 if spec["stages"]["run"]:
-                    run_cases(binaries, spec, valgrind=valgrind)
+                    run_cases(binaries, spec, source_root, valgrind=valgrind)
 
 
 def main() -> None:
     configure_console()
-    parser = argparse.ArgumentParser(description="Validate basic-ssg examples from scripts/test_spec.json")
+    parser = argparse.ArgumentParser(
+        description=f"Validate basic-ssg examples from their {SPEC_NAME}; examples-dev by default"
+    )
     parser.add_argument("--roc", default=os.environ.get("ROC", "roc"))
     parser.add_argument("--bundle-path", type=Path)
     parser.add_argument("--bundle-url", default=os.environ.get("BUNDLE_URL"))
     parser.add_argument("--platform-url", help="use platform source directly instead of a bundle")
     parser.add_argument(
-        "--published",
+        "--release",
         action="store_true",
-        help="test committed example compiler and release URLs without rewriting them",
+        help="test examples-release as committed, with its own compiler and release URL",
     )
     parser.add_argument("--no-build", action="store_true", help="do not rebuild the platform host")
     parser.add_argument(
@@ -480,8 +487,8 @@ def main() -> None:
         help="run native x64 Linux example cases under Valgrind Memcheck",
     )
     args = parser.parse_args()
-    if sum((args.bundle_path is not None, args.bundle_url is not None, args.platform_url is not None, args.published)) > 1:
-        parser.error("--bundle-path, --bundle-url, --platform-url, and --published are mutually exclusive")
+    if sum((args.bundle_path is not None, args.bundle_url is not None, args.platform_url is not None, args.release)) > 1:
+        parser.error("--bundle-path, --bundle-url, --platform-url, and --release are mutually exclusive")
     roc = executable(args.roc)
     target = args.target or detect_native_target()
     if args.valgrind and args.operation != "all":
@@ -500,21 +507,25 @@ def main() -> None:
         parser.error("--valgrind requires 'strip' on PATH")
     if args.operation == "all" and target != detect_native_target():
         raise SystemExit(f"Cannot run {target} artifacts on native target {detect_native_target()}")
-    version = active_roc_version(roc) if args.allow_unpinned_roc else require_pinned_roc(roc)
+    version = (
+        active_roc_version(roc)
+        if args.allow_unpinned_roc
+        else require_pinned_roc(roc, release_examples=args.release)
+    )
     print(f"Using roc version: {version}")
-    if not args.no_build and not any((args.bundle_path, args.bundle_url, args.platform_url, args.published)):
+    if not args.no_build and not any((args.bundle_path, args.bundle_url, args.platform_url, args.release)):
         command(sys.executable, ROOT / "scripts" / "build.py", "--target", target)
     generated_bundle: Path | None = None
     try:
-        if args.published:
-            run_suite(roc, None, target, args.operation, valgrind=args.valgrind)
+        if args.release:
+            run_suite(roc, RELEASE_EXAMPLES, None, target, args.operation, valgrind=args.valgrind)
         elif args.platform_url:
             run_suite(
-                roc, args.platform_url, target, args.operation, valgrind=args.valgrind
+                roc, DEV_EXAMPLES, args.platform_url, target, args.operation, valgrind=args.valgrind
             )
         elif args.bundle_url:
             run_suite(
-                roc, args.bundle_url, target, args.operation, valgrind=args.valgrind
+                roc, DEV_EXAMPLES, args.bundle_url, target, args.operation, valgrind=args.valgrind
             )
         else:
             bundle = args.bundle_path
@@ -526,7 +537,7 @@ def main() -> None:
             if not bundle.is_file():
                 raise SystemExit(f"Bundle does not exist: {bundle}")
             with served_bundle(bundle.resolve()) as url:
-                run_suite(roc, url, target, args.operation, valgrind=args.valgrind)
+                run_suite(roc, DEV_EXAMPLES, url, target, args.operation, valgrind=args.valgrind)
     finally:
         if generated_bundle is not None:
             generated_bundle.unlink(missing_ok=True)

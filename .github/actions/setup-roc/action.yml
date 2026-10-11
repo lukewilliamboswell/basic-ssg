@@ -6,6 +6,10 @@ inputs:
     description: Install the latest nightly instead of the agreed Roc header pin
     required: false
     default: "false"
+  release-examples:
+    description: Install the compiler pinned by examples-release instead of the development pin
+    required: false
+    default: "false"
 
 outputs:
   nightly-tag:
@@ -20,8 +24,18 @@ runs:
       shell: bash
       env:
         USE_LATEST: ${{ inputs.use-latest }}
+        RELEASE_EXAMPLES: ${{ inputs.release-examples }}
       run: |
         set -euo pipefail
+
+        case "$RELEASE_EXAMPLES" in
+          true) pin_flag="--release-examples" ;;
+          false) pin_flag="" ;;
+          *)
+            echo "release-examples must be true or false, got: $RELEASE_EXAMPLES" >&2
+            exit 1
+            ;;
+        esac
 
         case "$USE_LATEST" in
           true)
@@ -29,7 +43,7 @@ runs:
             echo "Installing the latest Roc nightly"
             ;;
           false)
-            nightly_tag="$(python "$GITHUB_WORKSPACE/scripts/roc_version.py" --print-tag)"
+            nightly_tag="$(python "$GITHUB_WORKSPACE/scripts/roc_version.py" --print-tag $pin_flag)"
             echo "Installing Roc $nightly_tag from the selected Roc headers"
             ;;
           *)

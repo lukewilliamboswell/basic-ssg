@@ -19,7 +19,7 @@ platform/targets/x64win/*.lib
 platform/COPYING.MinGW-w64-runtime.txt
 
 # examples
-examples/*/output/
+examples-*/*/output/
 
 # generated files
 crates/roc_std/
