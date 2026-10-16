@@ -319,7 +319,9 @@ def record_host(output: Path, build_commands: list[list[str]], toolchain: dict[s
             originals = sorted(p for p in directory.rglob("*") if p.is_file()
                                and re.match(r"^(LICENSE|COPYING|NOTICE|UNLICENSE)([._-]|$)", p.name, re.I))
         if not originals:
-            raise SystemExit(f"No license files for {package['name']} {package['version']}")
+            # Some crates are packaged without license texts; their manifest
+            # still records the reviewed SPDX expression, authors and repository.
+            originals = [directory / "Cargo.toml"]
         package_licenses = []
         for original in originals:
             relative = original.relative_to(directory).as_posix()

@@ -23,8 +23,10 @@ lazy linking. `host.lib` remains separate.
 
 The MSVC Rust host embeds Rust and its Cargo dependencies. The Windows producer
 collects the resolved dependencies' original license files, source copyright
-headers, crate checksums and Rust's `COPYRIGHT-library.html`. An unknown license
-expression or missing notice stops the build. Microsoft SDK or CRT archives are
+headers, crate checksums and Rust's `COPYRIGHT-library.html`. Crates packaged without
+license texts (`asciidoc-parser`, `plist`) are covered by their `Cargo.toml`, which
+records the license expression, authors and repository. An unknown license
+expression stops the build. Microsoft SDK or CRT archives are
 not copied into the platform.
 
 The independently released runtime-input archive also contains Windows COFF
@@ -37,7 +39,8 @@ Windows platform inputs are now built by `scripts/windows_runtime.py` instead.
 
 The Rust host uses `asciidoc-parser` 0.30.0 under MIT OR Apache-2.0. Its newly
 introduced runtime dependencies are `bytecount` (Apache-2.0 OR MIT),
-`percent-encoding` (MIT OR Apache-2.0), `self_cell` (Apache-2.0 OR MIT), and
+`percent-encoding` (MIT OR Apache-2.0), `self_cell` (Apache-2.0 OR GPL-2.0-only, used
+under Apache-2.0), and
 `thiserror`/`syn` (MIT OR Apache-2.0). Full dependency versions are pinned in
 `Cargo.lock`.
 
