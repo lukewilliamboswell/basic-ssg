@@ -4,7 +4,6 @@
     "release.yml"
   ],
   "compiler_roots": [
-    "platform/main.roc",
     "examples-dev/article-inspector/main.roc",
     "examples-dev/orchard-guide/main.roc",
     "examples-dev/travel-journal/main.roc",
