@@ -33,16 +33,16 @@ class RocVersionTests(unittest.TestCase):
             (root / ".roc-version").write_text(PIN + "\n", encoding="utf-8")
         return root
 
-    def test_reads_agreeing_app_and_platform_header_pins(self) -> None:
+    def test_reads_agreeing_app_header_pins(self) -> None:
         root = self.repository({
-            "platform/main.roc": f'platform "" packages {{ roc: "{PIN}" }}',
             "examples/hello/main.roc": f'app [main!] {{ roc: "{PIN}" }}',
+            "examples/other/main.roc": f'app [main!] {{ roc: "{PIN}" }}',
         })
         self.assertEqual(pinned_roc(root), (PIN, "db83307"))
 
     def test_rejects_disagreeing_header_pins(self) -> None:
         root = self.repository({
-            "platform/main.roc": f'platform "" packages {{ roc: "{PIN}" }}',
+            "examples/other/main.roc": f'app [main!] {{ roc: "{PIN}" }}',
             "examples/hello/main.roc": 'app [main!] { roc: "nightly-2026-09-08-39a3f89" }',
         })
         with self.assertRaisesRegex(SystemExit, "disagree"):
@@ -58,7 +58,7 @@ class RocVersionTests(unittest.TestCase):
     def test_release_examples_have_their_own_pin(self) -> None:
         release_pin = "nightly-2026-09-08-39a3f89"
         root = self.repository({
-            "platform/main.roc": f'platform "" packages {{ roc: "{PIN}" }}',
+            "examples-dev/hello/main.roc": f'app [main!] {{ roc: "{PIN}" }}',
             "examples-release/hello/main.roc": f'app [main!] {{ roc: "{release_pin}" }}',
         })
         (root / "examples-release/hello/content/snippet.roc").parent.mkdir()
@@ -71,7 +71,7 @@ class RocVersionTests(unittest.TestCase):
 
     def test_rejects_legacy_version_file(self) -> None:
         root = self.repository(
-            {"platform/main.roc": f'platform "" packages {{ roc: "{PIN}" }}'}, legacy=True
+            {"examples/hello/main.roc": f'app [main!] {{ roc: "{PIN}" }}'}, legacy=True
         )
         with self.assertRaisesRegex(SystemExit, "legacy .roc-version"):
             pinned_roc(root)

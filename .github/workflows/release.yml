@@ -97,7 +97,7 @@ jobs:
           version: ${{ inputs.release_version }}
           allow-default-branch: "true"
           allow-nightly-bootstrap: "true"
-          compiler-root: platform/main.roc
+          compiler-root: examples-dev/orchard-guide/main.roc
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
