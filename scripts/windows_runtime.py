@@ -317,7 +317,7 @@ def record_host(output: Path, build_commands: list[list[str]], toolchain: dict[s
             originals = [ROOT / "LICENSE"]
         else:
             originals = sorted(p for p in directory.rglob("*") if p.is_file()
-                               and re.match(r"^(LICENSE|COPYING|NOTICE|UNLICENSE)([._-]|$)", p.name, re.I))
+                               and re.match(r"^(LICEN[CS]E|COPYING|NOTICE|UNLICENSE)([._-]|$)", p.name, re.I))
         if not originals:
             # Some crates are packaged without license texts; their manifest
             # still records the reviewed SPDX expression, authors and repository.
