@@ -172,4 +172,4 @@ jobs:
             --target "$GITHUB_SHA" \
             --latest=false \
             --title "Runtime inputs v$VERSION" \
-            --notes "Reproducible musl runtime objects and generated MinGW import stubs. Verify with: gh attestation verify basic-ssg-runtime-inputs-v$VERSION.zip --repo $GITHUB_REPOSITORY"
+            --notes "Reproducible musl runtime objects. Verify with: gh attestation verify basic-ssg-runtime-inputs-v$VERSION.zip --repo $GITHUB_REPOSITORY"

@@ -190,8 +190,7 @@ the `Runtime inputs` workflow: real musl startup/libc/libunwind archives. Once
 `.github/runtime-inputs.json` is present, builds download the immutable archive,
 verify its SHA-256 and (in CI) its GitHub attestation, and hydrate
 `platform/targets/`. Until the first runtime release is adopted, the checked-in
-musl files remain. The archive still carries Windows import stubs that the
-Windows build no longer uses.
+musl files remain.
 
 To reproduce a runtime-input candidate locally with Zig 0.16.0:
 

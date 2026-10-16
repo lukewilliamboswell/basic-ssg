@@ -24,7 +24,6 @@ TARGET_INPUTS = {
     "x64win": ("host.lib", *windows_runtime.LIBRARIES),
 }
 LICENSE_NAMES = ("LICENSE", "THIRD_PARTY_LICENSES.md")
-RUNTIME_NOTICE = PLATFORM_DIR / "COPYING.MinGW-w64-runtime.txt"
 
 
 def executable(command: str) -> str:
@@ -106,7 +105,7 @@ def main() -> None:
     if missing_licenses:
         raise SystemExit(f"Missing required license files: {missing_licenses}")
 
-    runtime_notices = [RUNTIME_NOTICE] if RUNTIME_NOTICE.is_file() else []
+    runtime_notices: list[Path] = []
     # The Windows inputs travel with their provenance record and original notices.
     if args.target in (None, "x64win"):
         runtime_notices.extend(windows_runtime.validate(PLATFORM_DIR / "targets" / "x64win"))
