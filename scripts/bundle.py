@@ -8,7 +8,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from build import ROC_TARGETS, WINDOWS_SYSTEM_LIBRARIES
+import windows_runtime
+from build import ROC_TARGETS
 from roc_version import active_roc_version, require_pinned_roc
 
 
@@ -20,7 +21,7 @@ TARGET_INPUTS = {
     "arm64mac": ("libhost.a",),
     "x64musl": ("crt1.o", "libhost.a", "libunwind.a", "libc.a"),
     "arm64musl": ("crt1.o", "libhost.a", "libunwind.a", "libc.a"),
-    "x64win": ("host.lib", *WINDOWS_SYSTEM_LIBRARIES),
+    "x64win": ("host.lib", *windows_runtime.LIBRARIES),
 }
 LICENSE_NAMES = ("LICENSE", "THIRD_PARTY_LICENSES.md")
 RUNTIME_NOTICE = PLATFORM_DIR / "COPYING.MinGW-w64-runtime.txt"
@@ -106,6 +107,9 @@ def main() -> None:
         raise SystemExit(f"Missing required license files: {missing_licenses}")
 
     runtime_notices = [RUNTIME_NOTICE] if RUNTIME_NOTICE.is_file() else []
+    # The Windows inputs travel with their provenance record and original notices.
+    if args.target in (None, "x64win"):
+        runtime_notices.extend(windows_runtime.validate(PLATFORM_DIR / "targets" / "x64win"))
     source_files = [*roc_files, *library_files, *license_sources, *runtime_notices]
     unpacked_size = sum(path.stat().st_size for path in source_files)
     if unpacked_size > MAX_PLATFORM_BYTES:
