@@ -152,7 +152,7 @@ python scripts/glue.py --check
 ```
 
 By default, the glue script uses the immutable `RustGlue.roc` from the Roc
-commit named by the platform header's compiler pin. `ROC_RUST_GLUE` and `ROC_GLUE_SPEC` can override
+commit named by the development examples' compiler pin. `ROC_RUST_GLUE` and `ROC_GLUE_SPEC` can override
 that URL with a local path, bundle URL, or installed shorthand;
 `ROC_GLUE_DIR` and `ROC_SRC` can select an explicit matching compiler checkout.
 Glue specs are compiled as cached host dynamic libraries. The script defaults
