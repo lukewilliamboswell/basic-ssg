@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-10-09-258ab27" }
+app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-10-17-5f126ac" }
 
 import pf.SSG
 import pf.Path
