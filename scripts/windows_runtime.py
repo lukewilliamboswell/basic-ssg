@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import subprocess
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,11 +134,37 @@ def notice(output: Path, name: str, contents: bytes) -> str:
     return path.relative_to(output).as_posix()
 
 
+def upstream_sources(upstream: dict[str, object]) -> list[tuple[str, str, dict[str, str]]]:
+    """(project, commit, files) groups of vendored sources, with their pinned hashes."""
+    basic_cli = upstream["basic_cli"]
+    return [(upstream["project"], upstream["commit"], upstream["files"]),
+            (basic_cli["project"], basic_cli["commit"], basic_cli["files"])]
+
+
+def verify_vendored(upstream: dict[str, object]) -> None:
+    for _, _, files in upstream_sources(upstream):
+        for name, expected in files.items():
+            if digest(SOURCE_DIR / name) != expected:
+                raise SystemExit(f"Vendored source changed without updating provenance: {name}")
+
+
+def check_upstream() -> None:
+    """Confirm the pinned hashes describe the files at the pinned upstream commits."""
+    upstream = json.loads((SOURCE_DIR / "UPSTREAM.json").read_text())
+    directories = [upstream["directory"], upstream["basic_cli"]["directory"]]
+    for (project, commit, files), directory in zip(upstream_sources(upstream), directories):
+        for name, expected in files.items():
+            url = f"https://raw.githubusercontent.com/{project}/{commit}/{directory}/{name}"
+            with urllib.request.urlopen(url, timeout=30) as response:
+                actual = hashlib.sha256(response.read()).hexdigest()
+            if actual != expected:
+                raise SystemExit(f"{name} does not match {project}@{commit[:12]}: {actual}")
+    print("Vendored sources match their pinned upstream commits.")
+
+
 def build_runtime(output: Path, scratch: Path, zig_lib: Path, zig: str) -> dict[str, object]:
     upstream = json.loads((SOURCE_DIR / "UPSTREAM.json").read_text())
-    for name, expected in upstream["files"].items():
-        if digest(SOURCE_DIR / name) != expected:
-            raise SystemExit(f"Vendored source changed without updating provenance: {name}")
+    verify_vendored(upstream)
     license_path = SOURCE_DIR / "LICENSE.roc.txt"
     if digest(license_path) != upstream["license_sha256"]:
         raise SystemExit("Vendored Roc license does not match UPSTREAM.json")
@@ -175,7 +202,9 @@ def build_runtime(output: Path, scratch: Path, zig_lib: Path, zig: str) -> dict[
         "redistribution_basis": "UPL-1.0 and MIT permit source and binary redistribution with notices retained.",
         "build_commands": commands,
         "local_sources": [source_record(SOURCE_DIR / name, ROOT) for name in ("security.zig", "type_info.cpp")],
-        "modifications": ["Added original UPL-1.0 stack-cookie and MSVC type-info metadata support (copied from basic-cli); upstream Roc sources are unmodified."],
+        "local_source_revision": "https://github.com/" + upstream["basic_cli"]["project"] + "/tree/"
+                                 + upstream["basic_cli"]["commit"] + "/" + upstream["basic_cli"]["directory"],
+        "modifications": ["Added original UPL-1.0 stack-cookie and MSVC type-info metadata support (copied unmodified from basic-cli); upstream Roc sources are unmodified."],
     }
 
 
@@ -425,8 +454,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "platform" / "targets" / "x64win")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check-upstream", action="store_true",
+                        help="download the vendored sources at their pinned commits and compare hashes")
     args = parser.parse_args()
-    if args.check:
+    if args.check_upstream:
+        check_upstream()
+    elif args.check:
         validate(args.output_dir)
     else:
         build(args.output_dir)

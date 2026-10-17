@@ -185,6 +185,12 @@ writes `PROVENANCE.json` and the original license notices to `licenses/`, and
 `scripts/bundle.py` ships them in the bundle. `python scripts/windows_runtime.py --check`
 verifies the inventory.
 
+The files in `native/windows/` are copies pinned by commit and SHA-256 in `UPSTREAM.json`:
+the startup, initializer and TLS sources from Roc, and `security.zig`, `type_info.cpp` and
+`runtime_fixture.c` from basic-cli. A build fails if any of them differs from its pin. To
+update one, change the file, its hash and the commit together, then run
+`python scripts/windows_runtime.py --check-upstream` to confirm the pins match upstream.
+
 The musl compiler runtime inputs are released independently by
 the `Runtime inputs` workflow: real musl startup/libc/libunwind archives. Once
 `.github/runtime-inputs.json` is present, builds download the immutable archive,

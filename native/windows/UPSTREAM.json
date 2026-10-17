@@ -7,5 +7,16 @@
     "tls.zig": "1d541a2c44d7ac4437fc37396548b3b16cba5c363b7c87572fb29a495e8af683"
   },
   "license": "UPL-1.0",
-  "license_sha256": "a71f5f17762cc8ac7a5435fe9810e029dc937d379d216fa7630a2775d42eb833"
+  "license_sha256": "a71f5f17762cc8ac7a5435fe9810e029dc937d379d216fa7630a2775d42eb833",
+  "basic_cli": {
+    "project": "roc-lang/basic-cli",
+    "commit": "cbd8b47c7ef180daa4f10138191ba7215a249e96",
+    "directory": "native/windows",
+    "files": {
+      "runtime_fixture.c": "4788d3c59753ecb7324e1a4ecd54d06ae5eb4e789e0ded188c654465e71d45ac",
+      "security.zig": "55538b7dc8144e87b6df00d73db0b3d87f2eb6e2daa21ac8f5efd156c7b07f12",
+      "type_info.cpp": "e9976e48d4c399027c76a3db65ad9e4ff366fcbfe0753f0b3bcb2152ccf5925c"
+    }
+  },
+  "directory": "src/default_platform/msvc_runtime"
 }

@@ -90,6 +90,18 @@ class ProvenanceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "redistribution_basis.*child"):
             runtime.validate(self.output)
 
+    def test_vendored_sources_must_match_pinned_hashes(self):
+        upstream = json.loads((runtime.SOURCE_DIR / "UPSTREAM.json").read_text())
+        runtime.verify_vendored(upstream)
+        for project, files in ((upstream["project"], upstream["files"]),
+                               (upstream["basic_cli"]["project"], upstream["basic_cli"]["files"])):
+            with self.subTest(project=project):
+                changed = json.loads(json.dumps(upstream))
+                group = changed["files"] if project == upstream["project"] else changed["basic_cli"]["files"]
+                group[next(iter(files))] = "0" * 64
+                with self.assertRaisesRegex(SystemExit, "Vendored source changed"):
+                    runtime.verify_vendored(changed)
+
     def test_stdcall_normalization_preserves_ordinals(self):
         definition = runtime.normalize_definition("EXPORTS\n Foo@8 @123\n Bar @4 DATA\n")
         self.assertIn("Foo @123", definition)
