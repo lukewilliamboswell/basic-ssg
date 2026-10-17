@@ -12,7 +12,8 @@ release-bundling scripts, and examples.
 - Zig for reproducible cross-compilation of the Linux musl targets
 - Valgrind for x86-64 Linux memory validation (installed by CI)
 - On Windows, Visual Studio Build Tools with the MSVC x64 toolchain and Windows
-  SDK
+  SDK, Zig 0.17.0 (it builds the Windows runtime inputs), and the Rust
+  `rust-docs` and `llvm-tools-preview` components
 
 Commands below use `python` as the Python 3.10+ launcher. If that command is not
 available, substitute `python3` on macOS or Linux, or `py -3.10` on Windows.
@@ -174,12 +175,28 @@ MSVC toolchain:
 python scripts/build.py --target x64win
 ```
 
-This produces `host.lib`. Compiler runtime inputs are released independently by
-the `Runtime inputs` workflow: real musl startup/libc/libunwind archives and
-MinGW-generated Windows COFF import stubs. Once `.github/runtime-inputs.json` is
-present, builds download the immutable archive, verify its SHA-256 and (in CI)
-its GitHub attestation, and hydrate `platform/targets/`. Until the first runtime
-release is adopted, the checked-in musl files and Windows SDK fallback remain.
+This produces `host.lib` and `windows_support.lib` in `platform/targets/x64win/`.
+`windows_support.lib` combines the MSVC startup, TLS and initializer runtime (vendored
+from Roc in `native/windows/`, see `UPSTREAM.json`) with UCRT and Win32 import
+libraries generated from Zig's mingw-w64 definitions; no Microsoft SDK or CRT
+archives are copied. Since Roc stopped probing for a Windows SDK, an `x64win`
+platform must list all of its linker inputs. `scripts/windows_runtime.py` also
+writes `PROVENANCE.json` and the original license notices to `licenses/`, and
+`scripts/bundle.py` ships them in the bundle. `python scripts/windows_runtime.py --check`
+verifies the inventory.
+
+The files in `native/windows/` are copies pinned by commit and SHA-256 in `UPSTREAM.json`:
+the startup, initializer and TLS sources from Roc, and `security.zig`, `type_info.cpp` and
+`runtime_fixture.c` from basic-cli. A build fails if any of them differs from its pin. To
+update one, change the file, its hash and the commit together, then run
+`python scripts/windows_runtime.py --check-upstream` to confirm the pins match upstream.
+
+The musl compiler runtime inputs are released independently by
+the `Runtime inputs` workflow: real musl startup/libc/libunwind archives. Once
+`.github/runtime-inputs.json` is present, builds download the immutable archive,
+verify its SHA-256 and (in CI) its GitHub attestation, and hydrate
+`platform/targets/`. Until the first runtime release is adopted, the checked-in
+musl files remain.
 
 To reproduce a runtime-input candidate locally with Zig 0.16.0:
 

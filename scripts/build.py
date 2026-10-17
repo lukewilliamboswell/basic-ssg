@@ -8,6 +8,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import windows_runtime
+
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {
@@ -19,22 +21,6 @@ TARGETS = {
 ALL_TARGETS = tuple(TARGETS)
 ROC_TARGETS = (*ALL_TARGETS, "x64win")
 WINDOWS_TARGET = "x86_64-pc-windows-msvc"
-WINDOWS_SYSTEM_LIBRARIES = (
-    "advapi32.lib",
-    "bcrypt.lib",
-    "crypt32.lib",
-    "dbghelp.lib",
-    "iphlpapi.lib",
-    "kernel32.lib",
-    "ncrypt.lib",
-    "ntdll.lib",
-    "ole32.lib",
-    "secur32.lib",
-    "shell32.lib",
-    "user32.lib",
-    "userenv.lib",
-    "ws2_32.lib",
-)
 RUNTIME_INPUT_CONFIG = ROOT / ".github" / "runtime-inputs.json"
 
 
@@ -175,51 +161,30 @@ def build_target(target_name: str, *, native: bool = False) -> None:
     strip_linux_host(target_name)
 
 
-def windows_sdk_version(path: Path) -> tuple[int, ...]:
-    try:
-        return tuple(int(part) for part in path.name.split("."))
-    except ValueError:
-        return ()
-
-
-def find_windows_sdk_lib_dir() -> Path:
-    program_files = os.environ.get("ProgramFiles(x86)")
-    if not program_files:
-        raise SystemExit("ProgramFiles(x86) is not set; cannot locate the Windows SDK")
-
-    sdk_root = Path(program_files) / "Windows Kits" / "10" / "Lib"
-    if not sdk_root.is_dir():
-        raise SystemExit(f"Could not find Windows SDK library directory: {sdk_root}")
-    candidates = sorted(
-        (
-            directory / "um" / "x64"
-            for directory in sdk_root.iterdir()
-            if directory.is_dir()
-            and (directory / "um" / "x64" / "ws2_32.lib").is_file()
-        ),
-        key=lambda path: windows_sdk_version(path.parents[1]),
-        reverse=True,
+def windows_build_env() -> dict[str, str]:
+    env = os.environ.copy()
+    # The runtime inputs import the system UCRT, so build the host with the
+    # dynamic CRT even if the environment asks for +crt-static.
+    existing = env.get("CARGO_ENCODED_RUSTFLAGS")
+    if existing is None:
+        existing = "\x1f".join(env.get("RUSTFLAGS", "").split())
+    env["CARGO_ENCODED_RUSTFLAGS"] = (
+        existing + ("\x1f" if existing else "") + "-Ctarget-feature=-crt-static"
     )
-    if not candidates:
-        raise SystemExit(f"Could not find x64 Windows SDK libraries under {sdk_root}")
-    return candidates[0]
+    return env
 
 
 def build_windows() -> None:
     print(f"Building for x64win ({WINDOWS_TARGET})...")
     install_rust_target(WINDOWS_TARGET)
-    run(
-        "cargo",
-        "build",
-        "--locked",
-        "--release",
-        "--lib",
-        "--target",
-        WINDOWS_TARGET,
-    )
+    env = windows_build_env()
+    build_command = [
+        "cargo", "build", "--locked", "--release", "--lib", "--target", WINDOWS_TARGET,
+    ]
+    run(*build_command, env=env)
 
     output_dir = ROOT / "platform" / "targets" / "x64win"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    windows_runtime.build(output_dir)
     host_destination = output_dir / "host.lib"
     shutil.copy2(
         ROOT / "target" / WINDOWS_TARGET / "release" / "host.lib",
@@ -227,18 +192,9 @@ def build_windows() -> None:
     )
     print(f"  -> {host_destination.relative_to(ROOT)}")
 
-    runtime_ready = os.environ.get("RUNTIME_INPUTS_READY") == "true"
-    if not runtime_ready and not hydrate_runtime_inputs():
-        # Transitional fallback until the first independently attested runtime
-        # package is published and .github/runtime-inputs.json is committed.
-        sdk_lib_dir = find_windows_sdk_lib_dir()
-        for name in WINDOWS_SYSTEM_LIBRARIES:
-            source = sdk_lib_dir / name
-            if not source.is_file():
-                raise SystemExit(f"Could not find required Windows SDK library: {source}")
-            destination = output_dir / name
-            shutil.copy2(source, destination)
-            print(f"  -> {destination.relative_to(ROOT)}")
+    windows_runtime.record_host(
+        output_dir, [build_command], {"rust_flags": env["CARGO_ENCODED_RUSTFLAGS"]}
+    )
 
 
 def main() -> None:
