@@ -4,11 +4,28 @@
 from __future__ import annotations
 
 import tempfile
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 import test as test_runner
+
+
+class BundleTests(unittest.TestCase):
+    def test_created_archive_is_relative_to_roc_working_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_directory:
+            root = Path(raw_directory)
+            (root / "platform").mkdir()
+            archive = root / "bundle.tar.zst"
+            archive.write_bytes(b"archive")
+            for reported in ("../bundle.tar.zst", str(archive)):
+                with self.subTest(reported=reported), \
+                     patch.object(test_runner, "ROOT", root), \
+                     patch.object(test_runner.subprocess, "run", return_value=subprocess.CompletedProcess(
+                         [], 0, stdout=f"Created: {reported}\n"
+                     )):
+                    self.assertEqual(test_runner.create_bundle("roc", "arm64mac"), archive.resolve())
 
 
 class ValgrindTests(unittest.TestCase):
