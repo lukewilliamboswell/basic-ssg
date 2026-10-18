@@ -114,7 +114,9 @@ def create_bundle(roc: str, target: str, *, allow_unpinned_roc: bool = False) ->
     if not matches:
         raise SystemExit("Bundle creation did not report a .tar.zst archive")
     path = Path(matches[-1])
-    path = path if path.is_absolute() else ROOT / path
+    # Roc reports Created paths relative to its working directory, which
+    # bundle.py sets to platform/ while staging the archive inputs.
+    path = path if path.is_absolute() else ROOT / "platform" / path
     if not path.is_file():
         raise SystemExit(f"Bundle creation did not produce an archive: {path}")
     return path.resolve()
