@@ -95,9 +95,6 @@ jobs:
           - os: ubuntu-24.04-arm
             target: arm64musl
             python: python3
-          - os: windows-2025
-            target: x64win
-            python: python
     steps:
       - name: Checkout the exact producer commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -109,7 +106,6 @@ jobs:
         uses: ./.github/actions/setup-roc
 
       - name: Install pinned Zig
-        if: runner.os != 'Windows'
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
           version: 0.16.0
@@ -129,24 +125,12 @@ jobs:
           --destination platform
 
       - name: Build a fresh host around the candidate runtime
-        env:
-          RUNTIME_INPUTS_READY: "true"
         run: ${{ matrix.python }} scripts/build.py --target ${{ matrix.target }}
 
-      - name: Bundle and test candidate runtime (Unix)
-        if: runner.os != 'Windows'
+      - name: Bundle and test candidate runtime
         run: |
           python3 scripts/bundle.py --target ${{ matrix.target }} --output-dir "$RUNNER_TEMP/bundle"
           python3 scripts/test.py --bundle-path "$RUNNER_TEMP"/bundle/*.tar.zst --no-build
-
-      - name: Bundle and test candidate runtime (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          python scripts/bundle.py --target x64win --output-dir "$env:RUNNER_TEMP/bundle"
-          $bundle = (Get-ChildItem "$env:RUNNER_TEMP/bundle/*.tar.zst").FullName
-          if ($bundle.Count -ne 1) { throw "Expected exactly one bundle" }
-          python scripts/test.py --bundle-path $bundle --no-build
 
   publish:
     name: Attest and publish runtime inputs
@@ -188,4 +172,4 @@ jobs:
             --target "$GITHUB_SHA" \
             --latest=false \
             --title "Runtime inputs v$VERSION" \
-            --notes "Reproducible musl runtime objects and generated MinGW import stubs. Verify with: gh attestation verify basic-ssg-runtime-inputs-v$VERSION.zip --repo $GITHUB_REPOSITORY"
+            --notes "Reproducible musl runtime objects. Verify with: gh attestation verify basic-ssg-runtime-inputs-v$VERSION.zip --repo $GITHUB_REPOSITORY"

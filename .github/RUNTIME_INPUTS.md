@@ -8,9 +8,8 @@ independent `runtime-inputs-vX.Y.Z` release without changing the latest platform
 release.
 
 The archive contains real musl `crt1.o`, `libc.a`, and `libunwind.a` files for
-x64 and ARM64. Its Windows files are generated COFF import stubs from Zig's
-mingw-w64 definitions, not Microsoft SDK libraries. `libhost.a` and `host.lib`
-are intentionally excluded and remain source-build outputs.
+x64 and ARM64. `libhost.a` and `host.lib` are intentionally excluded and remain
+source-build outputs. The Windows inputs are built by `scripts/windows_runtime.py`.
 
 ## First release and adoption
 
@@ -33,8 +32,7 @@ are intentionally excluded and remain source-build outputs.
 
 4. Delete the six tracked musl files. The consumer then downloads and verifies
    the immutable archive; CI additionally requires its signer workflow and
-   producer commit. Remove the transitional Windows SDK fallback from
-   `scripts/build.py` in the same follow-up.
+   producer commit.
 
 Do not add a moving release URL, skip attestation verification in CI, publish a
 runtime release from a pull request, or include a host library in this package.

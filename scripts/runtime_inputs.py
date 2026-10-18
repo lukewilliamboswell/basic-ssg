@@ -19,26 +19,14 @@ from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
 ZIG_VERSION = "0.16.0"
-MINGW_LICENSE_URL = (
-    "https://raw.githubusercontent.com/mingw-w64/mingw-w64/"
-    "aa96035ea5edd244502bd3e1550d4a801c12033e/"
-    "COPYING.MinGW-w64-runtime/COPYING.MinGW-w64-runtime.txt"
-)
-MINGW_LICENSE_SHA256 = "1db8da07b436c68833c0673ffee3d9fcb2526047f3820b81661865dfedc79a1f"
 MUSL_TARGETS = {
     "x64musl": "x86_64-linux-musl",
     "arm64musl": "aarch64-linux-musl",
 }
 MUSL_FILES = ("crt1.o", "libc.a", "libunwind.a")
 ZIG_MUSL_ARCHIVES = ("libc.a", "libzigc.a", "libcompiler_rt.a")
-WINDOWS_FILES = (
-    "advapi32.lib", "bcrypt.lib", "crypt32.lib", "dbghelp.lib",
-    "iphlpapi.lib", "kernel32.lib", "ncrypt.lib", "ntdll.lib", "ole32.lib",
-    "secur32.lib", "shell32.lib", "user32.lib", "userenv.lib", "ws2_32.lib",
-)
 EXPECTED_FILES = tuple(
-    [f"targets/{target}/{name}" for target in MUSL_TARGETS for name in MUSL_FILES]
-    + [f"targets/x64win/{name}" for name in WINDOWS_FILES]
+    f"targets/{target}/{name}" for target in MUSL_TARGETS for name in MUSL_FILES
 )
 CONSUMER_CONFIG = ROOT / ".github" / "runtime-inputs.json"
 MAX_ARCHIVE_BYTES = 128 * 1024 * 1024
@@ -149,9 +137,7 @@ def locate_artifacts(
     return found
 
 
-def zig_link(
-    target: str, work: Path, wanted: tuple[str, ...], *, windows: bool = False
-) -> dict[str, Path]:
+def zig_link(target: str, work: Path, wanted: tuple[str, ...]) -> dict[str, Path]:
     target_work = work / target.replace("-", "_")
     target_work.mkdir(parents=True)
     source = target_work / "probe.cpp"
@@ -162,10 +148,9 @@ def zig_link(
     env = os.environ.copy()
     env["ZIG_GLOBAL_CACHE_DIR"] = "global-cache"
     env["ZIG_LOCAL_CACHE_DIR"] = "local-cache"
-    libraries = [f"-l{Path(name).stem}" for name in wanted] if windows else []
     command = [
         "zig", "c++", "-target", target, "-O2", "-g0", "-fno-sanitize=all",
-        "-static", "-v", source.name, *libraries, "-o", "probe.exe",
+        "-static", "-v", source.name, "-o", "probe.exe",
     ]
     result = subprocess.run(
         command, cwd=target_work, env=env, text=True, stdout=subprocess.DEVNULL,
@@ -209,11 +194,6 @@ def build(output: Path) -> None:
                 destination / "libunwind.a",
                 replacements=path_replacements,
             )
-        found = zig_link("x86_64-windows-gnu", work, WINDOWS_FILES, windows=True)
-        destination = output / "targets" / "x64win"
-        destination.mkdir(parents=True)
-        for name in WINDOWS_FILES:
-            shutil.copyfile(found[name], destination / name)
 
 
 def inventory(directory: Path) -> list[dict[str, object]]:
@@ -235,14 +215,6 @@ def compare(first: Path, second: Path) -> None:
     if first_inventory != second_inventory:
         raise SystemExit("Two clean runtime-input builds produced different bytes")
     print("Two clean runtime-input builds are byte-identical.")
-
-
-def download_mingw_license() -> bytes:
-    with urllib.request.urlopen(MINGW_LICENSE_URL, timeout=30) as response:
-        content = response.read()
-    if hashlib.sha256(content).hexdigest() != MINGW_LICENSE_SHA256:
-        raise SystemExit("Pinned mingw-w64 license digest mismatch")
-    return content
 
 
 def zip_write(archive: zipfile.ZipFile, name: str, content: bytes) -> None:
@@ -279,7 +251,6 @@ def package(directory: Path, output: Path, version: str) -> None:
             for name, spdx_id, license_id in (
                 ("musl", "SPDXRef-musl", "MIT"),
                 ("LLVM-libunwind", "SPDXRef-libunwind", "Apache-2.0 WITH LLVM-exception"),
-                ("mingw-w64-import-definitions", "SPDXRef-mingw", "NOASSERTION"),
             )
         ],
     }
@@ -293,7 +264,6 @@ def package(directory: Path, output: Path, version: str) -> None:
             zip_write(archive, relative, (directory / relative).read_bytes())
         zip_write(archive, "manifest.json", (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode())
         zip_write(archive, "sbom.spdx.json", sbom_content)
-        zip_write(archive, "LICENSES/COPYING.MinGW-w64-runtime.txt", download_mingw_license())
         zip_write(archive, "LICENSES/THIRD_PARTY_LICENSES.md", (ROOT / "THIRD_PARTY_LICENSES.md").read_bytes())
     (output.parent / "SHA256SUMS").write_text(f"{sha256(output)}  {output.name}\n", encoding="utf-8")
     print(f"Created {output} ({sha256(output)})")
@@ -304,10 +274,7 @@ def verify_archive(archive_path: Path, expected_digest: str | None = None) -> di
         raise SystemExit("Runtime archive exceeds the download size limit")
     if expected_digest and sha256(archive_path) != expected_digest:
         raise SystemExit("Runtime archive SHA-256 mismatch")
-    allowed_metadata = {
-        "manifest.json", "sbom.spdx.json",
-        "LICENSES/COPYING.MinGW-w64-runtime.txt", "LICENSES/THIRD_PARTY_LICENSES.md",
-    }
+    allowed_metadata = {"manifest.json", "sbom.spdx.json", "LICENSES/THIRD_PARTY_LICENSES.md"}
     with zipfile.ZipFile(archive_path) as archive:
         if sum(item.file_size for item in archive.infolist()) > MAX_UNPACKED_BYTES:
             raise SystemExit("Runtime archive exceeds the unpacked size limit")
@@ -342,8 +309,6 @@ def extract_archive(archive_path: Path, destination: Path) -> None:
             temporary = target.with_suffix(target.suffix + ".tmp")
             temporary.write_bytes(archive.read(relative))
             temporary.replace(target)
-        notice = destination / "COPYING.MinGW-w64-runtime.txt"
-        notice.write_bytes(archive.read("LICENSES/COPYING.MinGW-w64-runtime.txt"))
     print(f"Extracted runtime inputs {manifest['version']} into {destination}")
 
 
@@ -397,8 +362,6 @@ def hydrate(config_path: Path, destination: Path, *, verify_attestation: bool) -
             temporary = target.with_suffix(target.suffix + ".tmp")
             temporary.write_bytes(archive.read(relative))
             temporary.replace(target)
-        notice = destination / "COPYING.MinGW-w64-runtime.txt"
-        notice.write_bytes(archive.read("LICENSES/COPYING.MinGW-w64-runtime.txt"))
     print(f"Hydrated runtime inputs {manifest['version']} into {destination}")
 
 
