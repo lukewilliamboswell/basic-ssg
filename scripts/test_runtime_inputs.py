@@ -32,7 +32,6 @@ class RuntimeInputsTests(unittest.TestCase):
                 runtime_inputs.zip_write(archive, name, content)
             runtime_inputs.zip_write(archive, "manifest.json", json.dumps(manifest).encode())
             runtime_inputs.zip_write(archive, "sbom.spdx.json", b"{}")
-            runtime_inputs.zip_write(archive, "LICENSES/COPYING.MinGW-w64-runtime.txt", b"license")
             runtime_inputs.zip_write(archive, "LICENSES/THIRD_PARTY_LICENSES.md", b"licenses")
             if extra:
                 runtime_inputs.zip_write(archive, extra, b"unexpected")

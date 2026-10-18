@@ -18,8 +18,7 @@ roc_nightly-*/
 # Built per-target host libraries (produced by scripts/build.py and bundled for release).
 # The musl toolchain inputs (crt1.o/libc.a/libunwind.a) ARE committed.
 platform/targets/*/libhost.a
-platform/targets/x64win/*.lib
-platform/COPYING.MinGW-w64-runtime.txt
+platform/targets/x64win/
 
 # examples
 examples-*/*/output/

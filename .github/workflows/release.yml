@@ -55,19 +55,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Install Zig
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
+        with:
+          version: 0.17.0
+
       - name: Install Rust
         run: |
-          rustup toolchain install "${{ needs.rust-version.outputs.version }}" --profile minimal --target x86_64-pc-windows-msvc
+          rustup toolchain install "${{ needs.rust-version.outputs.version }}" --profile minimal --target x86_64-pc-windows-msvc --component rust-docs,llvm-tools-preview
           rustup default "${{ needs.rust-version.outputs.version }}"
 
       - name: Build Windows host
         run: python scripts/build.py
 
+      - name: Verify Windows runtime ABI and redistribution evidence
+        run: python -m unittest discover -s scripts -p test_windows_runtime.py
+
       - name: Upload Windows host
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: windows-x64-host
-          path: platform/targets/x64win/*.lib
+          path: platform/targets/x64win/
           if-no-files-found: error
           retention-days: 7
 
@@ -97,13 +105,13 @@ jobs:
           version: ${{ inputs.release_version }}
           allow-default-branch: "true"
           allow-nightly-bootstrap: "true"
-          compiler-root: platform/main.roc
+          compiler-root: examples-dev/orchard-guide/main.roc
 
       - name: Install Roc
         uses: ./.github/actions/setup-roc
 
       - name: Install Zig
-        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29
+        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
           version: 0.16.0
 

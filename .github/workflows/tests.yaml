@@ -71,11 +71,12 @@ jobs:
       - name: Install Rust components
         run: rustup component add rustfmt clippy
 
+      # The Windows runtime inputs are built with Zig 0.17.0; the Unix runtime
+      # inputs stay on the reproducible 0.16.0.
       - name: Install Zig
-        if: runner.os != 'Windows'
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # ratchet:mlugg/setup-zig@v2.2.1
         with:
-          version: 0.16.0
+          version: ${{ runner.os == 'Windows' && '0.17.0' || '0.16.0' }}
 
       - name: Install Valgrind
         if: matrix.os == 'ubuntu-24.04'
@@ -104,7 +105,9 @@ jobs:
 
       - name: Install Windows Rust components
         if: runner.os == 'Windows'
-        run: rustup target add x86_64-pc-windows-msvc
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup component add rust-docs llvm-tools-preview
 
       - name: Run all Windows tests
         if: runner.os == 'Windows'
