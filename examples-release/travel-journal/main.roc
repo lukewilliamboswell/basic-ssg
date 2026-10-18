@@ -1,4 +1,4 @@
-app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.12.0/2C2pqQg55Sm4Y12imgSpdQi9bRiUeCbDGxF7puKrLqup.tar.zst", roc: "nightly-2026-10-04-130536d" }
+app [main!] { pf: platform "https://github.com/lukewilliamboswell/basic-ssg/releases/download/0.14.0/Fh8e797qgMC59JFDLYPjPC8cHDMMZo5YKmuoDPa8nNuw.tar.zst", roc: "nightly-2026-10-16-f14c106" }
 
 import pf.Html
 import pf.HtmlAttributes exposing [lang]
@@ -54,16 +54,16 @@ main! = |args|
 	}
 
 ## Decode a whole-file JSON object together with page data and an effectful field.
-json_page_decoder! : PageDecoder.Decoder(SSG.Page, JsonDecodedPage, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str), ..])
-json_page_decoder! = {
+json_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, JsonDecodedPage, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str)])
+json_page_decoder! = |{}| {
 	content: PageDecoder.from_source(Json.parse),
 	generated_at: PageDecoder.from_effect(decode_timestamp!),
 	page: PageDecoder.page!,
 }.PageDecoder
 
 ## Decode JSON frontmatter, then effectfully render the remaining source as Markdown.
-frontmatter_page_decoder! : PageDecoder.Decoder(SSG.Page, FrontmatterDecodedPage, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str), ..])
-frontmatter_page_decoder! = {
+frontmatter_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, FrontmatterDecodedPage, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str)])
+frontmatter_page_decoder! = |{}| {
 	content: frontmatter(Json.parse),
 	generated_at: PageDecoder.from_effect(decode_timestamp!),
 	page: PageDecoder.page!,
@@ -107,7 +107,7 @@ process_json_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
 		[page, .. as rest] => {
-			decoded = SSG.decode_page!(page, json_page_decoder!)?
+			decoded = SSG.decode_page!(page, json_page_decoder!({}))?
 			content = render_json_page(decoded)
 			SSG.write_file!({ output_dir, output_path: decoded.page.output_path, content })?
 			process_json_pages!(rest, output_dir)
@@ -119,7 +119,7 @@ process_frontmatter_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
 		[page, .. as rest] => {
-			decoded = SSG.decode_page!(page, frontmatter_page_decoder!)?
+			decoded = SSG.decode_page!(page, frontmatter_page_decoder!({}))?
 			content = render_frontmatter_page(decoded)
 			SSG.write_file!({ output_dir, output_path: decoded.page.output_path, content })?
 			process_frontmatter_pages!(rest, output_dir)
