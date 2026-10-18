@@ -13,7 +13,7 @@ are included in release bundles; retain them when redistributing the libraries.
 The startup, initializer and TLS sources come from Roc commit
 `7d256b954603e1170ee0d6df229c795aba6dc70d` under UPL-1.0. The additional stack-cookie
 and type-info support is original code under UPL-1.0, copied unmodified from basic-cli
-(commit pinned in `native/windows/UPSTREAM.json`). Zig 0.17.0
+(commit pinned in `native/windows/UPSTREAM.json`) together with basic-cli's license. Zig 0.17.0
 supplies compiler-rt under MIT and mingw-w64 import definitions under ZPL-2.1. Original
 license texts and source hashes accompany the generated archives. The import
 libraries refer to Windows DLLs supplied by the operating system.

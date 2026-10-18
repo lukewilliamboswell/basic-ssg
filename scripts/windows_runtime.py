@@ -40,6 +40,7 @@ MANIFEST_NAME = "PROVENANCE.json"
 PERMISSIVE_LICENSES = {"0BSD", "MIT", "Apache-2.0", "ISC", "BSD-2-Clause", "BSD-3-Clause",
                        "BSL-1.0", "Zlib", "CC0-1.0", "Unlicense", "Unicode-3.0", "UPL-1.0",
                        "CDLA-Permissive-2.0"}
+PERMISSIVE_EXCEPTIONS = {"LLVM-exception"}
 
 
 def permissive(expression: str) -> bool:
@@ -73,7 +74,12 @@ def permissive(expression: str) -> bool:
                 raise ValueError(f"Malformed license expression: {expression!r}")
             position += 1
             return result
-        return token in PERMISSIVE_LICENSES
+        result = token in PERMISSIVE_LICENSES
+        if position < len(tokens) and tokens[position] == "WITH":
+            exception = tokens[position + 1]
+            position += 2
+            result = result and exception in PERMISSIVE_EXCEPTIONS
+        return result
 
     try:
         result = alternatives()
@@ -134,16 +140,17 @@ def notice(output: Path, name: str, contents: bytes) -> str:
     return path.relative_to(output).as_posix()
 
 
-def upstream_sources(upstream: dict[str, object]) -> list[tuple[str, str, dict[str, str]]]:
-    """(project, commit, files) groups of vendored sources, with their pinned hashes."""
-    basic_cli = upstream["basic_cli"]
-    return [(upstream["project"], upstream["commit"], upstream["files"]),
-            (basic_cli["project"], basic_cli["commit"], basic_cli["files"])]
+def upstream_sources(upstream: dict[str, object]) -> list[tuple[str, str, dict[str, tuple[str, str]]]]:
+    """(project, commit, {local name: (upstream path, pinned hash)}) for each vendored group."""
+    return [(group["project"], group["commit"], {
+        **{name: (f"{group['directory']}/{name}", expected) for name, expected in group["files"].items()},
+        group["license_file"]: ("LICENSE", group["license_sha256"]),
+    }) for group in (upstream, upstream["basic_cli"])]
 
 
 def verify_vendored(upstream: dict[str, object]) -> None:
     for _, _, files in upstream_sources(upstream):
-        for name, expected in files.items():
+        for name, (_, expected) in files.items():
             if digest(SOURCE_DIR / name) != expected:
                 raise SystemExit(f"Vendored source changed without updating provenance: {name}")
 
@@ -151,28 +158,23 @@ def verify_vendored(upstream: dict[str, object]) -> None:
 def check_upstream() -> None:
     """Confirm the pinned hashes describe the files at the pinned upstream commits."""
     upstream = json.loads((SOURCE_DIR / "UPSTREAM.json").read_text())
-    directories = [upstream["directory"], upstream["basic_cli"]["directory"]]
-    for (project, commit, files), directory in zip(upstream_sources(upstream), directories):
-        for name, expected in files.items():
-            url = f"https://raw.githubusercontent.com/{project}/{commit}/{directory}/{name}"
+    for project, commit, files in upstream_sources(upstream):
+        for path, expected in files.values():
+            url = f"https://raw.githubusercontent.com/{project}/{commit}/{path}"
             with urllib.request.urlopen(url, timeout=30) as response:
                 actual = hashlib.sha256(response.read()).hexdigest()
             if actual != expected:
-                raise SystemExit(f"{name} does not match {project}@{commit[:12]}: {actual}")
+                raise SystemExit(f"{path} does not match {project}@{commit[:12]}: {actual}")
     print("Vendored sources match their pinned upstream commits.")
 
 
 def build_runtime(output: Path, scratch: Path, zig_lib: Path, zig: str) -> dict[str, object]:
     upstream = json.loads((SOURCE_DIR / "UPSTREAM.json").read_text())
     verify_vendored(upstream)
-    license_path = SOURCE_DIR / "LICENSE.roc.txt"
-    if digest(license_path) != upstream["license_sha256"]:
-        raise SystemExit("Vendored Roc license does not match UPSTREAM.json")
-    license_file = notice(output, "roc-UPL-1.0.txt", license_path.read_bytes())
+    license_file = notice(output, "roc-UPL-1.0.txt", (SOURCE_DIR / upstream["license_file"]).read_bytes())
     zig_license = notice(output, "zig-MIT.txt", (zig_lib.parent / "LICENSE").read_bytes())
-    original_license = notice(output, "basic-cli-UPL-1.0.txt",
-                              b"Original runtime support: Copyright 2026 basic-cli contributors.\n\n"
-                              + (ROOT / "LICENSE").read_bytes())
+    basic_cli_license = notice(output, "basic-cli-UPL-1.0.txt",
+                               (SOURCE_DIR / upstream["basic_cli"]["license_file"]).read_bytes())
     common = ["-target", "x86_64-windows-msvc", "-O", "ReleaseFast", "-fno-stack-check"]
     tls = scratch / "tls.obj"
     security = scratch / "security.obj"
@@ -198,7 +200,7 @@ def build_runtime(output: Path, scratch: Path, zig_lib: Path, zig: str) -> dict[
         "compiler_rt_sources": [source_record(p, zig_lib) for p in sorted(
             [zig_lib / "compiler_rt.zig", *(zig_lib / "compiler_rt").rglob("*.zig")])],
         "license": "UPL-1.0 AND MIT",
-        "license_files": [license_file, zig_license, original_license],
+        "license_files": [license_file, zig_license, basic_cli_license],
         "redistribution_basis": "UPL-1.0 and MIT permit source and binary redistribution with notices retained.",
         "build_commands": commands,
         "local_sources": [source_record(SOURCE_DIR / name, ROOT) for name in ("security.zig", "type_info.cpp")],
@@ -339,7 +341,11 @@ def record_host(output: Path, build_commands: list[list[str]], toolchain: dict[s
         if package["id"] not in wanted:
             continue
         expression = package["license"]
-        if not expression or not permissive(expression):
+        try:
+            reviewed = bool(expression) and permissive(expression)
+        except ValueError as error:
+            raise SystemExit(f"{error} ({package['name']})") from None
+        if not reviewed:
             raise SystemExit(f"Unreviewed license expression: {package['name']} {expression!r}")
         directory = Path(package["manifest_path"]).parent
         if package["source"] is None:
@@ -408,10 +414,19 @@ def record_host(output: Path, build_commands: list[list[str]], toolchain: dict[s
     validate(output)
 
 
+def remove_previous_outputs(output: Path) -> None:
+    """Earlier builds (including the former SDK copies) would fail the inventory check."""
+    for path in output.iterdir():
+        if path.is_file() and path.suffix.lower() in BINARY_EXTENSIONS:
+            path.unlink()
+    shutil.rmtree(output / "licenses", ignore_errors=True)
+
+
 def build(output: Path, *, zig: str | None = None) -> None:
     zig = zig or resolve_zig()
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True)
+    remove_previous_outputs(output)
     scratch = ROOT / "target" / "windows-runtime"
     scratch.mkdir(parents=True, exist_ok=True)
     zig_lib = zig_lib_dir(zig)

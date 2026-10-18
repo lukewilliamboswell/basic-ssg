@@ -64,6 +64,14 @@ class ProvenanceTests(unittest.TestCase):
                         runtime.validate(self.output)
                     path.unlink()
 
+    def test_previous_outputs_removed_before_build(self):
+        for relative in ("advapi32.lib", "startup.obj", "licenses/cargo/old-1.0.0/LICENSE"):
+            (self.output / relative).parent.mkdir(parents=True, exist_ok=True)
+            (self.output / relative).write_bytes(b"stale")
+        runtime.remove_previous_outputs(self.output)
+        remaining = {p.relative_to(self.output).as_posix() for p in self.output.rglob("*") if p.is_file()}
+        self.assertEqual(remaining, {runtime.MANIFEST_NAME})
+
     def test_license_path_escape_rejected(self):
         path = self.output / runtime.MANIFEST_NAME
         manifest = json.loads(path.read_text())
@@ -93,12 +101,14 @@ class ProvenanceTests(unittest.TestCase):
     def test_vendored_sources_must_match_pinned_hashes(self):
         upstream = json.loads((runtime.SOURCE_DIR / "UPSTREAM.json").read_text())
         runtime.verify_vendored(upstream)
-        for project, files in ((upstream["project"], upstream["files"]),
-                               (upstream["basic_cli"]["project"], upstream["basic_cli"]["files"])):
-            with self.subTest(project=project):
+        for path in (("files", "tls.zig"), ("license_sha256",),
+                     ("basic_cli", "files", "security.zig"), ("basic_cli", "license_sha256")):
+            with self.subTest(path=path):
                 changed = json.loads(json.dumps(upstream))
-                group = changed["files"] if project == upstream["project"] else changed["basic_cli"]["files"]
-                group[next(iter(files))] = "0" * 64
+                group = changed
+                for key in path[:-1]:
+                    group = group[key]
+                group[path[-1]] = "0" * 64
                 with self.assertRaisesRegex(SystemExit, "Vendored source changed"):
                     runtime.verify_vendored(changed)
 
@@ -112,8 +122,13 @@ class ProvenanceTests(unittest.TestCase):
         self.assertTrue(runtime.permissive("(MIT OR Apache-2.0) AND Unicode-3.0"))
         self.assertFalse(runtime.permissive("MIT AND GPL-2.0-only"))
         self.assertFalse(runtime.permissive("GPL-2.0-only"))
-        with self.assertRaisesRegex(ValueError, "Malformed"):
-            runtime.permissive("(MIT")
+        self.assertTrue(runtime.permissive("Apache-2.0 WITH LLVM-exception"))
+        self.assertTrue(runtime.permissive("Apache-2.0 WITH LLVM-exception OR GPL-2.0-only"))
+        self.assertFalse(runtime.permissive("GPL-2.0-only WITH LLVM-exception"))
+        self.assertFalse(runtime.permissive("Apache-2.0 WITH Unreviewed-exception"))
+        for expression in ("(MIT", "MIT WITH"):
+            with self.assertRaisesRegex(ValueError, "Malformed"):
+                runtime.permissive(expression)
 
     def test_zig_is_resolved_from_zig_and_version_checked(self):
         with patch.dict(os.environ, {"ZIG": "selected-zig"}), \

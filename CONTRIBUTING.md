@@ -187,7 +187,7 @@ verifies the inventory.
 
 The files in `native/windows/` are copies pinned by commit and SHA-256 in `UPSTREAM.json`:
 the startup, initializer and TLS sources from Roc, and `security.zig`, `type_info.cpp` and
-`runtime_fixture.c` from basic-cli. A build fails if any of them differs from its pin. To
+`runtime_fixture.c` from basic-cli, plus each project's `LICENSE`. A build fails if any of them differs from its pin. To
 update one, change the file, its hash and the commit together, then run
 `python scripts/windows_runtime.py --check-upstream` to confirm the pins match upstream.
 
