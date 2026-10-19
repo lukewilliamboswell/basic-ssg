@@ -483,7 +483,7 @@ fn read_replacement_snippet(
 
     // Remove markers for nested snippets from the selected content too.
     Ok(remove_snippet_comments(
-        &replacement_file_content[snippet_start..end_position],
+        replacement_file_content[snippet_start..end_position].trim_matches(['\r', '\n']),
     ))
 }
 
@@ -748,12 +748,38 @@ mod tests {
 
         let html = parse_markdown(&input).expect("render replacement snippet directive");
 
-        assert!(html.contains("selected &lt;content&gt;"));
+        assert!(html.contains(">selected &lt;content&gt;"));
         assert!(html.contains("nested content"));
         assert!(!html.contains("outside before"));
         assert!(!html.contains("outside after"));
         assert!(!html.contains("### start snippet"));
         assert!(!html.contains("### end snippet"));
+    }
+
+    #[test]
+    fn replacement_snippets_trim_blank_lines_and_preserve_indentation() {
+        let test_dir = TestDir::new("replacement-snippet-blank-lines");
+        let input = test_dir.path().join("page.md");
+        let replacement = test_dir.path().join("example.txt");
+        write(&input, "page");
+
+        for line_ending in ["\n", "\r\n"] {
+            let source = [
+                "### start snippet selected",
+                "",
+                "    first line",
+                "",
+                "    second line",
+                "",
+                "### end snippet selected",
+            ]
+            .join(line_ending);
+            write(&replacement, &source);
+            assert_eq!(
+                read_replacement_snippet("example.txt", "selected", &input).unwrap(),
+                ["    first line", "", "    second line"].join(line_ending),
+            );
+        }
     }
 
     #[cfg(unix)]
