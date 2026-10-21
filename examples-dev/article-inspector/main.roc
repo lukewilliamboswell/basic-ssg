@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-10-19-601b54c" }
+app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-10-21-5349569" }
 
 import pf.IOErr
 import pf.OsStr
