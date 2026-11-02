@@ -11,10 +11,9 @@ The archive contains real musl `crt1.o`, `libc.a`, and `libunwind.a` files for
 x64 and ARM64. `libhost.a` and `host.lib` are intentionally excluded and remain
 source-build outputs. The Windows inputs are built by `scripts/windows_runtime.py`.
 
-## First release and adoption
+## Adopt a runtime-input release
 
-1. Merge the producer workflow and dispatch `Runtime inputs` on `main` with
-   version `1.0.0`.
+1. Dispatch `Runtime inputs` on the reviewed `main` commit with a new version.
 2. Verify the release asset, its `SHA256SUMS`, SPDX SBOM, workflow run, and both
    GitHub attestations.
 3. Add `.github/runtime-inputs.json` in a reviewed follow-up PR:
@@ -30,7 +29,7 @@ source-build outputs. The Windows inputs are built by `scripts/windows_runtime.p
    }
    ```
 
-4. Delete the six tracked musl files. The consumer then downloads and verifies
+4. Remove superseded tracked musl inputs when adopting the archive. The consumer downloads and verifies
    the immutable archive; CI additionally requires its signer workflow and
    producer commit.
 
