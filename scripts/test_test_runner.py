@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import tempfile
 import subprocess
 import unittest
@@ -13,6 +15,18 @@ import test as test_runner
 
 
 class BundleTests(unittest.TestCase):
+    def test_failed_bundle_preserves_diagnostics_and_exit_code(self) -> None:
+        output = io.StringIO()
+        failure = subprocess.CompletedProcess(
+            ["bundle.py"], 4, stdout="compiler rejected archive inputs\n"
+        )
+        with patch.object(test_runner.subprocess, "run", return_value=failure), \
+             contextlib.redirect_stdout(output), \
+             self.assertRaises(subprocess.CalledProcessError) as caught:
+            test_runner.create_bundle("roc", "x64musl")
+        self.assertEqual(caught.exception.returncode, 4)
+        self.assertIn("compiler rejected archive inputs", output.getvalue())
+
     def test_created_archive_is_relative_to_roc_working_directory(self) -> None:
         with tempfile.TemporaryDirectory() as raw_directory:
             root = Path(raw_directory)

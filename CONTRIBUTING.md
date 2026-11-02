@@ -18,11 +18,9 @@ release-bundling scripts, and examples.
 Commands below use `python` as the Python 3.10+ launcher. If that command is not
 available, substitute `python3` on macOS or Linux, or `py -3.10` on Windows.
 
-Pinned CI and release jobs resolve the agreeing header pins through the validating
-local setup action in `.github/actions/setup-roc`. The daily updater proposes a
-pin-only commit and exercises both release examples and current source before
-the selected pins move together. The pins in `examples-release` are not selected:
-they stay on the compiler the latest release was built with.
+CI and release jobs resolve the agreeing header pins through
+`.github/actions/setup-roc`. Upgrade development pins in a reviewed pull request.
+The `examples-release` headers retain the compiler used for their release.
 
 ## Local Development
 
@@ -158,7 +156,7 @@ that URL with a local path, bundle URL, or installed shorthand;
 `ROC_GLUE_DIR` and `ROC_SRC` can select an explicit matching compiler checkout.
 Glue specs are compiled as cached host dynamic libraries. The script defaults
 to `--opt=dev`; set `ROC_GLUE_OPT` to `size` or `speed` to exercise an LLVM
-build. The old `interpreter` mode is no longer supported.
+build. Use `dev`, `size`, or `speed` for glue compilation.
 
 ## Releases
 
@@ -179,8 +177,7 @@ This produces `host.lib` and `windows_support.lib` in `platform/targets/x64win/`
 `windows_support.lib` combines the MSVC startup, TLS and initializer runtime (vendored
 from Roc in `native/windows/`, see `UPSTREAM.json`) with UCRT and Win32 import
 libraries generated from Zig's mingw-w64 definitions; no Microsoft SDK or CRT
-archives are copied. Since Roc stopped probing for a Windows SDK, an `x64win`
-platform must list all of its linker inputs. `scripts/windows_runtime.py` also
+archives are copied. An `x64win` platform must list all of its linker inputs. `scripts/windows_runtime.py` also
 writes `PROVENANCE.json` and the original license notices to `licenses/`, and
 `scripts/bundle.py` ships them in the bundle. `python scripts/windows_runtime.py --check`
 verifies the inventory.
@@ -195,8 +192,7 @@ The musl compiler runtime inputs are released independently by
 the `Runtime inputs` workflow: real musl startup/libc/libunwind archives. Once
 `.github/runtime-inputs.json` is present, builds download the immutable archive,
 verify its SHA-256 and (in CI) its GitHub attestation, and hydrate
-`platform/targets/`. Until the first runtime release is adopted, the checked-in
-musl files remain.
+`platform/targets/`.
 
 To reproduce a runtime-input candidate locally with Zig 0.16.0:
 
@@ -227,5 +223,8 @@ and the docs follow-up pull request use the official
 [`roc-lang/release-package`](https://github.com/roc-lang/release-package)
 actions. A successful manual release publishes the bundle, deploys the new docs
 version to Pages, and opens a pull request adding that generated version under
-`www/`. The first new-compiler release starts this tree from scratch rather than
-restoring the legacy-compiler Pages content.
+`www/`.
+
+## Documentation
+
+Keep documentation focused on current reader tasks. Remove superseded guidance and status narratives; keep release changes in release records and investigations or unresolved work in issues. Follow the [shared documentation guide](https://lukewilliamboswell.github.io/roc-automation/documentation.html#write-project-documentation).
