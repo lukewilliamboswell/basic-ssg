@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -71,6 +72,17 @@ def target_files(target: str | None = None) -> list[Path]:
     return files
 
 
+def single_target_source(source: str, target: str) -> str:
+    """Keep only the host declaration included by a local single-target bundle."""
+    if target not in TARGET_INPUTS:
+        raise ValueError(f"Unknown target: {target}")
+    pattern = re.compile(r"(?m)^\t\t([a-z0-9]+): \{ inputs: \[[^\n]+\] \},\n")
+    declared = {match.group(1) for match in pattern.finditer(source)}
+    if declared != set(TARGET_INPUTS):
+        raise ValueError(f"Unexpected platform target declarations: {sorted(declared)}")
+    return pattern.sub(lambda match: match.group() if match.group(1) == target else "", source)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bundle the basic-ssg platform")
     parser.add_argument("--output-dir", type=Path, default=ROOT)
@@ -137,7 +149,12 @@ def main() -> None:
         backup_dir = Path(temp)
         backups: dict[Path, Path] = {}
         staged: list[Path] = []
+        original_main = (PLATFORM_DIR / "main.roc").read_bytes()
         try:
+            if args.target is not None:
+                (PLATFORM_DIR / "main.roc").write_text(
+                    single_target_source(original_main.decode("utf-8"), args.target), encoding="utf-8"
+                )
             for source in license_sources:
                 target = PLATFORM_DIR / source.name
                 if target.exists():
@@ -159,6 +176,7 @@ def main() -> None:
                 check=True,
             )
         finally:
+            (PLATFORM_DIR / "main.roc").write_bytes(original_main)
             for target in staged:
                 backup = backups.get(target)
                 if backup is None:

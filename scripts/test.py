@@ -107,9 +107,10 @@ def create_bundle(roc: str, target: str, *, allow_unpinned_roc: bool = False) ->
             target,
             *version_args,
         ],
-        cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True,
+        cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False,
     )
-    print(result.stdout, end="")
+    print(result.stdout, end="", flush=True)
+    result.check_returncode()
     matches = re.findall(r"^Created:\s+(.+\.tar\.zst)\s*$", result.stdout, re.MULTILINE)
     if not matches:
         raise SystemExit("Bundle creation did not report a .tar.zst archive")
