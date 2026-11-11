@@ -95,7 +95,7 @@
           "input_files": [{"path": "index.md", "text": "---\n{\"title\":\"Incomplete\"}\n---\n# Notes"}],
           "args": ["{input}", "{output}"],
           "exit_code": 1,
-          "stderr_contains": ["MissingRequiredField"]
+          "stderr_contains": ["InvalidJson(\"Missing field: author\")"]
         },
         {
           "name": "reports a missing frontmatter delimiter",
