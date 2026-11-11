@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-10-27-de79a0f" }
+app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-11-10-f7d1f19" }
 
 import pf.Html
 import pf.HtmlAttributes exposing [lang]
@@ -35,7 +35,7 @@ FrontmatterDecodedPage : {
 	generated_at : U128,
 }
 
-main! : List(OsStr) => Try({}, [Exit(I32), InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), PagesError(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
+main! : List(OsStr) => Try({}, [Exit(I32), InvalidFrontmatter(Str), InvalidJson(Str), PagesError(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
 main! = |args|
 	match args.drop_first(1) {
 		[input_dir_arg, output_dir_arg] => {
@@ -54,7 +54,7 @@ main! = |args|
 	}
 
 ## Decode a whole-file JSON object together with page data and an effectful field.
-json_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, JsonDecodedPage, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str)])
+json_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, JsonDecodedPage, [InvalidJson(Str), ReadError(Str)])
 json_page_decoder! = |{}| {
 	content: PageDecoder.from_source(Json.parse),
 	generated_at: PageDecoder.from_effect(decode_timestamp!),
@@ -62,7 +62,7 @@ json_page_decoder! = |{}| {
 }.PageDecoder
 
 ## Decode JSON frontmatter, then effectfully render the remaining source as Markdown.
-frontmatter_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, FrontmatterDecodedPage, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str)])
+frontmatter_page_decoder! : {} -> PageDecoder.Decoder(SSG.Page, FrontmatterDecodedPage, [InvalidFrontmatter(Str), InvalidJson(Str), ParseError(Str), ReadError(Str)])
 frontmatter_page_decoder! = |{}| {
 	content: frontmatter(Json.parse),
 	generated_at: PageDecoder.from_effect(decode_timestamp!),
@@ -102,7 +102,7 @@ split_frontmatter = |source| {
 	}
 }
 
-process_json_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidJson(Str), MissingRequiredField(Str), ReadError(Str), WriteError(Str)])
+process_json_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidJson(Str), ReadError(Str), WriteError(Str)])
 process_json_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
@@ -114,7 +114,7 @@ process_json_pages! = |pages, output_dir|
 		}
 	}
 
-process_frontmatter_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidFrontmatter(Str), InvalidJson(Str), MissingRequiredField(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
+process_frontmatter_pages! : List(SSG.Page), Path.Path => Try({}, [InvalidFrontmatter(Str), InvalidJson(Str), ParseError(Str), ReadError(Str), WriteError(Str)])
 process_frontmatter_pages! = |pages, output_dir|
 	match pages {
 		[] => Ok({})
