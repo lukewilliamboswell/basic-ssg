@@ -11,6 +11,11 @@ STYLESHEET_MARKUP = '<link rel="stylesheet" href="{source}">'
 SCRIPT_MARKUP = '<script type="module" src="{source}"></script>'
 
 
+def html_pages(site: Path) -> list[Path]:
+    # `roc docs` writes the search index as an HTML fragment that search.js fetches.
+    return [html for html in site.rglob("*.html") if html.name != "search-index.html"]
+
+
 def enhance_html(site: Path, html: Path) -> bool:
     document = html.read_text(encoding="utf-8")
     if "roc-highlight.js" in document and "roc-highlight.css" in document:
@@ -41,7 +46,7 @@ def main() -> None:
         if not (site / asset).is_file():
             raise SystemExit(f"Missing highlighter asset: {site / asset}")
 
-    changed = sum(enhance_html(site, html) for html in site.rglob("*.html"))
+    changed = sum(enhance_html(site, html) for html in html_pages(site))
     print(f"Added Roc syntax highlighting to {changed} HTML files")
 
 
