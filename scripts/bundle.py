@@ -71,6 +71,25 @@ def target_files(target: str | None = None) -> list[Path]:
     return files
 
 
+def stub_other_targets(target: str) -> list[Path]:
+    """Create empty inputs for unselected targets that were not built.
+
+    `roc bundle` requires every input declared in main.roc to exist, while a
+    local test bundle only carries the selected target's host.
+    """
+    stubs: list[Path] = []
+    for other_target, names in TARGET_INPUTS.items():
+        if other_target == target:
+            continue
+        for name in names:
+            path = PLATFORM_DIR / "targets" / other_target / name
+            if not path.exists():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+                stubs.append(path)
+    return stubs
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bundle the basic-ssg platform")
     parser.add_argument("--output-dir", type=Path, default=ROOT)
@@ -137,7 +156,10 @@ def main() -> None:
         backup_dir = Path(temp)
         backups: dict[Path, Path] = {}
         staged: list[Path] = []
+        stubs: list[Path] = []
         try:
+            if args.target is not None:
+                stubs = stub_other_targets(args.target)
             for source in license_sources:
                 target = PLATFORM_DIR / source.name
                 if target.exists():
@@ -159,6 +181,8 @@ def main() -> None:
                 check=True,
             )
         finally:
+            for stub in stubs:
+                stub.unlink(missing_ok=True)
             for target in staged:
                 backup = backups.get(target)
                 if backup is None:
