@@ -19,7 +19,7 @@ Html := [].{
 	## Create an escaped text node. Characters with special meaning in HTML are
 	## encoded when the node is rendered.
 	text : Str -> Node
-	text = |s| Text(s)
+	text = |content| Text(content)
 
 	## Insert trusted HTML without escaping it.
 	##
@@ -27,7 +27,7 @@ Html := [].{
 	## `raw` only for trusted markup, such as `SSG.parse_markdown!` output when
 	## the source Markdown is trusted.
 	raw : Str -> Node
-	raw = |s| Raw(s)
+	raw = |content| Raw(content)
 
 	## Group sibling nodes without adding a wrapper element.
 	fragment : List(Node) -> Node
