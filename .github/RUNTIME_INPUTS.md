@@ -7,7 +7,7 @@ hosts, creates signed provenance and SBOM attestations, and publishes an
 independent `runtime-inputs-vX.Y.Z` release without changing the latest platform
 release.
 
-The archive contains real musl `crt1.o`, `libc.a`, and `libunwind.a` files for
+The archive contains real musl `rcrt1.o`, `libc.a`, and `libunwind.a` files for
 x64 and ARM64. `libhost.a` and `host.lib` are intentionally excluded and remain
 source-build outputs. The Windows inputs are built by `scripts/windows_runtime.py`.
 

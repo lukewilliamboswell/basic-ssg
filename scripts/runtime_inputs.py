@@ -23,7 +23,7 @@ MUSL_TARGETS = {
     "x64musl": "x86_64-linux-musl",
     "arm64musl": "aarch64-linux-musl",
 }
-MUSL_FILES = ("crt1.o", "libc.a", "libunwind.a")
+MUSL_FILES = ("rcrt1.o", "libc.a", "libunwind.a")
 ZIG_MUSL_ARCHIVES = ("libc.a", "libzigc.a", "libcompiler_rt.a")
 EXPECTED_FILES = tuple(
     f"targets/{target}/{name}" for target in MUSL_TARGETS for name in MUSL_FILES
@@ -148,9 +148,11 @@ def zig_link(target: str, work: Path, wanted: tuple[str, ...]) -> dict[str, Path
     env = os.environ.copy()
     env["ZIG_GLOBAL_CACHE_DIR"] = "global-cache"
     env["ZIG_LOCAL_CACHE_DIR"] = "local-cache"
+    # Roc links native executables as PIE, so a static link needs musl's
+    # self-relocating rcrt1.o and a PIC libc.
     command = [
         "zig", "c++", "-target", target, "-O2", "-g0", "-fno-sanitize=all",
-        "-static", "-v", source.name, "-o", "probe.exe",
+        "-static", "-fPIE", "-pie", "-v", source.name, "-o", "probe.exe",
     ]
     result = subprocess.run(
         command, cwd=target_work, env=env, text=True, stdout=subprocess.DEVNULL,
@@ -182,7 +184,7 @@ def build(output: Path) -> None:
             destination = output / "targets" / roc_target
             destination.mkdir(parents=True)
             copy_canonical_object(
-                found["crt1.o"], destination / "crt1.o", path_replacements
+                found["rcrt1.o"], destination / "rcrt1.o", path_replacements
             )
             canonicalize_archives(
                 tuple(found[name] for name in ZIG_MUSL_ARCHIVES),
