@@ -96,6 +96,10 @@ and inline semantics and warnings, customize rendering with
 default fragment from `AsciiDoc.render`. `SSG.render_asciidoc!` combines parsing
 and default rendering for source strings.
 
+Rendered Roc code blocks use `<samp class="language-roc">` in both Markdown and
+AsciiDoc. Token spans provide build-time highlighting and the language class
+lets applications select Roc blocks for their own highlighting.
+
 `SSG.pages_with!` discovers another source extension, such as `json`, and maps
 each source path to an `.html` output path. `SSG.decode_page!` reads the source
 as UTF-8 and runs an application-supplied pure or effectful decoder.
