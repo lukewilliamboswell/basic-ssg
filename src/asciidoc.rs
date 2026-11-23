@@ -192,6 +192,7 @@ mod tests {
     #[test]
     fn highlights_delimited_roc_source() {
         let doc = parse("[source,roc]\n----\nvalue = \"Roc\"\n----\n");
+        assert!(doc.blocks[0].html.contains("<samp class=\"language-roc\">"));
         assert!(
             doc.blocks[0].html.contains("class=\"str\""),
             "{}",

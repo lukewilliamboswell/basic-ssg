@@ -8,9 +8,12 @@
 //! `comma`, `colon`). Tokens with no styled class (identifiers, whitespace) are
 //! emitted as plain HTML-escaped text.
 
-/// Highlight a multi-line Roc code block, wrapped in `<pre><samp>…</samp></pre>`.
+/// Highlight a multi-line Roc code block and identify its language on the `samp` element.
 pub fn highlight_roc_code(code: &str) -> String {
-    format!("<pre><samp>{}</samp></pre>", highlight_inner(code))
+    format!(
+        "<pre><samp class=\"language-roc\">{}</samp></pre>",
+        highlight_inner(code)
+    )
 }
 
 /// Highlight an inline Roc snippet, wrapped in `<code>…</code>`.

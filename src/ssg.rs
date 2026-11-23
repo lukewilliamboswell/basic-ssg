@@ -724,6 +724,23 @@ mod tests {
     }
 
     #[test]
+    fn markdown_marks_included_roc_source_and_preserves_token_spans() {
+        let test_dir = TestDir::new("roc-language-marker");
+        let input = test_dir.path().join("page.md");
+        write(&test_dir.path().join("main.roc"), "echo!(\"<Roc>\")\n");
+        write(
+            &input,
+            "```roc\nfile:main.roc\n```\n\n```\n$ roc main.roc\n```\n",
+        );
+
+        let html = parse_markdown(&input).expect("render Roc and terminal blocks");
+
+        assert!(html.contains("<pre><samp class=\"language-roc\">"));
+        assert!(html.contains("<span class=\"str\">\"&lt;Roc&gt;\"</span>"));
+        assert!(html.contains("<pre><samp>$ roc main.roc\n</samp></pre>"));
+    }
+
+    #[test]
     fn markdown_expands_the_named_replacement_snippet() {
         let test_dir = TestDir::new("replacement-snippet");
         let input = test_dir.path().join("page.md");
