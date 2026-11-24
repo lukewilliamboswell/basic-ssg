@@ -93,7 +93,9 @@ python scripts/all_tests.py --valgrind
 ```
 
 The existing x86-64 Linux CI matrix entry enables this mode; it is not a
-separate lane. Valgrind writes to a dedicated log so its diagnostics do not
+separate lane. Valgrind uses the compiler output with debug information
+so the dynamic loader metadata and diagnostic symbols are preserved.
+Valgrind writes to a dedicated log so its diagnostics do not
 change the stdout and stderr assertions in `examples-dev/test_spec.json`. All leak
 kinds remain visible in that log; only `possibly lost` and `still reachable`
 allocations are non-fatal because libraries can retain or use interior pointers
