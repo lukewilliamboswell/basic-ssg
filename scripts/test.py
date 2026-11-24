@@ -272,7 +272,8 @@ def build_valgrind_apps(
             f"--output={binary}",
             *roc_extra_args(),
         )
-        command("strip", "--strip-debug", binary)
+        # GNU strip can relocate the dynamic metadata of Roc-built PIEs.
+        # Memcheck reads the compiler output with its debug information.
         binaries[app["path"]] = binary
     return binaries
 
@@ -505,8 +506,6 @@ def main() -> None:
         parser.error("--valgrind requires 'valgrind' on PATH")
     if args.valgrind and shutil.which("cc") is None:
         parser.error("--valgrind requires 'cc' on PATH")
-    if args.valgrind and shutil.which("strip") is None:
-        parser.error("--valgrind requires 'strip' on PATH")
     if args.operation == "all" and target != detect_native_target():
         raise SystemExit(f"Cannot run {target} artifacts on native target {detect_native_target()}")
     version = (

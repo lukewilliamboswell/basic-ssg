@@ -1,6 +1,6 @@
 platform ""
 	requires {
-		main! : List([Utf8(Str), UnixBytes(List(U8)), WindowsU16s(List(U16))]) => Try({}, [Exit(I32), ..])
+		main! : List(OsStr.OsStr) => Try({}, [Exit(I32), ..])
 	}
 	exposes [AsciiDoc, Cmd, Env, Html, HtmlAttributes, IOErr, Locale, OsStr, PageDecoder, Path, SSG, Stderr, Stdout, Utc]
 	packages {
