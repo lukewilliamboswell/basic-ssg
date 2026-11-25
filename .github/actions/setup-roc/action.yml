@@ -54,7 +54,6 @@ runs:
 
         printf 'nightly-tag=%s\n' "$nightly_tag" >> "$GITHUB_OUTPUT"
 
-    - uses: roc-lang/setup-roc@e81ba5825caa1544545c783d4a02ae3155b5ab02
+    - uses: lukewilliamboswell/roc-automation/actions/setup-roc-nightly@dd30a5dd576973b6e224db70d96e3e12c96bcc95 # tools-0.12.0
       with:
-        version: nightly-new-compiler
         nightly-tag: ${{ steps.roc-version.outputs.nightly-tag }}

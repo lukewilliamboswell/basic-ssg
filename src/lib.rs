@@ -982,40 +982,56 @@ pub extern "C" fn hosted_utc_now() -> HostUtcNowResult {
 // Roc runtime symbols (allocator + handlers), entrypoint
 // ============================================================================
 
+/// # Safety
+/// `alignment` must be a power of two. The length plus the allocator's
+/// size header must describe a valid layout at that alignment.
 #[no_mangle]
-pub extern "C" fn roc_alloc(length: usize, alignment: usize) -> *mut c_void {
-    DefaultAllocators::roc_alloc(roc_host_ptr(), length, alignment).as_ptr()
+pub unsafe extern "C" fn roc_alloc(length: usize, alignment: usize) -> *mut c_void {
+    unsafe { DefaultAllocators::roc_alloc(roc_host_ptr(), length, alignment).as_ptr() }
 }
 
+/// # Safety
+/// `ptr` must be live and come from the Roc allocator at the same alignment.
+/// The caller must stop using it after this call.
 #[no_mangle]
-pub extern "C" fn roc_dealloc(ptr: *mut c_void, alignment: usize) {
-    DefaultAllocators::roc_dealloc(roc_host_ptr(), ptr, alignment);
+pub unsafe extern "C" fn roc_dealloc(ptr: *mut c_void, alignment: usize) {
+    unsafe { DefaultAllocators::roc_dealloc(roc_host_ptr(), ptr, alignment) };
 }
 
+/// # Safety
+/// `ptr` must be live and come from the Roc allocator at the same alignment.
+/// The new length plus the size header must describe a valid layout. The caller
+/// must use the returned pointer in place of `ptr` after this call.
 #[no_mangle]
-pub extern "C" fn roc_realloc(
+pub unsafe extern "C" fn roc_realloc(
     ptr: *mut c_void,
     new_length: usize,
     alignment: usize,
 ) -> *mut c_void {
-    DefaultAllocators::roc_realloc(roc_host_ptr(), ptr, new_length, alignment).as_ptr()
+    unsafe { DefaultAllocators::roc_realloc(roc_host_ptr(), ptr, new_length, alignment).as_ptr() }
 }
 
+/// # Safety
+/// `bytes` must point to `len` readable bytes of valid UTF-8.
 #[no_mangle]
-pub extern "C" fn roc_dbg(bytes: *const u8, len: usize) {
+pub unsafe extern "C" fn roc_dbg(bytes: *const u8, len: usize) {
     DEBUG_OR_EXPECT_CALLED.store(true, Ordering::Release);
-    DefaultHandlers::roc_dbg(roc_host_ptr(), bytes, len);
+    unsafe { DefaultHandlers::roc_dbg(roc_host_ptr(), bytes, len) };
 }
 
+/// # Safety
+/// `bytes` must point to `len` readable bytes of valid UTF-8.
 #[no_mangle]
-pub extern "C" fn roc_expect_failed(bytes: *const u8, len: usize) {
+pub unsafe extern "C" fn roc_expect_failed(bytes: *const u8, len: usize) {
     DEBUG_OR_EXPECT_CALLED.store(true, Ordering::Release);
-    DefaultHandlers::roc_expect_failed(roc_host_ptr(), bytes, len);
+    unsafe { DefaultHandlers::roc_expect_failed(roc_host_ptr(), bytes, len) };
 }
 
+/// # Safety
+/// `bytes` must point to `len` readable bytes of valid UTF-8.
 #[no_mangle]
-pub extern "C" fn roc_crashed(bytes: *const u8, len: usize) {
-    DefaultHandlers::roc_crashed(roc_host_ptr(), bytes, len);
+pub unsafe extern "C" fn roc_crashed(bytes: *const u8, len: usize) {
+    unsafe { DefaultHandlers::roc_crashed(roc_host_ptr(), bytes, len) };
 }
 
 #[cfg(unix)]

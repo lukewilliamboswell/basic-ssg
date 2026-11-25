@@ -1,4 +1,4 @@
-app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-11-23-b5c77fc" }
+app [main!] { pf: platform "../../platform/main.roc", roc: "nightly-2026-11-25-d5a4f1e" }
 
 import pf.Html
 import pf.HtmlAttributes exposing [lang]
