@@ -42,9 +42,11 @@ OsStr := [
 	from_interpolation = |segments|
 		Str.from_interpolation(segments).map_ok(|assemble| |values| Utf8(assemble(values)))
 
-	## TODO: Restore generic parser_for and encoder_for helpers when the compiler
-	## no longer treats auto-derived `_` declarations in platforms as hosted:
-	## https://github.com/roc-lang/roc/issues/10162
+	## Parse the tagged representation, preserving the original OS units.
+	parser_for : _
+
+	## Encode the tagged representation without converting it to display text.
+	encoder_for : _
 
 	## Convert an OS string to a string if its raw representation is valid text.
 	to_str_try : OsStr -> Try(Str, [InvalidStr(U64)])
@@ -261,3 +263,9 @@ expect OsStr.utf8("abc") != OsStr.unix("abc")
 
 ## Hashing is consistent with exact representation equality.
 expect Dict.single(OsStr.unix_bytes([97, 255]), "found").get(OsStr.unix_bytes([97, 255])) == Ok("found")
+
+## JSON roundtrips the original representation, including invalid Unicode.
+expect {
+	original = [OsStr.utf8("café"), OsStr.unix_bytes([255]), OsStr.windows_u16s([0xD800])]
+	Json.parse(Json.to_str(original)) == Ok(original)
+}
